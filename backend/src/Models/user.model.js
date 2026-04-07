@@ -30,7 +30,7 @@ const userSchema = new Schema(
 
     avatar: {
       type: String, // cloudinary URL
-      default: "",  // not required
+      default: ""  // not required
     },
 
     password: {
@@ -64,11 +64,12 @@ const userSchema = new Schema(
   { timestamps: true }
 );
 
-userSchema.pre("save", async function() {
-  if (!this.isModified(password)) return;
-  this.password= await bcrypt.hash(this.password,10)
-  
-})
+userSchema.pre("save", async function () {
+    if (!this.isModified("password")) return;
+
+    this.password = await bcrypt.hash(this.password, 10);
+});
+
 userSchema.methods.isPasswordCorrect=async function(password) {
        return await bcrypt.compare(password,this.password)  
 }
