@@ -1,3 +1,6 @@
+
+
+import { User } from "../Models/user.model.js";
 export const verifyOTP = async (req, res) => {
   const { email, otp } = req.body;
 
@@ -27,7 +30,7 @@ export const verifyOTP = async (req, res) => {
 
   await user.save();
 
-  return res.json(200,{ 
+  return res.status(200).json({
     message: "Account verified successfully",
   });
 };
