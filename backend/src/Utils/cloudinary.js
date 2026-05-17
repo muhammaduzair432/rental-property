@@ -26,6 +26,17 @@ const uploadOnCloudinary = async (localFilePath) => {
     return null;
   }
 };
+// 🔥 PRODUCTION ADDITION: Delete old assets from Cloudinary
+ const deleteFromCloudinary = async (publicId) => {
+    try {
+        if (!publicId) return null;
+        const response = await cloudinary.uploader.destroy(publicId);
+        return response;
+    } catch (error) {
+        console.error("Cloudinary Deletion Error:", error);
+        return null;
+    }
+  };
 
 
 
@@ -81,4 +92,4 @@ const uploadOnCloudinary = async (localFilePath) => {
 //   }
 // };
 
-export { uploadOnCloudinary };
+export { uploadOnCloudinary, deleteFromCloudinary };

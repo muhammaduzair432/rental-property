@@ -35,3 +35,22 @@ export const verifyJwt = asyncHandler(async (req, _, next) => {
         throw new ApiError(401, error.message || "Invalid access token");
     }
 });
+
+export const authorizeRoles = (...allowedRoles) => {
+    return (req, res, next) => {
+        // verifyJwt runs right before this, guaranteeing req.user exists
+        if (!req.user) {
+            return res.status(401).json({ success: false, message: "Authentication required." });
+        }
+
+        // Intercept request if user's role is not whitelisted for this route
+        if (!allowedRoles.includes(req.user.role)) {
+            return res.status(403).json({
+                success: false,
+                message: `Access Denied. Role '${req.user.role}' is unauthorized to access this endpoint.`
+            });
+        }
+
+        next(); // Authorization cleared! Pass to the controller
+    };
+};
