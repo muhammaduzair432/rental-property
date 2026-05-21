@@ -4,48 +4,44 @@ import { ApiError } from "../utils/apiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { Favorite } from "../Models/favorite.model.js";
 import { Review } from "../Models/review.model.js";
+import { Notification } from "../Models/notification.model.js";
 
 // ==========================================
 // 1. STORE PROPERTY (POST /api/v2/properties/store)
+//    👉 FLOWCHART STEPS 1 & 2: Save as unapproved + Notify Admin
 // ==========================================
 export const createProperty = asyncHandler(async (req, res) => {
-    // 1. Extract text and array data from the incoming request body
+    // Extract text and array data from the incoming request body
     const { title, description, price, location, amenities } = req.body;
 
-    // 2. Validate essential text inputs
+    // Validate essential text inputs
     if (!title || !description || !price || !location) {
         throw new ApiError(400, "Title, description, price, and location are required fields");
     }
 
-    // 3. Ensure an authenticated owner is present (Attached by your verifyJwt middleware)
+    // Ensure an authenticated owner is present (Attached by your verifyJwt middleware)
     if (!req.user?._id) {
         throw new ApiError(401, "Unauthorized request. Missing owner reference.");
     }
 
-    // 4. Capture uploaded image files array from Multer
-       // =========================================================================
-// FIX: Extract only the secure_url string before saving to MongoDB
-// =========================================================================
-const imageFiles = req.files; 
-let cloudinaryImageUrls = [];
+    // Capture uploaded image files array from Multer
+    const imageFiles = req.files; 
+    let cloudinaryImageUrls = [];
 
-if (imageFiles && imageFiles.length > 0) {
-    // 1. Process all uploads in parallel
-    const uploadPromises = imageFiles.map((file) => uploadOnCloudinary(file.path));
-    const uploadedResults = await Promise.all(uploadPromises);
+    if (imageFiles && imageFiles.length > 0) {
+        // Process all uploads in parallel to stay highly performant
+        const uploadPromises = imageFiles.map((file) => uploadOnCloudinary(file.path));
+        const uploadedResults = await Promise.all(uploadPromises);
 
-    // 2. Extract ONLY the secure_url string from each resolved result object
-    cloudinaryImageUrls = uploadedResults
-        .filter((result) => result !== null) // Ignore failed uploads
-        .map((result) => {
-            // If uploadOnCloudinary already returned a string URL, use it
-            if (typeof result === "string") return result;
-            
-            // If it returned the full Cloudinary object response, pull secure_url
-            return result?.secure_url || result?.url || "";
-        })
-        .filter((url) => url !== ""); // Remove empty placeholders
-}
+        // Extract ONLY the secure_url string from each resolved result object
+        cloudinaryImageUrls = uploadedResults
+            .filter((result) => result !== null) // Ignore failed uploads
+            .map((result) => {
+                if (typeof result === "string") return result;
+                return result?.secure_url || result?.url || "";
+            })
+            .filter((url) => url !== ""); // Remove empty placeholders
+    }
 
     // Parse out amenities if they arrive as a comma-separated string from form-data
     let processedAmenities = [];
@@ -55,7 +51,7 @@ if (imageFiles && imageFiles.length > 0) {
             : amenities.split(",").map(item => item.trim());
     }
 
-    // 5. Create and save the property matching your schema exactly
+    // FLOWCHART STEP 1: Store property in DB with isApproved: false by default
     const newProperty = await Property.create({
         title,
         description,
@@ -63,41 +59,45 @@ if (imageFiles && imageFiles.length > 0) {
         location,
         amenities: processedAmenities,
         images: cloudinaryImageUrls,
-        owner: req.user._id, // References the authenticated user object
-        isApproved: true // Temporary true for testing tenant browsing without admin blockage
+        owner: req.user._id,   // References the authenticated user object
+        isApproved: false     // Enforce Admin verification check boundary
+    });
+
+    // 🔥 FLOWCHART STEP 2: Generate an internal DB notification for the Admin to approve
+    // FIXED: Enforces the required ownerId parameter to prevent validation crashes!
+    // =========================================================================
+    await Notification.create({
+        ownerId: req.user._id, // Enforces path requirement matching schema validator constraints
+        roleTarget: "admin",   // Explicitly flags that this alert targets the Admin review dashboard panel view
+        message: `New property listing "${newProperty.title}" created by Host ${req.user.username} requires formal verification approval.`
     });
 
     return res.status(201).json({
         success: true,
-        message: `Property registered successfully with ${cloudinaryImageUrls.length} images!`,
+        message: `Property registered successfully with ${cloudinaryImageUrls.length} images and sent to Admin for approval check!`,
         data: newProperty
     });
 });
 
-
-
 // =========================================================================
-// OPTIMIZED BROWSE & FILTER PROPERTIES (GET /api/v2/properties/browse)
+// 2. OPTIMIZED BROWSE & FILTER PROPERTIES (GET /api/v2/properties/browse)
 // =========================================================================
 export const browseProperties = asyncHandler(async (req, res) => {
-    // 1. Extract and parse parameters with default fallback boundaries
     const { location, minPrice, maxPrice, amenities, search, page, limit } = req.query;
     
     const activePage = parseInt(page) || 1;
     const activeLimit = parseInt(limit) || 10;
     const skipValue = (activePage - 1) * activeLimit;
 
-    // 2. Base Query Anchor: Only show verified properties publicly
+    // Base Query Anchor: Only show verified properties publicly
     const queryConditions = { isApproved: true };
 
-    // 3. Dynamic Filter Construction Loop
-    
-    // A. Location Search: Case-insensitive partial matching (e.g., "york" matches "New York")
+    // Location Search: Case-insensitive partial matching
     if (location && location.trim() !== "") {
         queryConditions.location = { $regex: location.trim(), $options: "i" };
     }
 
-    // B. Global Search Bar: Scans both Title and Description fields simultaneously
+    // Global Search Bar: Scans both Title and Description simultaneously
     if (search && search.trim() !== "") {
         queryConditions.$or = [
             { title: { $regex: search.trim(), $options: "i" } },
@@ -105,32 +105,29 @@ export const browseProperties = asyncHandler(async (req, res) => {
         ];
     }
 
-    // C. Pricing Slider Filter: Handles minimum and maximum numeric thresholds dynamically
+    // Pricing Slider Filter
     if (minPrice || maxPrice) {
         queryConditions.price = {};
         if (minPrice) queryConditions.price.$gte = Number(minPrice);
         if (maxPrice) queryConditions.price.$lte = Number(maxPrice);
     }
 
-    // D. Amenities Checkboxes: Match multiple amenities concurrently using $all
-    // Expects comma-separated values in URL query string: ?amenities=Wifi,AC
+    // Amenities Checkboxes using $all array matcher
     if (amenities && amenities.trim() !== "") {
         const amenitiesArray = amenities.split(",").map(item => item.trim());
         queryConditions.amenities = { $all: amenitiesArray };
     }
 
-    // 4. Query Execution Layer with Pagination and Total Count Tracking
-    // Run counting and querying concurrently to maintain server efficiency
+    // Query Execution Layer with Pagination and Total Count Tracking
     const [properties, totalMatchingResults] = await Promise.all([
         Property.find(queryConditions)
             .select("title description price location images amenities owner")
             .skip(skipValue)
             .limit(activeLimit)
-            .sort({ createdAt: -1 }), // Always display fresh listings first
+            .sort({ createdAt: -1 }), 
         Property.countDocuments(queryConditions)
     ]);
 
-    // 5. Compute structural metadata to help frontend pagination navigation state
     const totalPages = Math.ceil(totalMatchingResults / activeLimit);
 
     return res.status(200).json({
@@ -148,23 +145,18 @@ export const browseProperties = asyncHandler(async (req, res) => {
     });
 });
 
-
 // =========================================================================
-// FETCH SINGLE PROPERTY DETAILS (GET /api/v2/properties/details/:propertyId)
+// 3. FETCH SINGLE PROPERTY DETAILS (GET /api/v2/properties/details/:propertyId)
 // =========================================================================
 export const getPropertyDetails = asyncHandler(async (req, res) => {
-    // 1. Extract the dynamic property ID variable directly from the URL path parameters
     const { propertyId } = req.params;
 
-    // 2. Fetch the document matching the ID and populate the linked Owner profile details
-    // Strips away secure information like password hash and tokens from the response payload
     const property = await Property.findById(propertyId)
         .populate({
             path: "owner",
             select: "fullname username email avatar" 
         });
 
-    // 3. Prevent page initialization crashes if an invalid or missing entry ID is specified
     if (!property) {
         return res.status(404).json({
             success: false,
@@ -172,7 +164,6 @@ export const getPropertyDetails = asyncHandler(async (req, res) => {
         });
     }
 
-    // 4. Return the complete structured matching document configuration safely
     return res.status(200).json({
         success: true,
         message: "Property details loaded successfully.",
@@ -180,28 +171,81 @@ export const getPropertyDetails = asyncHandler(async (req, res) => {
     });
 });
 
+// =========================================================================
+// 4. VIEW MY PROPERTIES INVENTORY LIST (GET /api/v2/properties/my-inventory)
+//    👉 FLOWCHART STEP: Shows the host only listings they personally own
+// =========================================================================
+export const getMyProperties = asyncHandler(async (req, res) => {
+    const properties = await Property.find({ owner: req.user._id }).sort({ createdAt: -1 });
 
-
-
+    return res.status(200).json({
+        success: true,
+        message: "Owner property inventory retrieved successfully.",
+        count: properties.length,
+        data: properties
+    });
+});
 
 // =========================================================================
-// STANDARD TOGGLE FAVORITE (POST /api/v2/properties/favorite/:propertyId)
+// 5. UPDATE PROPERTY LISTING DETAILS (PUT /api/v2/properties/update/:propertyId)
+// =========================================================================
+export const updateProperty = asyncHandler(async (req, res) => {
+    const { propertyId } = req.params;
+    const { title, description, price, location, amenities } = req.body;
+
+    // Secure database scan ensuring cross-account listings cannot be hacked
+    const property = await Property.findOne({ _id: propertyId, owner: req.user._id });
+    if (!property) {
+        return res.status(404).json({ success: false, message: "Property not found or unauthorized access." });
+    }
+
+    if (title) property.title = title;
+    if (description) property.description = description;
+    if (price) property.price = Number(price);
+    if (location) property.location = location;
+    if (amenities) property.amenities = Array.isArray(amenities) ? amenities : amenities.split(",").map(a => a.trim());
+
+    await property.save();
+
+    return res.status(200).json({
+        success: true,
+        message: "Property listing details updated successfully.",
+        property
+    });
+});
+
+// =========================================================================
+// 6. PERMANENTLY REMOVE PROPERTY (DELETE /api/v2/properties/delete/:propertyId)
+// =========================================================================
+export const deleteProperty = asyncHandler(async (req, res) => {
+    const { propertyId } = req.params;
+
+    const property = await Property.findOneAndDelete({ _id: propertyId, owner: req.user._id });
+    if (!property) {
+        return res.status(404).json({ success: false, message: "Property not found or unauthorized access." });
+    }
+
+    return res.status(200).json({
+        success: true,
+        message: "Property listing permanently removed from system database."
+    });
+});
+
+// =========================================================================
+// 7. STANDARD TOGGLE FAVORITE (POST /api/v2/properties/favorite/:propertyId)
 // =========================================================================
 export const toggleFavoriteProperty = asyncHandler(async (req, res) => {
     const { propertyId } = req.params;
-    const userId = req.user._id; // Extracted cleanly via your verifyJwt middleware
+    const userId = req.user._id; 
 
-    // 1. Confirm the target property actually exists before linking it
     const propertyExists = await Property.exists({ _id: propertyId });
     if (!propertyExists) {
         return res.status(404).json({ success: false, message: "Property not found." });
     }
 
-    // 2. Atomic Lookup: Locate an existing favorite record matching this specific user-property pair
     const existingFavorite = await Favorite.findOne({ user: userId, property: propertyId });
 
     if (existingFavorite) {
-        // If it exists, remove the connection document atomically
         await Favorite.findByIdAndDelete(existingFavorite._id);
         return res.status(200).json({
             success: true,
@@ -209,7 +253,6 @@ export const toggleFavoriteProperty = asyncHandler(async (req, res) => {
             message: "Property removed from favorites successfully."
         });
     } else {
-        // If it doesn't exist, build a clean structural link document
         await Favorite.create({ user: userId, property: propertyId });
         return res.status(201).json({
             success: true,
@@ -220,22 +263,20 @@ export const toggleFavoriteProperty = asyncHandler(async (req, res) => {
 });
 
 // =========================================================================
-// VIEW MY FAVORITES LIST (GET /api/v2/properties/favorites/my-list)
+// 8. VIEW MY FAVORITES LIST (GET /api/v2/properties/favorites/my-list)
 // =========================================================================
 export const getMyFavorites = asyncHandler(async (req, res) => {
     const userId = req.user._id;
 
-    // Fetch favorited collection documents for the active user, merging property details
     const favorites = await Favorite.find({ user: userId })
         .populate({
             path: "property",
-            select: "title description price location images amenities" // Select safe public visibility metrics
+            select: "title description price location images amenities" 
         })
         .sort({ createdAt: -1 });
 
-    // Clean up response data formatting to provide a streamlined property array to the frontend
     const favoritedProperties = favorites
-        .filter(fav => fav.property !== null) // Safety check for any deleted properties
+        .filter(fav => fav.property !== null) 
         .map(fav => fav.property);
 
     return res.status(200).json({
@@ -246,18 +287,14 @@ export const getMyFavorites = asyncHandler(async (req, res) => {
     });
 });
 
-
-
-
 // =========================================================================
-// SUBMIT A PROPERTY REVIEW - WITH IMMEDIATE AVATAR POPULATION (POST /api/v2/properties/review/:propertyId)
+// 9. SUBMIT A PROPERTY REVIEW (POST /api/v2/properties/review/:propertyId)
 // =========================================================================
 export const addPropertyReview = asyncHandler(async (req, res) => {
     const { propertyId } = req.params;
     const { rating, comment } = req.body;
-    const userId = req.user._id; // Populated from your working verifyJwt middleware
+    const userId = req.user._id; 
 
-    // 1. Basic validation for the fields being submitted
     if (!rating || !comment || comment.trim() === "") {
         return res.status(400).json({
             success: false,
@@ -265,7 +302,6 @@ export const addPropertyReview = asyncHandler(async (req, res) => {
         });
     }
 
-    // 2. Ensure the property they are trying to review actually exists
     const propertyExists = await Property.exists({ _id: propertyId });
     if (!propertyExists) {
         return res.status(404).json({
@@ -274,7 +310,6 @@ export const addPropertyReview = asyncHandler(async (req, res) => {
         });
     }
 
-    // 3. Check if this user has already left a voluntary review for this listing
     const existingReview = await Review.findOne({ property: propertyId, user: userId });
     if (existingReview) {
         return res.status(400).json({
@@ -283,7 +318,6 @@ export const addPropertyReview = asyncHandler(async (req, res) => {
         });
     }
 
-    // 4. Save the voluntary review to MongoDB cleanly
     const reviewInstance = await Review.create({
         user: userId,
         property: propertyId,
@@ -291,7 +325,6 @@ export const addPropertyReview = asyncHandler(async (req, res) => {
         comment: comment.trim()
     });
 
-    // 🔥 FIX: Fetch the newly created review and populate the user details (including avatar) instantly!
     const populatedReview = await Review.findById(reviewInstance._id)
         .populate({
             path: "user",
@@ -306,15 +339,14 @@ export const addPropertyReview = asyncHandler(async (req, res) => {
 });
 
 // =========================================================================
-// GET ALL REVIEWS FOR A PROPERTY (GET /api/v2/properties/reviews/:propertyId)
+// 10. GET ALL REVIEWS FOR A PROPERTY (GET /api/v2/properties/reviews/:propertyId)
 // =========================================================================
 export const getPropertyReviews = asyncHandler(async (req, res) => {
     const { propertyId } = req.params;
 
-    // Pull reviews matching property ID, populating user details cleanly
     const reviews = await Review.find({ property: propertyId })
         .populate({ path: "user", select: "fullname username avatar" })
-        .sort({ createdAt: -1 }); // Newest reviews show up first
+        .sort({ createdAt: -1 }); 
 
     return res.status(200).json({
         success: true,
@@ -324,16 +356,14 @@ export const getPropertyReviews = asyncHandler(async (req, res) => {
     });
 });
 
-
 // =========================================================================
-// UPDATE/EDIT REVIEWS (PUT /api/v2/properties/review/edit/:reviewId)
+// 11. UPDATE/EDIT REVIEWS (PUT /api/v2/properties/review/edit/:reviewId)
 // =========================================================================
 export const updatePropertyReview = asyncHandler(async (req, res) => {
     const { reviewId } = req.params;
     const { rating, comment } = req.body;
-    const userId = req.user._id; // Sourced cleanly from your verifyJwt middleware
+    const userId = req.user._id; 
 
-    // 1. Basic body parameter input check
     if (!rating || !comment || comment.trim() === "") {
         return res.status(400).json({
             success: false,
@@ -341,7 +371,6 @@ export const updatePropertyReview = asyncHandler(async (req, res) => {
         });
     }
 
-    // 2. Locate the targeted review record
     const review = await Review.findById(reviewId);
     if (!review) {
         return res.status(404).json({
@@ -350,7 +379,6 @@ export const updatePropertyReview = asyncHandler(async (req, res) => {
         });
     }
 
-    // 3. SECURITY GUARD: Ensure the logged-in user matches the owner of the review
     if (review.user.toString() !== userId.toString()) {
         return res.status(403).json({
             success: false,
@@ -358,7 +386,6 @@ export const updatePropertyReview = asyncHandler(async (req, res) => {
         });
     }
 
-    // 4. Update the document entries and commit them to MongoDB
     review.rating = Number(rating);
     review.comment = comment.trim();
     const updatedReview = await review.save();
@@ -371,13 +398,12 @@ export const updatePropertyReview = asyncHandler(async (req, res) => {
 });
 
 // =========================================================================
-// DELETE REVIEW (DELETE /api/v2/properties/review/delete/:reviewId)
+// 12. DELETE REVIEW (DELETE /api/v2/properties/review/delete/:reviewId)
 // =========================================================================
 export const deletePropertyReview = asyncHandler(async (req, res) => {
     const { reviewId } = req.params;
     const userId = req.user._id;
 
-    // 1. Locate the targeted review document
     const review = await Review.findById(reviewId);
     if (!review) {
         return res.status(404).json({
@@ -386,7 +412,6 @@ export const deletePropertyReview = asyncHandler(async (req, res) => {
         });
     }
 
-    // 2. SECURITY GUARD: Only the creator of the review is cleared to delete it
     if (review.user.toString() !== userId.toString()) {
         return res.status(403).json({
             success: false,
@@ -394,7 +419,6 @@ export const deletePropertyReview = asyncHandler(async (req, res) => {
         });
     }
 
-    // 3. Delete the document atomically from the collection
     await Review.findByIdAndDelete(reviewId);
 
     return res.status(200).json({
@@ -402,3 +426,4 @@ export const deletePropertyReview = asyncHandler(async (req, res) => {
         message: "Review deleted successfully."
     });
 });
+

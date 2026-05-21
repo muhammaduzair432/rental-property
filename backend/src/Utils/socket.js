@@ -36,21 +36,47 @@ export const initializeSocket = (server) => {
 };
 
 // 🔥 PRODUCTION CORE: Send a push message directly to a target user inside the app
+// Inside src/utils/socket.js
+
 export const sendLiveNotification = (targetUserId, eventName, payload) => {
-    if (!ioInstance) {
-        console.error("Socket.io engine has not been initialized yet!");
+    try {
+        // 1. Core Safeguard: Ensure the primary socket engine instance is actively running
+        if (!ioInstance) {
+            console.error("⚠️ Real-time Socket Engine has not been initialized yet!");
+            return false;
+        }
+
+        // 2. Fallback validation bounds for the receiver's ID object mapping
+        if (!targetUserId) {
+            console.error("⚠️ Cannot send live notification: Target User ID is undefined.");
+            return false;
+        }
+
+        const targetSocketId = userSocketMap[targetUserId.toString()];
+
+        // 3. Check if the Owner is online or offline in-app right now
+        if (targetSocketId) {
+            // Secure fallback layout values to prevent key evaluation exceptions
+            const safePayload = {
+                notificationId: payload?.notificationId || "",
+                message: payload?.message || "New activity detected.",
+                bookingId: payload?.bookingId || "",
+                createdAt: payload?.createdAt || new Date()
+            };
+
+            // Emit safely down their personal pipeline channel
+            ioInstance.to(targetSocketId).emit(eventName, safePayload);
+            console.log(`⚡ Live alert pushed to active User [${targetUserId}] via channel [${targetSocketId}]`);
+            return true;
+        }
+
+        // 4. If the owner is offline, log a message rather than letting it throw an error
+        console.log(`💤 Target User [${targetUserId}] is currently offline. Notification stored fallback inside MongoDB.`);
+        return false;
+
+    } catch (socketError) {
+        // Catch-all safety boundary grid keeps the main Express server from crashing or hanging up
+        console.error("❌ CRITICAL NON-BLOCKING SOCKET SYSTEM FAILURE:", socketError.message);
         return false;
     }
-
-    const targetSocketId = userSocketMap[targetUserId.toString()];
-
-    if (targetSocketId) {
-        // If the owner is active in-app right now, emit the message down their personal pipeline instantly!
-        ioInstance.to(targetSocketId).emit(eventName, payload);
-        console.log(`⚡ Live alert pushed to active User [${targetUserId}] via socket channel [${targetSocketId}]`);
-        return true;
-    }
-
-    console.log(`💤 Target User [${targetUserId}] is currently offline. Notification stored silently in MongoDB.`);
-    return false;
 };
