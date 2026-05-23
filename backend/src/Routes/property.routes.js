@@ -15,7 +15,8 @@ import {
     getOwnerPropertiesReviews, // 🔥 Injected for Owner Review Management
     replyToReview,             // 🔥 Injected for Owner Review Management
     updateOwnerReply,          // 🔥 Injected for Owner Review Management
-    deleteOwnerReply           // 🔥 Injected for Owner Review Management
+    deleteOwnerReply,
+    getOwnerEarningsOverview   // 🔥 Injected for Owner Earnings Overview
 } from "../Controllers/property.controller.js";
 import { verifyJwt, authorizeRoles } from "../Middlewares/auth.middleware.js"; 
 import { uploadfile } from "../Middlewares/multer.middleware.js";
@@ -82,5 +83,8 @@ router.route("/owner/review/reply/edit/:reviewId").put(verifyJwt, authorizeRoles
 
 // H. Delete/Wipe a host reply response from the card layout view
 router.route("/owner/review/reply/delete/:reviewId").delete(verifyJwt, authorizeRoles("owner"), deleteOwnerReply);
+
+// I. Get Owner Earnings Overview
+router.route("/owner/earnings-overview").get(verifyJwt, authorizeRoles("owner"), getOwnerEarningsOverview);
 
 export default router;

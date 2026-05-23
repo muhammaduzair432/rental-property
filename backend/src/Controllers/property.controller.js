@@ -5,6 +5,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { Favorite } from "../Models/favorite.model.js";
 import { Review } from "../Models/review.model.js";
 import { Notification } from "../Models/notification.model.js";
+import { Booking } from "../Models/booking.model.js";
 
 // ==========================================
 // 1. STORE PROPERTY (POST /api/v2/properties/store)
@@ -71,6 +72,10 @@ export const createProperty = asyncHandler(async (req, res) => {
 // =========================================================================
 // 2. OPTIMIZED BROWSE & FILTER PROPERTIES (GET /api/v2/properties/browse)
 // =========================================================================
+// =========================================================================
+// 2. OPTIMIZED BROWSE & FILTER PROPERTIES (GET /api/v2/properties/browse)
+//    👉 FLOWCHART COMPLIANCE: Locks down and blocks unapproved listings!
+// =========================================================================
 export const browseProperties = asyncHandler(async (req, res) => {
     const { location, minPrice, maxPrice, amenities, search, page, limit } = req.query;
     
@@ -78,33 +83,44 @@ export const browseProperties = asyncHandler(async (req, res) => {
     const activeLimit = parseInt(limit) || 10;
     const skipValue = (activePage - 1) * activeLimit;
 
+    // 🛡️ CRITICAL SECURITY ANCHOR: Non-negotiable base constraint condition rule
     const queryConditions = { isApproved: true };
 
+    // A. Location Search: Case-insensitive partial matching
     if (location && location.trim() !== "") {
         queryConditions.location = { $regex: location.trim(), $options: "i" };
     }
 
+    // B. 🔥 FIXED Global Search Bar: Forces MongoDB to match both conditions simultaneously
     if (search && search.trim() !== "") {
-        queryConditions.$or = [
-            { title: { $regex: search.trim(), $options: "i" } },
-            { description: { $regex: search.trim(), $options: "i" } }
+        queryConditions.$and = [
+            { isApproved: true }, // Re-enforce verification constraint inside compound search array
+            {
+                $or: [
+                    { title: { $regex: search.trim(), $options: "i" } },
+                    { description: { $regex: search.trim(), $options: "i" } }
+                ]
+            }
         ];
     }
 
+    // C. Pricing Slider Filter
     if (minPrice || maxPrice) {
         queryConditions.price = {};
         if (minPrice) queryConditions.price.$gte = Number(minPrice);
         if (maxPrice) queryConditions.price.$lte = Number(maxPrice);
     }
 
+    // D. Amenities Checkboxes using $all array matcher
     if (amenities && amenities.trim() !== "") {
         const amenitiesArray = amenities.split(",").map(item => item.trim());
         queryConditions.amenities = { $all: amenitiesArray };
     }
 
+    // Query Execution Layer with Pagination and Total Count Tracking
     const [properties, totalMatchingResults] = await Promise.all([
         Property.find(queryConditions)
-            .select("title description price location images amenities owner")
+            .select("title description price location images amenities owner isApproved")
             .skip(skipValue)
             .limit(activeLimit)
             .sort({ createdAt: -1 }), 
@@ -115,7 +131,7 @@ export const browseProperties = asyncHandler(async (req, res) => {
 
     return res.status(200).json({
         success: true,
-        message: "Properties feed matching criteria retrieved successfully.",
+        message: "Properties feed matching verification criteria retrieved successfully.",
         pagination: {
             totalItems: totalMatchingResults,
             totalPages: totalPages,
@@ -522,5 +538,73 @@ export const deleteOwnerReply = asyncHandler(async (req, res) => {
     return res.status(200).json({
         success: true,
         message: "Host reply removed completely from the transaction card layout view."
+    });
+});
+
+
+
+// =========================================================================
+// 🔥 FLOWCHART FEATURE: OWNER EARNINGS & PERFORMANCE OVERVIEW
+// 👉 GET /api/v2/properties/owner/earnings-overview
+// =========================================================================
+export const getOwnerEarningsOverview = asyncHandler(async (req, res) => {
+    const ownerId = req.user._id;
+
+    // 1. Locate all properties that belong exclusively to this host
+    const myProperties = await Property.find({ owner: ownerId })
+        .select("title location price images");
+        
+    if (!myProperties || myProperties.length === 0) {
+        return res.status(200).json({
+            success: true,
+            message: "No properties found for this host account. Earnings are zero.",
+            analytics: {
+                grandTotalEarnings: 0,
+                totalConfirmedBookingsCount: 0,
+                propertyPerformanceBreakdown: []
+            }
+        });
+    }
+
+    const propertyIds = myProperties.map(p => p._id);
+
+    // 2. Query all historical bookings for these properties that are 'confirmed'
+    const confirmedBookings = await Booking.find({
+        property: { $in: propertyIds },
+        status: "confirmed"
+    }).select("property totalPrice startDate endDate");
+
+    // 3. LAYER A: Compute the Grand Total Platform Revenue across all properties
+    const grandTotalEarnings = confirmedBookings.reduce((sum, booking) => sum + booking.totalPrice, 0);
+
+    // 4. LAYER B: Compile the itemized Property-by-Property Breakdown array
+    const propertyPerformanceBreakdown = myProperties.map(property => {
+        // Filter out bookings related ONLY to this specific loop property iteration
+        const structuralBookings = confirmedBookings.filter(
+            b => b.property.toString() === property._id.toString()
+        );
+
+        // Sum up total revenue generated by this individual asset listing node
+        const individualPropertyEarnings = structuralBookings.reduce((sum, b) => sum + b.totalPrice, 0);
+
+        return {
+            propertyId: property._id,
+            title: property.title,
+            location: property.location,
+            basePricePerNight: property.price,
+            thumbnail: property.images[0] || "",
+            totalBookingsCount: structuralBookings.length,
+            revenueGenerated: individualPropertyEarnings
+        };
+    });
+
+    return res.status(200).json({
+        success: true,
+        message: "Owner flowchart earnings matrix compiled successfully.",
+        analytics: {
+            grandTotalEarnings, // Cumulative platform value
+            totalConfirmedBookingsCount: confirmedBookings.length,
+            propertyPerformanceBreakdown // Itemized analytical breakdown grid array
+        }
     });
 });

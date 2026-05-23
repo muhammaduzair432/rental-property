@@ -14,6 +14,8 @@ export {app};
 import userRouter from "./Routes/user.Routes.js"
 import propertyRouter from "./Routes/property.Routes.js";
 import bookingRouter from "./Routes/booking.Routes.js"
+import adminRouter from "./Routes/admin.Routes.js";
 app.use("/api/v2/users",userRouter)
 app.use("/api/v2/properties", propertyRouter);
-app.use("/api/v2/bookings", bookingRouter)
+app.use("/api/v2/bookings", bookingRouter);
+app.use("/api/v2/admin", adminRouter)

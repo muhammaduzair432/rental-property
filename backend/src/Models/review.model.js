@@ -23,6 +23,15 @@ const reviewSchema = new Schema(
       required: [true, "Comment text is required."],
       trim: true,
     },
+    // 🔥 🔥 🔥 CRITICAL ADDITION: Enforce schema fields mapping! 🔥 🔥 🔥
+        reply: {
+            type: String,
+            trim: true
+            // No required check here because a tenant creates it first without a reply!
+        },
+        repliedAt: {
+            type: Date
+        }
   },
   { timestamps: true }
 );
