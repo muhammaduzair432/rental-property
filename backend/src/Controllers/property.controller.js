@@ -11,39 +11,32 @@ import { Notification } from "../Models/notification.model.js";
 //    👉 FLOWCHART STEPS 1 & 2: Save as unapproved + Notify Admin
 // ==========================================
 export const createProperty = asyncHandler(async (req, res) => {
-    // Extract text and array data from the incoming request body
     const { title, description, price, location, amenities } = req.body;
 
-    // Validate essential text inputs
     if (!title || !description || !price || !location) {
         throw new ApiError(400, "Title, description, price, and location are required fields");
     }
 
-    // Ensure an authenticated owner is present (Attached by your verifyJwt middleware)
     if (!req.user?._id) {
         throw new ApiError(401, "Unauthorized request. Missing owner reference.");
     }
 
-    // Capture uploaded image files array from Multer
     const imageFiles = req.files; 
     let cloudinaryImageUrls = [];
 
     if (imageFiles && imageFiles.length > 0) {
-        // Process all uploads in parallel to stay highly performant
         const uploadPromises = imageFiles.map((file) => uploadOnCloudinary(file.path));
         const uploadedResults = await Promise.all(uploadPromises);
 
-        // Extract ONLY the secure_url string from each resolved result object
         cloudinaryImageUrls = uploadedResults
-            .filter((result) => result !== null) // Ignore failed uploads
+            .filter((result) => result !== null)
             .map((result) => {
                 if (typeof result === "string") return result;
                 return result?.secure_url || result?.url || "";
             })
-            .filter((url) => url !== ""); // Remove empty placeholders
+            .filter((url) => url !== "");
     }
 
-    // Parse out amenities if they arrive as a comma-separated string from form-data
     let processedAmenities = [];
     if (amenities) {
         processedAmenities = Array.isArray(amenities) 
@@ -51,24 +44,20 @@ export const createProperty = asyncHandler(async (req, res) => {
             : amenities.split(",").map(item => item.trim());
     }
 
-    // FLOWCHART STEP 1: Store property in DB with isApproved: false by default
     const newProperty = await Property.create({
         title,
         description,
-        price: Number(price), // Explicitly cast to a number
+        price: Number(price),
         location,
         amenities: processedAmenities,
         images: cloudinaryImageUrls,
-        owner: req.user._id,   // References the authenticated user object
-        isApproved: false     // Enforce Admin verification check boundary
+        owner: req.user._id,
+        isApproved: false
     });
 
-    // 🔥 FLOWCHART STEP 2: Generate an internal DB notification for the Admin to approve
-    // FIXED: Enforces the required ownerId parameter to prevent validation crashes!
-    // =========================================================================
     await Notification.create({
-        ownerId: req.user._id, // Enforces path requirement matching schema validator constraints
-        roleTarget: "admin",   // Explicitly flags that this alert targets the Admin review dashboard panel view
+        ownerId: req.user._id,
+        roleTarget: "admin",
         message: `New property listing "${newProperty.title}" created by Host ${req.user.username} requires formal verification approval.`
     });
 
@@ -89,15 +78,12 @@ export const browseProperties = asyncHandler(async (req, res) => {
     const activeLimit = parseInt(limit) || 10;
     const skipValue = (activePage - 1) * activeLimit;
 
-    // Base Query Anchor: Only show verified properties publicly
     const queryConditions = { isApproved: true };
 
-    // Location Search: Case-insensitive partial matching
     if (location && location.trim() !== "") {
         queryConditions.location = { $regex: location.trim(), $options: "i" };
     }
 
-    // Global Search Bar: Scans both Title and Description simultaneously
     if (search && search.trim() !== "") {
         queryConditions.$or = [
             { title: { $regex: search.trim(), $options: "i" } },
@@ -105,20 +91,17 @@ export const browseProperties = asyncHandler(async (req, res) => {
         ];
     }
 
-    // Pricing Slider Filter
     if (minPrice || maxPrice) {
         queryConditions.price = {};
         if (minPrice) queryConditions.price.$gte = Number(minPrice);
         if (maxPrice) queryConditions.price.$lte = Number(maxPrice);
     }
 
-    // Amenities Checkboxes using $all array matcher
     if (amenities && amenities.trim() !== "") {
         const amenitiesArray = amenities.split(",").map(item => item.trim());
         queryConditions.amenities = { $all: amenitiesArray };
     }
 
-    // Query Execution Layer with Pagination and Total Count Tracking
     const [properties, totalMatchingResults] = await Promise.all([
         Property.find(queryConditions)
             .select("title description price location images amenities owner")
@@ -173,7 +156,6 @@ export const getPropertyDetails = asyncHandler(async (req, res) => {
 
 // =========================================================================
 // 4. VIEW MY PROPERTIES INVENTORY LIST (GET /api/v2/properties/my-inventory)
-//    👉 FLOWCHART STEP: Shows the host only listings they personally own
 // =========================================================================
 export const getMyProperties = asyncHandler(async (req, res) => {
     const properties = await Property.find({ owner: req.user._id }).sort({ createdAt: -1 });
@@ -193,7 +175,6 @@ export const updateProperty = asyncHandler(async (req, res) => {
     const { propertyId } = req.params;
     const { title, description, price, location, amenities } = req.body;
 
-    // Secure database scan ensuring cross-account listings cannot be hacked
     const property = await Property.findOne({ _id: propertyId, owner: req.user._id });
     if (!property) {
         return res.status(404).json({ success: false, message: "Property not found or unauthorized access." });
@@ -288,7 +269,7 @@ export const getMyFavorites = asyncHandler(async (req, res) => {
 });
 
 // =========================================================================
-// 9. SUBMIT A PROPERTY REVIEW (POST /api/v2/properties/review/:propertyId)
+// 9. SUBMIT A PROPERTY REVIEW - USER LEVEL (POST /api/v2/properties/review/:propertyId)
 // =========================================================================
 export const addPropertyReview = asyncHandler(async (req, res) => {
     const { propertyId } = req.params;
@@ -340,12 +321,14 @@ export const addPropertyReview = asyncHandler(async (req, res) => {
 
 // =========================================================================
 // 10. GET ALL REVIEWS FOR A PROPERTY (GET /api/v2/properties/reviews/:propertyId)
+//     👉 FIXED: Explicitly pulls 'reply' and 'repliedAt' so tenants see them!
 // =========================================================================
 export const getPropertyReviews = asyncHandler(async (req, res) => {
     const { propertyId } = req.params;
 
     const reviews = await Review.find({ property: propertyId })
         .populate({ path: "user", select: "fullname username avatar" })
+        .select("user rating comment reply repliedAt createdAt") // 🔥 Explicit inclusion matrix
         .sort({ createdAt: -1 }); 
 
     return res.status(200).json({
@@ -357,7 +340,7 @@ export const getPropertyReviews = asyncHandler(async (req, res) => {
 });
 
 // =========================================================================
-// 11. UPDATE/EDIT REVIEWS (PUT /api/v2/properties/review/edit/:reviewId)
+// 11. UPDATE/EDIT REVIEWS - USER LEVEL (PUT /api/v2/properties/review/edit/:reviewId)
 // =========================================================================
 export const updatePropertyReview = asyncHandler(async (req, res) => {
     const { reviewId } = req.params;
@@ -398,7 +381,7 @@ export const updatePropertyReview = asyncHandler(async (req, res) => {
 });
 
 // =========================================================================
-// 12. DELETE REVIEW (DELETE /api/v2/properties/review/delete/:reviewId)
+// 12. DELETE REVIEW - USER LEVEL (DELETE /api/v2/properties/review/delete/:reviewId)
 // =========================================================================
 export const deletePropertyReview = asyncHandler(async (req, res) => {
     const { reviewId } = req.params;
@@ -427,3 +410,117 @@ export const deletePropertyReview = asyncHandler(async (req, res) => {
     });
 });
 
+// =========================================================================
+// 🔥 🔥 🔥 OWNER LEVEL REVIEW MANAGEMENT SYSTEM 🔥 🔥 🔥
+// =========================================================================
+
+// 13. GET REVIEWS FOR OWNER'S PROPERTIES (GET /api/v2/properties/owner/reviews)
+export const getOwnerPropertiesReviews = asyncHandler(async (req, res) => {
+    const ownerId = req.user._id;
+
+    const myProperties = await Property.find({ owner: ownerId }).select("_id");
+    const propertyIds = myProperties.map(p => p._id);
+
+    const reviews = await Review.find({ property: { $in: propertyIds } })
+        .populate({ path: "user", select: "fullname username avatar" })
+        .populate({ path: "property", select: "title location images" })
+        .sort({ createdAt: -1 });
+
+    return res.status(200).json({
+        success: true,
+        message: "Owner property reviews feed loaded successfully.",
+        count: reviews.length,
+        data: reviews
+    });
+});
+
+// 14. REPLY TO TENANT REVIEW (POST /api/v2/properties/owner/review/reply/:reviewId)
+//     👉 FIXED: Returns direct 'reviewId' at top level for easy copy-pasting!
+// =========================================================================
+export const replyToReview = asyncHandler(async (req, res) => {
+    const { reviewId } = req.params;
+    const { replyText } = req.body;
+    const ownerId = req.user._id;
+
+    if (!replyText || replyText.trim() === "") {
+        return res.status(400).json({ success: false, message: "Reply text content cannot be empty." });
+    }
+
+    const review = await Review.findById(reviewId).populate("property");
+    if (!review) {
+        return res.status(404).json({ success: false, message: "Review record not found." });
+    }
+
+    if (review.property.owner.toString() !== ownerId.toString()) {
+        return res.status(403).json({ success: false, message: "Unauthorized. You do not own the property associated with this review." });
+    }
+
+    review.reply = replyText.trim();
+    review.repliedAt = new Date();
+    await review.save();
+
+    return res.status(200).json({
+        success: true,
+        message: "Host reply posted successfully.",
+        reviewId: review._id, // 🔥 Clean top-level reference ID key mapping
+        data: review
+    });
+});
+
+// 15. UPDATE OWNER REPLY (PUT /api/v2/properties/owner/review/reply/edit/:reviewId)
+//     👉 FIXED: Returns direct 'reviewId' at top level for easy tracking!
+// =========================================================================
+export const updateOwnerReply = asyncHandler(async (req, res) => {
+    const { reviewId } = req.params;
+    const { replyText } = req.body;
+    const ownerId = req.user._id;
+
+    if (!replyText || replyText.trim() === "") {
+        return res.status(400).json({ success: false, message: "Updated reply content cannot be empty." });
+    }
+
+    const review = await Review.findById(reviewId).populate("property");
+    if (!review) {
+        return res.status(404).json({ success: false, message: "Review record not found." });
+    }
+
+    if (review.property.owner.toString() !== ownerId.toString()) {
+        return res.status(403).json({ success: false, message: "Unauthorized access to this review property context." });
+    }
+
+    review.reply = replyText.trim();
+    review.repliedAt = new Date(); 
+    await review.save();
+
+    return res.status(200).json({
+        success: true,
+        message: "Host reply description modified successfully.",
+        reviewId: review._id, // 🔥 Clean top-level reference ID key mapping
+        data: review
+    });
+});
+
+// 16. DELETE OWNER REPLY (DELETE /api/v2/properties/owner/review/reply/delete/:reviewId)
+// =========================================================================
+export const deleteOwnerReply = asyncHandler(async (req, res) => {
+    const { reviewId } = req.params;
+    const ownerId = req.user._id;
+
+    const review = await Review.findById(reviewId).populate("property");
+    if (!review) {
+        return res.status(404).json({ success: false, message: "Review record not found." });
+    }
+
+    if (review.property.owner.toString() !== ownerId.toString()) {
+        return res.status(403).json({ success: false, message: "Unauthorized. You cannot clear data configurations for this listing." });
+    }
+
+    review.reply = undefined;
+    review.repliedAt = undefined;
+    await review.save();
+
+    return res.status(200).json({
+        success: true,
+        message: "Host reply removed completely from the transaction card layout view."
+    });
+});

@@ -9,9 +9,13 @@ import {
     getPropertyReviews,
     updatePropertyReview,
     deletePropertyReview,
-    getMyProperties,    // 🔥 Injected for Flowchart Step 4
-    updateProperty,     // 🔥 Injected for Flowchart Step 4
-    deleteProperty      // 🔥 Injected for Flowchart Step 4
+    getMyProperties,         // Flowchart Step 4
+    updateProperty,          // Flowchart Step 4
+    deleteProperty,          // Flowchart Step 4
+    getOwnerPropertiesReviews, // 🔥 Injected for Owner Review Management
+    replyToReview,             // 🔥 Injected for Owner Review Management
+    updateOwnerReply,          // 🔥 Injected for Owner Review Management
+    deleteOwnerReply           // 🔥 Injected for Owner Review Management
 } from "../Controllers/property.controller.js";
 import { verifyJwt, authorizeRoles } from "../Middlewares/auth.middleware.js"; 
 import { uploadfile } from "../Middlewares/multer.middleware.js";
@@ -35,7 +39,7 @@ router.route("/favorite/:propertyId").post(verifyJwt, toggleFavoriteProperty);
 router.route("/favorites/my-list").get(verifyJwt, getMyFavorites);
 
 // =========================================================================
-// REVIEWS INTERACTION PIPELINE
+// REVIEWS INTERACTION PIPELINE (TENANT LEVEL)
 // =========================================================================
 router.route("/review/:propertyId").post(verifyJwt, authorizeRoles("user"), addPropertyReview);
 router.route("/reviews/:propertyId").get(verifyJwt, getPropertyReviews);
@@ -49,7 +53,7 @@ router.route("/review/delete/:reviewId").delete(verifyJwt, authorizeRoles("user"
 // A. Store Property with Multiple Images (Sends approval notification request to Admin)
 router.route("/store").post(
     verifyJwt, 
-    authorizeRoles("owner"), // Optional: Locks creation strictly to verified host accounts
+    authorizeRoles("owner"), 
     uploadfile.array("images", 10), 
     createProperty
 );
@@ -62,5 +66,21 @@ router.route("/update/:propertyId").put(verifyJwt, authorizeRoles("owner"), upda
 
 // D. Permanently Remove Property Listing from DB
 router.route("/delete/:propertyId").delete(verifyJwt, authorizeRoles("owner"), deleteProperty);
+
+// =========================================================================
+// 🔥 NEW FLOWCHART FEATURE: OWNER REVIEW MANAGEMENT PIPELINE
+// =========================================================================
+
+// E. Fetch all reviews left by users across this host's property listings
+router.route("/owner/reviews-feed").get(verifyJwt, authorizeRoles("owner"), getOwnerPropertiesReviews);
+
+// F. Reply/Comment on a specific user review card
+router.route("/owner/review/reply/:reviewId").post(verifyJwt, authorizeRoles("owner"), replyToReview);
+
+// G. Update/Edit an existing host reply description string
+router.route("/owner/review/reply/edit/:reviewId").put(verifyJwt, authorizeRoles("owner"), updateOwnerReply);
+
+// H. Delete/Wipe a host reply response from the card layout view
+router.route("/owner/review/reply/delete/:reviewId").delete(verifyJwt, authorizeRoles("owner"), deleteOwnerReply);
 
 export default router;
