@@ -6,6 +6,7 @@ import { Favorite } from "../Models/favorite.model.js";
 import { Review } from "../Models/review.model.js";
 import { Notification } from "../Models/notification.model.js";
 import { Booking } from "../Models/booking.model.js";
+import { Log } from "../Models/log.model.js"; 
 
 // ==========================================
 // 1. STORE PROPERTY (POST /api/v2/properties/store)
@@ -55,6 +56,12 @@ export const createProperty = asyncHandler(async (req, res) => {
         owner: req.user._id,
         isApproved: false
     });
+    // 🔥 FLOWCHART AUDIT LOG: Track property creation events
+await Log.create({
+    actionType: "PROPERTY_CREATED",
+    description: `Host [${req.user.username}] staged a new property listing: "${newProperty.title}" awaiting verification review.`,
+    performedBy: req.user._id
+});
 
     await Notification.create({
         ownerId: req.user._id,

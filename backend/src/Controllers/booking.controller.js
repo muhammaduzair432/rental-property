@@ -4,6 +4,7 @@ import { Notification } from "../Models/notification.model.js";
 import { ApiError } from "../Utils/apiError.js";
 import { asyncHandler } from "../Utils/asyncHandler.js";
 import { sendLiveNotification } from "../utils/socket.js";
+import { Log } from "../Models/log.model.js";
 
 // ==========================================
 // 1. CREATE BOOKING (POST /api/v2/bookings/request)
@@ -193,6 +194,12 @@ export const acceptBookingRequest = asyncHandler(async (req, res) => {
     // A. Update booking state status inside database to confirmed
     booking.status = "confirmed";
     await booking.save();
+    // 🔥 FLOWCHART AUDIT LOG: Track booking resolution updates
+await Log.create({
+    actionType: "BOOKING_RESOLUTION",
+    description: `Host [${req.user.username}] updated booking request ID [${booking._id}] status state to "${booking.status}".`,
+    performedBy: req.user._id
+});
 
     // B. FLOWCHART NOTIFICATION LOG: Store alert history in DB for the Tenant User
     const dbAlert = await Notification.create({
@@ -243,6 +250,13 @@ export const rejectBookingRequest = asyncHandler(async (req, res) => {
     // A. Update booking state status inside database to rejected
     booking.status = "rejected";
     await booking.save();
+
+    // 🔥 FLOWCHART AUDIT LOG: Track booking rejection updates
+await Log.create({
+    actionType: "BOOKING_REJECTION",
+    description: `Host [${req.user.username}] rejected booking request ID [${booking._id}] status state to "${booking.status}".`,
+    performedBy: req.user._id
+});
 
     // B. FLOWCHART NOTIFICATION LOG: Store alert history in DB for the Tenant User
     const dbAlert = await Notification.create({

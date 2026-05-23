@@ -7,6 +7,7 @@ import { uploadOnCloudinary } from "../Utils/cloudinary.js";
 import { generateOTP } from "../Utils/generateOtp.js";
 import { verifyOTP } from "./verifyOtp.controller.js";
 import { sendEmail } from "../Utils/sendEmail.js";
+import { Log } from "../Models/log.model.js";
 import jwt from "jsonwebtoken";
 
 const generateaccessTokenAndRefreshToken = async (userid) => {
@@ -66,6 +67,12 @@ const registerUser = asyncHandler(async (req, res, next) => {
     otpExpiry: Date.now() + 10 * 60 * 1000, // 10 min
     isVerified: false,
   });
+  // 🔥 FLOWCHART AUDIT LOG: Track new registrations automatically
+await Log.create({
+    actionType: "USER_REGISTRATION",
+    description: `New user registration completed for account: [${newUser.username}] with role: [${newUser.role}].`,
+    performedBy: newUser._id
+});
   // send email
   await sendEmail(user.email, `Your OTP is ${otp}`);
   const createdUser = await User.findById(user._id).select(
