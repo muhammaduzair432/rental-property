@@ -1,1 +1,18 @@
 @import "tailwindcss";
+
+
+/* 🔥 Enforcing missing theme animations directly inside Tailwind v4 configuration layer */
+@theme {
+  --animate-fadeIn: fadeIn 0.25s ease-out forwards;
+  --animate-shake: shake 0.2s ease-in-out 2;
+
+  @keyframes fadeIn {
+    0% { opacity: 0; transform: translateY(4px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+  }
+}
