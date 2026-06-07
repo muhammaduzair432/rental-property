@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import { useAuthActions } from "../hooks/useAuthActions.js"; // Custom hook for auth action simulations
-
+import registerUser from "../store/authSlice.js"
 
 export default function Auth() {
     // Tab States: "login" | "register" | "otp"
@@ -36,7 +36,7 @@ export default function Auth() {
     const handleRegisterSubmit = async (e) => {
         e.preventDefault();
         setUiError("");
-        
+
         // if (!avatar) {
         //     setUiError("Please select an avatar profile picture to upload.");
         //     return;
@@ -50,13 +50,18 @@ export default function Auth() {
         dataPayload.append("fullname", fullname);
         dataPayload.append("avatar", avatar); // Holds file binary buffer
 
-        const result = await register(dataPayload);
+        console.log(dataPayload);
+        
+        const result = await registerUser(...dataPayload);
         setIsSubmitting(false);
+
+        console.log(result);
+        
 
         if (result.success) {
             setAuthState("otp"); // Pivot form container context directly to token verify state
         } else {
-            setUiError("Registration failed. Account might already exist.");
+            setUiError("Registration failed. Account might already exist.", result);
         }
     };
 
@@ -81,7 +86,7 @@ export default function Auth() {
     return (
         <div className="min-h-[calc(100vh-37px)] w-full bg-[#f9f9ff] text-[#151c27] flex items-center justify-center p-4 sm:p-6 lg:p-8">
             <div className="w-full max-w-5xl bg-white rounded-md border border-[#e2e8f8] shadow-sm overflow-hidden grid grid-cols-1 md:grid-cols-2 min-h-[600px]">
-                
+
                 {/* LEFT BLOCK PANEL: DYNAMIC INTERACTIVE CORE FORMS CONTAINER */}
                 <div className="p-8 sm:p-12 flex flex-col justify-center space-y-6 bg-white animate-fadeIn">
                     <div className="space-y-1">
@@ -151,7 +156,7 @@ export default function Auth() {
                                 <input type="file" onChange={(e) => setAvatar(e.target.files[0])} accept="image/*" className="w-full text-xs text-[#45464c] file:mr-4 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-bold file:bg-[#151c27] file:text-white file:cursor-pointer hover:file:bg-black" />
                             </div>
                             <button type="submit" disabled={isSubmitting} className="w-full py-2.5 bg-[#151c27] text-white rounded font-medium text-xs tracking-wider uppercase hover:bg-black transition-all shadow-sm">
-                                {isSubmitting ? "Uploading Node Buffers..." : "Register "}
+                                {isSubmitting ? "Uploading hold on..." : "Register "}
                             </button>
                             <div className="text-center pt-1">
                                 <span className="text-xs text-[#45464c]">Already registered? </span>
@@ -178,7 +183,7 @@ export default function Auth() {
                                 ))}
                             </div>
                             <button className="w-full py-2.5 bg-[#151c27] text-white rounded font-medium text-xs tracking-wider uppercase hover:bg-black transition-all">
-                                Verify Token Sequence
+                                Verify otp
                             </button>
                         </div>
                     )}

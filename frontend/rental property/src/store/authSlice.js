@@ -1,11 +1,22 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import api from "../utils/api.js"
 
 const initialState = {
     user: null,         // Holds fields matching our database schema: { _id, username, role, avatar }
-    isAuthenticated: false,
+    isVerified: false,
     loading: false,
     error: null,
 };
+
+export const registerUser = createAsyncThunk("register user", (userData, thunkApi) => {
+    try {
+
+        const res = api.post("/registerUser", (userData))
+        return res
+    } catch (error) {
+        thunkApi.rejectWithValue(error.message)
+    }
+})
 
 const authSlice = createSlice({
     name: "auth",
@@ -17,18 +28,18 @@ const authSlice = createSlice({
         },
         authSuccess: (state, action) => {
             state.loading = false;
-            state.isAuthenticated = true;
+            state.isVerified = true;
             state.user = action.payload; // Binds response data dynamically
         },
         authFailure: (state, action) => {
             state.loading = false;
-            state.isAuthenticated = false;
+            state.isVerified = false;
             state.user = null;
             state.error = action.payload;
         },
         logoutSuccess: (state) => {
             state.user = null;
-            state.isAuthenticated = false;
+            state.isVerified = false;
             state.loading = false;
             state.error = null;
         },
@@ -36,6 +47,18 @@ const authSlice = createSlice({
             state.error = null;
         }
     },
+    extraReducers:(builder) => {
+        builder
+            .addCase(registerUser.fulfilled, (state,action) => {
+                state.isVerified =  action.payload.data.isVerified === false ? false : true
+            })
+            .addCase(registerUser.pending, (state,action) => {
+                state.loading = true
+            })
+            .addCase(registerUser.rejected, (state,action) => {
+                state.error = action.payload
+            })
+    }
 });
 
 export const { authStart, authSuccess, authFailure, logoutSuccess, clearAuthError } = authSlice.actions;

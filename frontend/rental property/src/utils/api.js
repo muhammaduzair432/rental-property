@@ -2,7 +2,7 @@ import axios from "axios";
 
 const api = axios.create({
     baseURL: "http://localhost:8000/api/v2",
-    withCredentials: true, // ⚠️ CRITICAL: Forces browser cookies/JWT tokens to pass on every request
+    withCredentials: true,
     headers: {
         "Content-Type": "application/json"
     }

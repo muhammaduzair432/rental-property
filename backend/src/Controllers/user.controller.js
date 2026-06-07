@@ -70,8 +70,8 @@ const registerUser = asyncHandler(async (req, res, next) => {
   // 🔥 FLOWCHART AUDIT LOG: Track new registrations automatically
 await Log.create({
     actionType: "USER_REGISTRATION",
-    description: `New user registration completed for account: [${newUser.username}] with role: [${newUser.role}].`,
-    performedBy: newUser._id
+    description: `New user registration completed for account: [${user.username}] with role: [${user.role}].`,
+    performedBy: user._id
 });
   // send email
   await sendEmail(user.email, `Your OTP is ${otp}`);
