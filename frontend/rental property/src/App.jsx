@@ -1,11 +1,15 @@
 import React from "react";
-import Auth from "./pages/Auth";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Auth from "./pages/Auth.jsx";
+import Dashboard from "./layouts/DashBoardLayout.jsx";
 
 export default function App() {
   return (
-    <div className="w-full min-h-screen bg-[#f9f9ff]">
-      {/* 🚀 Rendering your custom Login, Register, and OTP interface screen */}
-      <Auth />
-    </div>
+    <BrowserRouter> {/* 👈 This context layer MUST wrap the <Routes> structure to prevent useContext errors! */}
+      <Routes>
+        <Route path="/auth" element={<Auth />} />
+        <Route path="/dashboard" element={<DashBoardLayout />} />
+      </Routes>
+    </BrowserRouter>
   );
 }

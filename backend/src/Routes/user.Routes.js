@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { registerUser } from "../Controllers/user.controller.js";
+import { registerUser,resendOTP} from "../Controllers/user.controller.js";
 import { uploadfile } from "../Middlewares/multer.middleware.js";
 import { verifyOTP } from "../Controllers/verifyOtp.controller.js";
 import { loginUser , logoutUser, updateProfile} from "../Controllers/user.controller.js";
@@ -7,12 +7,15 @@ import { verifyJwt } from "../Middlewares/auth.middleware.js";
 import { becomeOwner, promoteToAdmin } from "../Controllers/user.controller.js";
 import { authorizeRoles } from "../Middlewares/auth.middleware.js";
 
+
+
 const router = Router();
 router.route("/registerUser").post(uploadfile.single("avatar"), registerUser);
 router.route("/verifyOTP").post(verifyOTP);
 router.route("/loginUser").post(loginUser);
 // 🔥 ADDED: Secure Logout Endpoint
 router.route("/logout").post(verifyJwt, logoutUser)
+router.route("/resend-otp").post(resendOTP);
 
 // ==========================================
 // 🔥 THE FIX: PROFILE UPDATE PATH ROUTE
