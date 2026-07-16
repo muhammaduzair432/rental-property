@@ -1,15 +1,16 @@
 import React from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom"; // 👈 Imported Navigate
 import Auth from "./pages/Auth.jsx";
-import Dashboard from "./layouts/DashBoardLayout.jsx";
+import Dashboard from "./layouts/DashBoardLayout.jsx"; 
 
 export default function App() {
   return (
-    <BrowserRouter> {/* 👈 This context layer MUST wrap the <Routes> structure to prevent useContext errors! */}
-      <Routes>
-        <Route path="/auth" element={<Auth />} />
-        <Route path="/dashboard" element={<DashBoardLayout />} />
-      </Routes>
-    </BrowserRouter>
+    <Routes>
+      {/* Dynamic Fallback: If a user hits "/", automatically redirect them straight to the auth page layout! */}
+      <Route path="/" element={<Navigate to="/auth" replace />} />
+      
+      <Route path="/auth" element={<Auth />} />
+      <Route path="/dashboard" element={<Dashboard />} />
+    </Routes>
   );
 }

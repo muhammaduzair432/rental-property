@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { register, verifyOtp, resendOtp, login } from "../store/authSlice.js"; 
+import { registerUser, verifyOtp, resendOtp, loginUser } from "../store/authSlice.js"; 
 import { useNavigate } from "react-router-dom";
 
 export default function Auth() {
@@ -54,7 +54,7 @@ export default function Auth() {
         setIsSubmitting(true);
 
         try {
-            await dispatch(login({ email, password })).unwrap();
+            await dispatch(loginUser({ email, password })).unwrap();
             setIsSubmitting(false);
             // Dynamic redirection push to role-based system view!
             navigate("/dashboard");

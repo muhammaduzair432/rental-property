@@ -19,7 +19,7 @@ export const registerUser = createAsyncThunk("auth/registerUser", async (userDat
     }
 });
 
-// 2. Asynchronous Thunk: OTP Security Code Verification (NEW)
+// 2. Asynchronous Thunk: OTP Security Code Verification
 export const verifyOtp = createAsyncThunk("auth/verifyOtp", async (otpData, thunkApi) => {
     try {
         // Expects data format: { email: "...", otp: "123456" }
@@ -30,12 +30,25 @@ export const verifyOtp = createAsyncThunk("auth/verifyOtp", async (otpData, thun
         return thunkApi.rejectWithValue(errorMessage);
     }
 });
-// 3. Asynchronous Thunk: Resend OTP Code Request (NEW)
+
+// 3. Asynchronous Thunk: Resend OTP Code Request
 export const resendOtp = createAsyncThunk("auth/resendOtp", async (emailData, thunkApi) => {
     try {
         // emailData format: { email: "user@domain.com" }
         const res = await api.post("users/resend-otp", emailData);
         return res.data;
+    } catch (error) {
+        const errorMessage = error.response?.data?.message || error.message;
+        return thunkApi.rejectWithValue(errorMessage);
+    }
+});
+
+// 4. 🔥 NEW: Asynchronous Thunk for Login User (Fixes the named export error!)
+export const loginUser = createAsyncThunk("auth/loginUser", async (credentials, thunkApi) => {
+    try {
+        // credentials format: { email, password }
+        const res = await api.post("users/loginUser", credentials);
+        return res.data; // Expecting backend to return { success: true, user: { ... } }
     } catch (error) {
         const errorMessage = error.response?.data?.message || error.message;
         return thunkApi.rejectWithValue(errorMessage);
@@ -81,7 +94,6 @@ const authSlice = createSlice({
             .addCase(registerUser.fulfilled, (state, action) => {
                 state.loading = false;
                 state.error = null;
-                // Temporarily track the user credentials context
                 state.user = action.payload?.data ?? null;
                 state.isVerified = Boolean(action.payload?.data?.isVerified);
             })
@@ -90,7 +102,7 @@ const authSlice = createSlice({
                 state.error = action.payload || "Registration failed";
             })
             
-            // OTP Verification Lifecycle Hooks (NEW)
+            // OTP Verification Lifecycle Hooks
             .addCase(verifyOtp.pending, (state) => {
                 state.loading = true;
                 state.error = null;
@@ -99,7 +111,6 @@ const authSlice = createSlice({
                 state.loading = false;
                 state.error = null;
                 state.isVerified = true;
-                // Bind the verified user data to the active state session
                 if (action.payload?.user) {
                     state.user = action.payload.user;
                 }
@@ -107,6 +118,37 @@ const authSlice = createSlice({
             .addCase(verifyOtp.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload || "Verification failed";
+            })
+
+            // Resend OTP Lifecycle Hooks
+            .addCase(resendOtp.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(resendOtp.fulfilled, (state) => {
+                state.loading = false;
+                state.error = null;
+            })
+            .addCase(resendOtp.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload || "Failed to resend code";
+            })
+
+            // 🔥 NEW: Login User Lifecycle Hooks
+            .addCase(loginUser.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(loginUser.fulfilled, (state, action) => {
+                state.loading = false;
+                state.error = null;
+                // Bind the authenticated user profile object straight to state session
+                state.user = action.payload?.user ?? action.payload?.data ?? null;
+                state.isVerified = true;
+            })
+            .addCase(loginUser.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload || "Login failed";
             });
     }
 });
