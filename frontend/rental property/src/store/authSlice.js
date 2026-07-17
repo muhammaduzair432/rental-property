@@ -1,11 +1,16 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import api from "../utils/api.js";
+import api from "../utils/api.js"; // 👈 Utilizing your custom Axios instance configuration
 
 const initialState = {
     user: null,         // Profiles matching DB schema: { _id, username, role, avatar }
     isVerified: false,
     loading: false,
     error: null,
+    
+    // 🔥 New: Marketplace Global Collection States
+    properties: [],
+    loadingProperties: false,
+    propertiesError: null,
 };
 
 // 1. Asynchronous Thunk: User Registration
@@ -22,7 +27,6 @@ export const registerUser = createAsyncThunk("auth/registerUser", async (userDat
 // 2. Asynchronous Thunk: OTP Security Code Verification
 export const verifyOtp = createAsyncThunk("auth/verifyOtp", async (otpData, thunkApi) => {
     try {
-        // Expects data format: { email: "...", otp: "123456" }
         const res = await api.post("users/verifyOTP", otpData);
         return res.data;
     } catch (error) {
@@ -34,7 +38,6 @@ export const verifyOtp = createAsyncThunk("auth/verifyOtp", async (otpData, thun
 // 3. Asynchronous Thunk: Resend OTP Code Request
 export const resendOtp = createAsyncThunk("auth/resendOtp", async (emailData, thunkApi) => {
     try {
-        // emailData format: { email: "user@domain.com" }
         const res = await api.post("users/resend-otp", emailData);
         return res.data;
     } catch (error) {
@@ -43,12 +46,30 @@ export const resendOtp = createAsyncThunk("auth/resendOtp", async (emailData, th
     }
 });
 
-// 4. 🔥 NEW: Asynchronous Thunk for Login User (Fixes the named export error!)
+// 4. Asynchronous Thunk: User Login
 export const loginUser = createAsyncThunk("auth/loginUser", async (credentials, thunkApi) => {
     try {
-        // credentials format: { email, password }
         const res = await api.post("users/loginUser", credentials);
-        return res.data; // Expecting backend to return { success: true, user: { ... } }
+        return res.data; 
+    } catch (error) {
+        const errorMessage = error.response?.data?.message || error.message;
+        return thunkApi.rejectWithValue(errorMessage);
+    }
+});
+
+// 🌟 Asynchronous Thunk for Browsing Properties
+export const browseProperties = createAsyncThunk("auth/browseProperties", async (_, thunkApi) => {
+    try {
+        const res = await api.get("properties/browse");
+        
+        // 🔍 DEBUG LOG: Look in your browser console to see exactly what this prints!
+        console.log("=== BACKEND RAW RESPONSE DATA ===", res.data);
+        
+        // Fully flexible return that checks every common response wrapper
+        if (res.data && typeof res.data === 'object') {
+            return res.data.properties || res.data.data || res.data.listings || (Array.isArray(res.data) ? res.data : []);
+        }
+        return [];
     } catch (error) {
         const errorMessage = error.response?.data?.message || error.message;
         return thunkApi.rejectWithValue(errorMessage);
@@ -79,6 +100,9 @@ const authSlice = createSlice({
             state.isVerified = false;
             state.loading = false;
             state.error = null;
+            // Clear local listings memory upon signout lifecycle trigger
+            state.properties = [];
+            state.propertiesError = null;
         },
         clearAuthError: (state) => {
             state.error = null;
@@ -134,7 +158,7 @@ const authSlice = createSlice({
                 state.error = action.payload || "Failed to resend code";
             })
 
-            // 🔥 NEW: Login User Lifecycle Hooks
+            // Login User Lifecycle Hooks
             .addCase(loginUser.pending, (state) => {
                 state.loading = true;
                 state.error = null;
@@ -142,13 +166,27 @@ const authSlice = createSlice({
             .addCase(loginUser.fulfilled, (state, action) => {
                 state.loading = false;
                 state.error = null;
-                // Bind the authenticated user profile object straight to state session
                 state.user = action.payload?.user ?? action.payload?.data ?? null;
                 state.isVerified = true;
             })
             .addCase(loginUser.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload || "Login failed";
+            })
+
+            // 🌟 NEW: Properties Marketplace Pipeline Lifecycle Hooks
+            .addCase(browseProperties.pending, (state) => {
+                state.loadingProperties = true;
+                state.propertiesError = null;
+            })
+            .addCase(browseProperties.fulfilled, (state, action) => {
+                state.loadingProperties = false;
+                state.propertiesError = null;
+                state.properties = action.payload; // Successfully mapped array to store memory
+            })
+            .addCase(browseProperties.rejected, (state, action) => {
+                state.loadingProperties = false;
+                state.propertiesError = action.payload || "Failed to parse database listings";
             });
     }
 });
