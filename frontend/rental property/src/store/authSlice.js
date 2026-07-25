@@ -1,12 +1,14 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import api from "../utils/api.js"; // 👈 Utilizing your custom Axios instance configuration
 
+const getUser = localStorage.getItem("user") === "undefined" ? null : JSON.parse(localStorage.getItem("user"));
+
 const initialState = {
-    user: null,         // Profiles matching DB schema: { _id, username, role, avatar }
+    user: getUser,
     isVerified: false,
     loading: false,
     error: null,
-    
+
     // 🔥 New: Marketplace Global Collection States
     properties: [],
     loadingProperties: false,
@@ -50,7 +52,8 @@ export const resendOtp = createAsyncThunk("auth/resendOtp", async (emailData, th
 export const loginUser = createAsyncThunk("auth/loginUser", async (credentials, thunkApi) => {
     try {
         const res = await api.post("users/loginUser", credentials);
-        return res.data; 
+        localStorage.setItem("user", JSON.stringify(res.data.data.user));
+        return res.data.data;
     } catch (error) {
         const errorMessage = error.response?.data?.message || error.message;
         return thunkApi.rejectWithValue(errorMessage);
@@ -61,10 +64,10 @@ export const loginUser = createAsyncThunk("auth/loginUser", async (credentials, 
 export const browseProperties = createAsyncThunk("auth/browseProperties", async (_, thunkApi) => {
     try {
         const res = await api.get("properties/browse");
-        
+
         // 🔍 DEBUG LOG: Look in your browser console to see exactly what this prints!
         console.log("=== BACKEND RAW RESPONSE DATA ===", res.data);
-        
+
         // Fully flexible return that checks every common response wrapper
         if (res.data && typeof res.data === 'object') {
             return res.data.properties || res.data.data || res.data.listings || (Array.isArray(res.data) ? res.data : []);
@@ -87,7 +90,7 @@ const authSlice = createSlice({
         authSuccess: (state, action) => {
             state.loading = false;
             state.isVerified = true;
-            state.user = action.payload; 
+            state.user = action.payload;
         },
         authFailure: (state, action) => {
             state.loading = false;
@@ -125,7 +128,7 @@ const authSlice = createSlice({
                 state.loading = false;
                 state.error = action.payload || "Registration failed";
             })
-            
+
             // OTP Verification Lifecycle Hooks
             .addCase(verifyOtp.pending, (state) => {
                 state.loading = true;

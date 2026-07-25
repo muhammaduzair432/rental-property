@@ -10,7 +10,7 @@ app.use(
   cors({
     // Replace with your exact React frontend URL (e.g., http://localhost:5173 for Vite or 3000 for CRA)
     // Best practice: use an environment variable so it adapts to production easily
-    origin: process.env.CORS_ORIGIN || "http://localhost:5174", 
+    origin: process.env.CORS_ORIGIN || "http://localhost:5173", 
     
     // 2. THIS IS CRITICAL: Allows cookies to be sent back and forth
     credentials: true, 

@@ -2,12 +2,18 @@ import React, { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Navigate, useNavigate } from "react-router-dom";
 import { logoutSuccess } from "../store/authSlice.js";
+import api from "../utils/api.js"; // Import the API utility for making requests
 import UserDashboard from "../components/UserDashboard.jsx";
 
 export default function DashBoardLayout() {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const { user } = useSelector((state) => state.auth);
+
+    const getProperties = async () => {
+        const response = await api.get("/browse");
+        console.log(response.data);
+    }
     
     // States for Search query inputs
     const [searchQuery, setSearchQuery] = useState("");
@@ -97,7 +103,7 @@ export default function DashBoardLayout() {
             {/* 📺 BODY MAIN CONTENT SECTION */}
             <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
                 {user.role === "user" ? (
-                    <UserDashboard searchQuery={searchQuery} selectedFilter={selectedFilter} />
+                <UserDashboard searchQuery={searchQuery} selectedFilter={selectedFilter} />
                 ) : (
                     <div className="bg-white p-8 rounded-md border border-[#e2e8f8] text-center text-xs font-bold uppercase tracking-wider text-gray-400">
                         Please sign in with a standard User account to view this directory stream.

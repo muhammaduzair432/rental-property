@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { browseProperties } from "../store/authSlice.js"; 
+import { browseProperties } from "../store/authSlice.js";
 
 export default function UserDashboard({ searchQuery = "", selectedFilter = "all" }) {
     const dispatch = useDispatch();
@@ -21,13 +21,21 @@ export default function UserDashboard({ searchQuery = "", selectedFilter = "all"
 
     const filteredProperties = safeProperties.filter(item => {
         if (!item) return false;
-        const matchesSearch = (item.title || "").toLowerCase().includes(searchQuery.toLowerCase()) || 
-                              (item.description || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-                              (item.location || "").toLowerCase().includes(searchQuery.toLowerCase());
-        
-        const matchesType = selectedFilter === "all" || (item.type || "").toLowerCase() === selectedFilter.toLowerCase();
+        const matchesSearch = (item.title || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (item.description || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (item.location || "").toLowerCase().includes(searchQuery.toLowerCase());
+        const isHouse = (item.description || "").toLowerCase().includes("house");
+        const isVilla = (item.description || "").toLowerCase().includes("villa");
+        const isApartment = (item.description || "").toLowerCase().includes("apartment");
+
+        const matchesType = selectedFilter === "all" || (selectedFilter === "house" && isHouse) ||
+            (selectedFilter === "villa" && isVilla) ||
+            (selectedFilter === "apartment" && isApartment);
+        console.log("=== FILTER CHECK ===", { item, matchesSearch, matchesType });
         return matchesSearch && matchesType;
     });
+
+    console.log("=== FILTERED PROPERTIES ===", filteredProperties);
 
     if (loadingProperties) {
         return (
@@ -57,7 +65,7 @@ export default function UserDashboard({ searchQuery = "", selectedFilter = "all"
 
             {filteredProperties.length === 0 ? (
                 <div className="bg-white p-12 border border-dashed border-[#e2e8f8] text-center text-xs font-bold text-gray-400 uppercase rounded-md tracking-wider">
-                    No verified properties matched your active searching parameters. 
+                    No verified properties matched your active searching parameters.
                     <br />
                     <span className="text-[10px] lowercase text-gray-300 font-mono block mt-2">
                         (Check browser console logs to verify database payload array length)
@@ -67,7 +75,7 @@ export default function UserDashboard({ searchQuery = "", selectedFilter = "all"
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {filteredProperties.map((item) => (
                         <div key={item._id || item.id} className="bg-white border border-[#e2e8f8] rounded-md overflow-hidden shadow-xs flex flex-col justify-between hover:border-gray-400 transition-all animate-fadeIn">
-                            
+
                             <div className="h-48 bg-[#f9f9ff] relative border-b border-[#e2e8f8]">
                                 {item.image || item.images?.[0] ? (
                                     <img src={item.image || item.images?.[0]} alt={item.title} className="w-full h-full object-cover" />

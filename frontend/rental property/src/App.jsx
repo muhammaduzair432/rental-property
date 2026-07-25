@@ -4,6 +4,8 @@ import Auth from "./pages/Auth.jsx";
 import Dashboard from "./layouts/DashBoardLayout.jsx"; 
 
 export default function App() {
+  
+
   return (
     <Routes>
       {/* Dynamic Fallback: If a user hits "/", automatically redirect them straight to the auth page layout! */}
