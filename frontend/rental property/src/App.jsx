@@ -2,6 +2,7 @@ import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom"; // 👈 Imported Navigate
 import Auth from "./pages/Auth.jsx";
 import Dashboard from "./layouts/DashBoardLayout.jsx"; 
+import PropertyDetailsModal from "./components/PropertyDetailsModal.jsx";
 
 export default function App() {
   
@@ -13,6 +14,8 @@ export default function App() {
       
       <Route path="/auth" element={<Auth />} />
       <Route path="/dashboard" element={<Dashboard />} />
+      {/* 🌟 Dedicated Property Details Page */}
+        <Route path="/property/:propertyId" element={<PropertyDetailsModal />} />
     </Routes>
   );
 }

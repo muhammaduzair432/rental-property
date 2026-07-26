@@ -82,13 +82,20 @@ export default function DashBoardLayout() {
                         
                         {/* Conditional Avatar System: Shows avatar if uploaded, otherwise absolutely blank gray box */}
                         {user.avatar ? (
-                            <img src={user.avatar} alt="avatar" className="w-9 h-9 rounded-md border border-[#e2e8f8] object-cover" />
-                        ) : (
-                            <div className="w-9 h-9 rounded-md bg-gray-200 border border-[#e2e8f8] flex items-center justify-center text-[10px] font-bold text-gray-400 uppercase">
-                                --
-                            </div>
-                        )}
-
+                            <img src={user.avatar} alt="avatar" className="w-12 h-12 rounded-full border border-[#e2e8f8] object-cover" />
+                        ) : (<div className="w-8 h-8 rounded-full border border-[#e2e8f8] bg-blue-50 flex items-center justify-center overflow-hidden">
+    <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        className="w-6 h-6"
+    >
+        <circle cx="12" cy="8" r="4" fill="#3B82F6" />
+        <path
+            d="M5 20c0-3.3 3-6 7-6s7 2.7 7 6"
+            fill="#3B82F6"
+        />
+    </svg>
+</div>)}
                         <button 
                             onClick={handleSystemLogout}
                             className="text-[10px] font-bold uppercase tracking-wider px-3 py-2 border border-[#e2e8f8] text-[#151c27] bg-[#f9f9ff] rounded-md hover:bg-black hover:text-white transition-all cursor-pointer"

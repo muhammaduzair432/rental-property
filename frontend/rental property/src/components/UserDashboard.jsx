@@ -1,63 +1,97 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { browseProperties } from "../store/authSlice.js";
+import { fetchProperties } from "../store/propertySlice.js"; 
+import PropertyDetailsModal from "./PropertyDetailsModal.jsx";
+import { useNavigate } from "react-router-dom";
 
 export default function UserDashboard({ searchQuery = "", selectedFilter = "all" }) {
     const dispatch = useDispatch();
+    const navigate = useNavigate();
 
-    // 🕵️ Inspect the global auth state block
-    const authState = useSelector((state) => state.auth);
-    const { properties, loadingProperties, propertiesError } = authState;
+    // 🕵️ Selected property ID state for opening the details modal
+    const [selectedPropertyId, setSelectedPropertyId] = useState(null);
+
+    // 🕵️ Inspect the global properties state block from propertySlice
+
+    // const { properties, loading, error } = propertiesState;
+    const propertiesState = useSelector((state) => state.properties) || {};
+const { properties = [], loadingList = false, errorList = null } = propertiesState;
 
     useEffect(() => {
-        dispatch(browseProperties());
+        dispatch(fetchProperties());
     }, [dispatch]);
 
     // 🔍 DEBUG LOG: Check what the component is receiving from Redux
-    console.log("=== RENDER STATE CHECK ===", { properties, loadingProperties });
+    // console.log("=== RENDER STATE CHECK ===", { properties, loadinglist });
 
     // Fallback safely to an empty array if properties is undefined
     const safeProperties = Array.isArray(properties) ? properties : [];
 
+    // 🎯 Your exact filter logic maintained cleanly
     const filteredProperties = safeProperties.filter(item => {
         if (!item) return false;
+
         const matchesSearch = (item.title || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
             (item.description || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
             (item.location || "").toLowerCase().includes(searchQuery.toLowerCase());
-        const isHouse = (item.description || "").toLowerCase().includes("house");
-        const isVilla = (item.description || "").toLowerCase().includes("villa");
-        const isApartment = (item.description || "").toLowerCase().includes("apartment");
 
-        const matchesType = selectedFilter === "all" || (selectedFilter === "house" && isHouse) ||
+        const isHouse = (item.description || "").toLowerCase().includes("house") || (item.type || "").toLowerCase() === "house";
+        const isVilla = (item.description || "").toLowerCase().includes("villa") || (item.type || "").toLowerCase() === "villa";
+        const isApartment = (item.description || "").toLowerCase().includes("apartment") || (item.type || "").toLowerCase() === "apartment";
+
+        const matchesType = selectedFilter === "all" || 
+            (selectedFilter === "house" && isHouse) ||
             (selectedFilter === "villa" && isVilla) ||
             (selectedFilter === "apartment" && isApartment);
-        console.log("=== FILTER CHECK ===", { item, matchesSearch, matchesType });
+
+        
         return matchesSearch && matchesType;
     });
 
-    console.log("=== FILTERED PROPERTIES ===", filteredProperties);
 
-    if (loadingProperties) {
-        return (
-            <div className="flex flex-col items-center justify-center p-12 space-y-3">
-                <div className="w-6 h-6 border-2 border-[#151c27] border-t-transparent rounded-full animate-spin"></div>
-                <div className="text-[10px] font-bold tracking-widest text-gray-400 uppercase font-mono">
-                    Redux Thunk dispatch syncing database pipelines...
-                </div>
+
+    // if (loading) {
+    //     return (
+    //         <div className="flex flex-col items-center justify-center p-12 space-y-3">
+    //             <div className="w-6 h-6 border-2 border-[#151c27] border-t-transparent rounded-full animate-spin"></div>
+    //             <div className="text-[10px] font-bold tracking-widest text-gray-400 uppercase font-mono">
+    //                 Redux Thunk dispatch syncing database pipelines...
+    //             </div>
+    //         </div>
+    //     );
+    // }
+
+    // Use loadingList here so opening the modal won't re-render the dashboard background!
+if (loadingList) {
+    return (
+        <div className="flex flex-col items-center justify-center p-12 space-y-3">
+            <div className="w-6 h-6 border-2 border-[#151c27] border-t-transparent rounded-full animate-spin"></div>
+            <div className="text-[10px] font-bold tracking-widest text-gray-400 uppercase font-mono">
+                Syncing marketplace catalog...
             </div>
-        );
-    }
+        </div>
+    );
+}
 
-    if (propertiesError) {
+    if (errorList) {
         return (
             <div className="bg-red-50 text-red-700 p-4 text-xs font-bold uppercase border border-red-200 rounded-md tracking-wider">
-                ⚠️ Error: {propertiesError}
+                ⚠️ Error: {errorList}
             </div>
         );
     }
 
     return (
         <div className="space-y-6">
+            
+            {/* 🔍 PROPERTY DETAILS MODAL (Triggers when selectedPropertyId is set) */}
+            {selectedPropertyId && (
+                <PropertyDetailsModal 
+                    propertyId={selectedPropertyId} 
+                    onClose={() => setSelectedPropertyId(null)} 
+                />
+            )}
+
             <div>
                 <span className="text-[9px] font-bold text-[#7d8497] uppercase tracking-widest">REAL ESTATE CATALOG</span>
                 <h2 className="text-xl font-bold uppercase tracking-tight text-[#151c27]">Available Accommodations</h2>
@@ -97,9 +131,13 @@ export default function UserDashboard({ searchQuery = "", selectedFilter = "all"
                                     <p className="text-[11px] text-[#45464c] line-clamp-2 leading-relaxed">{item.description || "No descriptive logs registered on server storage nodes."}</p>
                                 </div>
 
-                                <button className="w-full py-2 bg-white hover:bg-[#151c27] text-[#151c27] hover:text-white border border-[#151c27] text-[10px] font-bold uppercase tracking-widest rounded transition-all cursor-pointer text-center">
-                                    View Details & Book
-                                </button>
+                                {/* 🎯 Triggers modal popup with the property ID */}
+                             <button 
+    onClick={() => navigate(`/property/${item._id || item.id}`)}
+    className="w-full py-2 bg-white hover:bg-[#151c27] text-[#151c27] hover:text-white border border-[#151c27] text-[10px] font-bold uppercase tracking-widest rounded transition-all cursor-pointer text-center"
+>
+    View Details & Book
+</button>
                             </div>
 
                         </div>
