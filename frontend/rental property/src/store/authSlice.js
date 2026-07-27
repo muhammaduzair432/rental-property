@@ -9,7 +9,7 @@ const initialState = {
     loading: false,
     error: null,
 
-    // 🔥 New: Marketplace Global Collection States
+    // 🔥 Marketplace Global Collection States
     properties: [],
     loadingProperties: false,
     propertiesError: null,
@@ -91,6 +91,9 @@ const authSlice = createSlice({
             state.loading = false;
             state.isVerified = true;
             state.user = action.payload;
+            if (action.payload) {
+                localStorage.setItem("user", JSON.stringify(action.payload));
+            }
         },
         authFailure: (state, action) => {
             state.loading = false;
@@ -106,10 +109,21 @@ const authSlice = createSlice({
             // Clear local listings memory upon signout lifecycle trigger
             state.properties = [];
             state.propertiesError = null;
+            localStorage.removeItem("user");
         },
         clearAuthError: (state) => {
             state.error = null;
-        }
+        },
+        // 🔑 NEW REDUCER: Updates active user state and persists changes to localStorage
+        updateAuthUser: (state, action) => {
+            const updatedUser = action.payload 
+                ? { ...state.user, ...action.payload } 
+                : state.user;
+            state.user = updatedUser;
+            if (updatedUser) {
+                localStorage.setItem("user", JSON.stringify(updatedUser));
+            }
+        },
     },
     extraReducers: (builder) => {
         builder
@@ -140,6 +154,7 @@ const authSlice = createSlice({
                 state.isVerified = true;
                 if (action.payload?.user) {
                     state.user = action.payload.user;
+                    localStorage.setItem("user", JSON.stringify(action.payload.user));
                 }
             })
             .addCase(verifyOtp.rejected, (state, action) => {
@@ -177,7 +192,7 @@ const authSlice = createSlice({
                 state.error = action.payload || "Login failed";
             })
 
-            // 🌟 NEW: Properties Marketplace Pipeline Lifecycle Hooks
+            // Properties Marketplace Pipeline Lifecycle Hooks
             .addCase(browseProperties.pending, (state) => {
                 state.loadingProperties = true;
                 state.propertiesError = null;
@@ -185,7 +200,7 @@ const authSlice = createSlice({
             .addCase(browseProperties.fulfilled, (state, action) => {
                 state.loadingProperties = false;
                 state.propertiesError = null;
-                state.properties = action.payload; // Successfully mapped array to store memory
+                state.properties = action.payload;
             })
             .addCase(browseProperties.rejected, (state, action) => {
                 state.loadingProperties = false;
@@ -194,5 +209,13 @@ const authSlice = createSlice({
     }
 });
 
-export const { authStart, authSuccess, authFailure, logoutSuccess, clearAuthError } = authSlice.actions;
+export const { 
+    authStart, 
+    authSuccess, 
+    authFailure, 
+    logoutSuccess, 
+    clearAuthError, 
+    updateAuthUser 
+} = authSlice.actions;
+
 export default authSlice.reducer;
