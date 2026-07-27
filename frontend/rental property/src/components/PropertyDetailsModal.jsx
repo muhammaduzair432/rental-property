@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchPropertyById } from "../store/propertySlice.js";
-import api from "../utils/api.js";
+import { createBooking, clearBookingState } from "../store/bookingSlice.js"; // 👈 Import Redux booking action
 import PropertyComments from "../components/PropertyComments.jsx";
 
 export default function PropertyDetailsPage() {
@@ -14,43 +14,76 @@ export default function PropertyDetailsPage() {
         (state) => state.properties || {}
     );
 
-    // Gallery State
-    const [activeImageIndex, setActiveImageIndex] = useState(0);
+    // 👈 Extract Redux Booking State
+    const { loading: bookingLoading, error: bookingError, successMessage } = useSelector(
+        (state) => state.booking || {}
+    );
 
-    // Booking Form State
+    // Gallery & Form State
+    const [activeImageIndex, setActiveImageIndex] = useState(0);
     const [checkIn, setCheckIn] = useState("");
     const [checkOut, setCheckOut] = useState("");
-    const [bookingStatus, setBookingStatus] = useState(null);
+    const [localError, setLocalError] = useState(null);
 
-    // Fetch details on mount
+    // Fetch property details on mount
     useEffect(() => {
         if (propertyId) {
             dispatch(fetchPropertyById(propertyId));
         }
+        return () => {
+            dispatch(clearBookingState());
+        };
     }, [dispatch, propertyId]);
 
-    // Submit Booking Request
+    // Price & Duration Calculation
+    const pricePerNight = selectedProperty?.pricePerNight || selectedProperty?.price || 0;
+
+    const calculateNights = () => {
+        if (!checkIn || !checkOut) return 0;
+        const start = new Date(checkIn);
+        const end = new Date(checkOut);
+        const diffDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+        return diffDays > 0 ? diffDays : 0;
+    };
+
+    const totalNights = calculateNights();
+    const totalPrice = totalNights * pricePerNight;
+
+    // Handle Redux Booking Submission
+// Handle Redux Booking Submission
     const handleBooking = async (e) => {
         e.preventDefault();
+        setLocalError(null);
+
         if (!checkIn || !checkOut) {
-            setBookingStatus({ type: "error", text: "Please select both check-in and check-out dates." });
+            setLocalError("Please select both check-in and check-out dates.");
             return;
         }
 
-        try {
-            const res = await api.post("bookings/create", {
-                propertyId,
+        if (totalNights <= 0) {
+            setLocalError("Check-out date must be after check-in date.");
+            return;
+        }
+
+        const targetPropertyId = propertyId || selectedProperty?._id || selectedProperty?.id;
+
+        // 🚀 Dispatch createBooking thunk matching POST /bookings/request
+        const result = await dispatch(
+            createBooking({
+                propertyId: targetPropertyId,
+                property: targetPropertyId,
                 startDate: checkIn,
-                endDate: checkOut
-            });
-            if (res.data?.success || res.status === 200 || res.status === 201) {
-                setBookingStatus({ type: "success", text: "Booking request submitted successfully!" });
-            }
-        } catch (err) {
-            setBookingStatus({ 
-                type: "error", 
-                text: err.response?.data?.message || "Property is unavailable for these dates." 
-            });
+                endDate: checkOut,
+                checkIn: checkIn,
+                checkOut: checkOut,
+                totalNights,
+                totalPrice,
+            })
+        );
+
+        if (createBooking.fulfilled.match(result)) {
+            setCheckIn("");
+            setCheckOut("");
         }
     };
 
@@ -88,7 +121,7 @@ export default function PropertyDetailsPage() {
             ? [selectedProperty.image] 
             : [];
 
-    // Extract amenities (supports array or comma-separated string)
+    // Extract amenities
     const amenitiesList = Array.isArray(selectedProperty.amenities)
         ? selectedProperty.amenities
         : typeof selectedProperty.amenities === "string"
@@ -116,7 +149,7 @@ export default function PropertyDetailsPage() {
             {/* MAIN CONTENT BODY */}
             <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
                 
-                {/* 📸 GALLERY SECTION */}
+                {/* GALLERY SECTION */}
                 <div className="bg-white border border-[#e2e8f8] rounded-xl overflow-hidden shadow-xs p-4 space-y-4">
                     <div className="w-full h-96 sm:h-[480px] bg-[#f9f9ff] rounded-lg overflow-hidden relative border border-[#e2e8f8]">
                         {imagesList.length > 0 ? (
@@ -131,7 +164,7 @@ export default function PropertyDetailsPage() {
                             </div>
                         )}
                         <span className="absolute bottom-4 left-4 bg-[#151c27] text-white text-xs font-black px-3 py-1.5 rounded-md uppercase tracking-wider shadow-md">
-                            ${selectedProperty.pricePerNight || selectedProperty.price || "0"} / Night
+                            ${pricePerNight} / Night
                         </span>
                     </div>
 
@@ -152,13 +185,11 @@ export default function PropertyDetailsPage() {
                     )}
                 </div>
 
-                {/* 🏠 PROPERTY DETAILS & BOOKING SIDEBAR GRID */}
+                {/* DETAILS & SIDEBAR GRID */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
                     
-                    {/* LEFT 2 COLUMNS: ORGANIZED PROPERTY SPECIFICATIONS */}
+                    {/* LEFT COLUMNS: PROPERTY SPECIFICATIONS */}
                     <div className="lg:col-span-2 bg-white border border-[#e2e8f8] rounded-xl p-6 sm:p-8 space-y-8 shadow-xs">
-                        
-                        {/* 1. Header & Title Block */}
                         <div>
                             <div className="flex justify-between items-center text-[10px] font-black uppercase text-[#7d8497] tracking-widest mb-1">
                                 <span>Category: {selectedProperty.category || selectedProperty.type || "Rental Property"}</span>
@@ -172,7 +203,6 @@ export default function PropertyDetailsPage() {
                             </p>
                         </div>
 
-                        {/* 2. Key Specifications Metric Grid */}
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 bg-[#f9f9ff] rounded-lg border border-[#e2e8f8]">
                             <div>
                                 <span className="text-[9px] font-bold uppercase text-[#7d8497] block">Type</span>
@@ -192,40 +222,31 @@ export default function PropertyDetailsPage() {
                             </div>
                         </div>
 
-                        {/* 3. Description Section */}
                         <div className="space-y-3 border-t border-[#e2e8f8] pt-6">
-                            <h3 className="text-xs font-bold uppercase text-[#7d8497] tracking-widest">
-                                Property Description
-                            </h3>
+                            <h3 className="text-xs font-bold uppercase text-[#7d8497] tracking-widest">Property Description</h3>
                             <p className="text-xs text-[#45464c] leading-relaxed whitespace-pre-line">
-                                {selectedProperty.description || "No detailed description provided for this listing."}
+                                {selectedProperty.description || "No detailed description provided."}
                             </p>
                         </div>
 
-                        {/* 4. Amenities Grid */}
                         <div className="space-y-3 border-t border-[#e2e8f8] pt-6">
-                            <h3 className="text-xs font-bold uppercase text-[#7d8497] tracking-widest">
-                                Included Amenities & Features
-                            </h3>
+                            <h3 className="text-xs font-bold uppercase text-[#7d8497] tracking-widest">Included Amenities</h3>
                             <div className="flex flex-wrap gap-2">
                                 {amenitiesList.map((item, index) => (
-                                    <span 
-                                        key={index} 
-                                        className="px-3 py-1.5 bg-[#f9f9ff] text-[#151c27] border border-[#e2e8f8] rounded-md text-[11px] font-bold uppercase tracking-wider"
-                                    >
+                                    <span key={index} className="px-3 py-1.5 bg-[#f9f9ff] text-[#151c27] border border-[#e2e8f8] rounded-md text-[11px] font-bold uppercase tracking-wider">
                                         ✓ {item}
                                     </span>
                                 ))}
                             </div>
                         </div>
-
                     </div>
 
-                    {/* RIGHT 1 COLUMN: BOOKING FORM */}
-                    <div className="bg-white border border-[#e2e8f8] rounded-xl p-6 space-y-4 shadow-xs sticky top-20">
-                        <span className="text-[10px] font-bold uppercase text-[#7d8497] tracking-widest block">
-                            Direct Booking Desk
-                        </span>
+                    {/* RIGHT COLUMN: BOOKING DESK CONNECTED TO REDUX */}
+                    <div className="bg-white border border-[#e2e8f8] rounded-xl p-6 space-y-5 shadow-xs sticky top-20">
+                        <div className="flex justify-between items-baseline border-b border-[#e2e8f8] pb-4">
+                            <span className="text-2xl font-black text-[#151c27]">${pricePerNight}</span>
+                            <span className="text-xs font-semibold text-gray-500 uppercase">/ night</span>
+                        </div>
                         
                         <form onSubmit={handleBooking} className="space-y-4">
                             <div className="space-y-3 text-xs">
@@ -233,44 +254,64 @@ export default function PropertyDetailsPage() {
                                     <label className="block text-[9px] font-bold uppercase text-gray-500 mb-1">Check In</label>
                                     <input 
                                         type="date" 
+                                        min={new Date().toISOString().split("T")[0]}
                                         value={checkIn} 
                                         onChange={(e) => setCheckIn(e.target.value)} 
-                                        className="w-full bg-[#f9f9ff] border border-[#e2e8f8] p-2.5 rounded-md focus:outline-none focus:border-[#151c27]"
+                                        className="w-full bg-[#f9f9ff] border border-[#e2e8f8] p-2.5 rounded-md focus:outline-none focus:border-[#151c27] text-[#151c27]"
                                     />
                                 </div>
                                 <div>
                                     <label className="block text-[9px] font-bold uppercase text-gray-500 mb-1">Check Out</label>
                                     <input 
                                         type="date" 
+                                        min={checkIn || new Date().toISOString().split("T")[0]}
                                         value={checkOut} 
                                         onChange={(e) => setCheckOut(e.target.value)} 
-                                        className="w-full bg-[#f9f9ff] border border-[#e2e8f8] p-2.5 rounded-md focus:outline-none focus:border-[#151c27]"
+                                        className="w-full bg-[#f9f9ff] border border-[#e2e8f8] p-2.5 rounded-md focus:outline-none focus:border-[#151c27] text-[#151c27]"
                                     />
                                 </div>
                             </div>
 
-                            {bookingStatus && (
-                                <div className={`p-3 text-xs font-bold rounded-md border ${
-                                    bookingStatus.type === "success" 
-                                        ? "bg-emerald-50 text-emerald-800 border-emerald-200" 
-                                        : "bg-red-50 text-red-800 border-red-200"
-                                }`}>
-                                    {bookingStatus.text}
+                            {/* Live Price Breakdown */}
+                            {totalNights > 0 && (
+                                <div className="bg-[#f9f9ff] p-3.5 rounded-lg border border-[#e2e8f8] space-y-2 text-xs">
+                                    <div className="flex justify-between text-gray-600 font-medium">
+                                        <span>${pricePerNight} × {totalNights} {totalNights === 1 ? "night" : "nights"}</span>
+                                        <span>${totalPrice}</span>
+                                    </div>
+                                    <div className="flex justify-between text-xs font-bold text-[#151c27] border-t border-[#e2e8f8] pt-2">
+                                        <span>Total Amount</span>
+                                        <span className="text-emerald-700">${totalPrice}</span>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Redux State Alerts */}
+                            {(localError || bookingError) && (
+                                <div className="p-3 text-xs font-bold rounded-md border bg-red-50 text-red-800 border-red-200 uppercase tracking-wider">
+                                    ⚠️ {localError || bookingError}
+                                </div>
+                            )}
+
+                            {successMessage && (
+                                <div className="p-3 text-xs font-bold rounded-md border bg-emerald-50 text-emerald-800 border-emerald-200 uppercase tracking-wider">
+                                    ✓ {successMessage}
                                 </div>
                             )}
 
                             <button 
                                 type="submit" 
-                                className="w-full py-3 bg-[#151c27] hover:bg-black text-white text-xs font-bold uppercase tracking-widest rounded-md transition-all cursor-pointer shadow-sm"
+                                disabled={bookingLoading}
+                                className="w-full py-3 bg-[#151c27] hover:bg-black text-white text-xs font-bold uppercase tracking-widest rounded-md transition-all cursor-pointer shadow-sm disabled:opacity-50"
                             >
-                                Confirm Reservation
+                                {bookingLoading ? "Processing Booking..." : "Confirm Reservation"}
                             </button>
                         </form>
                     </div>
 
                 </div>
 
-                {/* 💬 REVIEWS & FEEDBACK THREAD */}
+                {/* REVIEWS & REPLIES SECTION */}
                 <PropertyComments propertyId={propertyId || selectedProperty?._id || selectedProperty?.id} />
 
             </div>

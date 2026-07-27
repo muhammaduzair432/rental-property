@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from "react-router-dom"; // 👈 Imported Nav
 import Auth from "./pages/Auth.jsx";
 import Dashboard from "./layouts/DashBoardLayout.jsx"; 
 import PropertyDetailsModal from "./components/PropertyDetailsModal.jsx";
+import MyBookingsPage from "./components/MyBookingsPage.jsx";
 
 export default function App() {
   
@@ -16,6 +17,7 @@ export default function App() {
       <Route path="/dashboard" element={<Dashboard />} />
       {/* 🌟 Dedicated Property Details Page */}
         <Route path="/property/:propertyId" element={<PropertyDetailsModal />} />
+        <Route path="/my-bookings" element={<MyBookingsPage />} />
     </Routes>
   );
 }

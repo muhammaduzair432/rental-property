@@ -66,7 +66,7 @@ export default function DashBoardLayout() {
                     {/* Middle Right: Navigation Menus & Role */}
                     <div className="hidden lg:flex items-center space-x-6 text-[10px] font-bold uppercase tracking-wider text-[#7d8497]">
                         <span className="text-[#151c27] border-b-2 border-[#151c27] py-2 cursor-pointer">Browse</span>
-                        <span className="hover:text-[#151c27] cursor-pointer transition-colors">My Bookings</span>
+                        <span className="hover:text-[#151c27] cursor-pointer transition-colors" onClick={() => navigate("/my-bookings")}>My Bookings</span>
                         <span className="hover:text-[#151c27] cursor-pointer transition-colors">Favourites</span>
                         <span className="bg-[#151c27] text-white px-2.5 py-1 rounded text-[9px] lowercase tracking-normal">
                             role: {user.role}

@@ -1,10 +1,14 @@
 import { configureStore } from "@reduxjs/toolkit";
 import authReducer from "./authSlice.js";
-import propertyReducer from "./propertySlice.js"; // 👈 1. Import propertySlice
+import propertyReducer from "./propertySlice.js";
+import bookingReducer from "./bookingSlice.js"; // 👈 1. Import bookingSlice
+
 
 export const store = configureStore({
   reducer: {
     auth: authReducer,
-    properties: propertyReducer, // 👈 2. Add 'properties' key here exactly!
+    properties: propertyReducer,
+    booking: bookingReducer, // 👈 2. Register 'booking' slice
+    
   },
 });

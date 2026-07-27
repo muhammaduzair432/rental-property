@@ -35,7 +35,7 @@ export const fetchPropertyById = createAsyncThunk(
             
             const res = await api.get(`properties/details/${propertyId}`);
             
-            console.log("=== RAW PROPERTY DETAILS RESPONSE ===", res.data);
+            
 
             return (
                 res.data?.propertyDetails || 

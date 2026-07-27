@@ -106,16 +106,18 @@ export const createBooking = asyncHandler(async (req, res) => {
 export const getMyBookings = asyncHandler(async (req, res) => {
     const tenantId = req.user._id;
 
-    // Query using 'user' and populate 'property' to match your schema keys perfectly!
-    const bookings = await Booking.find({ user: tenantId })
-        .populate({
-            path: "property",
-            select: "title price location images owner" 
-        });
+    // ⚡ Query database and exclude any legacy documents where status is 'cancelled'
+    const bookings = await Booking.find({ 
+        user: tenantId,
+        status: { $ne: "cancelled" } // 👈 Ignores any old cancelled records
+    }).populate({
+        path: "property",
+        select: "title price location images owner" 
+    });
 
     return res.status(200).json({
         success: true,
-        message: "Your bookings retrieved successfully.",
+        message: "Active bookings retrieved successfully.",
         data: bookings
     });
 });
@@ -127,27 +129,21 @@ export const cancelBooking = asyncHandler(async (req, res) => {
     const { bookingId } = req.params; 
     const tenantId = req.user._id;
 
-    // Ensure the booking belongs to the tenant trying to cancel it
-    const booking = await Booking.findOne({ _id: bookingId, user: tenantId });
+    // 🗑️ PERMANENT DELETE: Deletes the booking document directly from MongoDB
+    const deletedBooking = await Booking.findOneAndDelete({ 
+        _id: bookingId, 
+        user: tenantId 
+    });
 
-    if (!booking) {
-        throw new ApiError(404, "Booking record not found.");
+    if (!deletedBooking) {
+        throw new ApiError(404, "Booking record not found or already deleted.");
     }
-
-    // Business Logic: Tenants can only cancel bookings that haven't been accepted yet
-    if (booking.status !== "pending") {
-        throw new ApiError(400, "Only pending bookings can be cancelled.");
-    }
-
-    // Flip the status string and save changes back to MongoDB
-    booking.status = "cancelled";
-    await booking.save();
 
     return res.status(200).json({
         success: true,
-        message: "Booking successfully cancelled."
+        message: "Booking deleted successfully from database."
     });
-});
+})
 
 // ==========================================
 // 4. FLOWCHART STEP 3: OWNER DASHBOARD OVERVIEW (GET /api/v2/bookings/owner/dashboard)
