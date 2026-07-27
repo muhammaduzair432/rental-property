@@ -27,15 +27,16 @@ export default function AddPropertyForm() {
         }
     };
 
-    const handleSubmit = async (e) => {
+  const handleSubmit = async (e) => {
         e.preventDefault();
 
         const formData = new FormData();
         formData.append("title", title);
         formData.append("description", description);
         formData.append("type", type);
-        formData.append("pricePerNight", pricePerNight);
+        formData.append("price", pricePerNight); // 👈 FIXED: Match backend expected key name "price"
         formData.append("location", location);
+        formData.append("amenities", "WiFi, Parking, AC"); // 👈 Optional default or connect to an input state
 
         // Append each image file under the key "images" to match uploadfile.array("images", 10)
         imageFiles.forEach((file) => {
