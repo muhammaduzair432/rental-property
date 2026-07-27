@@ -5,7 +5,11 @@ import { updateUserProfile, clearProfileState } from "../store/profileSlice.js";
 export default function UserProfileModal({ isOpen, onClose }) {
     const dispatch = useDispatch();
     const { user } = useSelector((state) => state.auth);
-    const { loading, error, successMessage } = useSelector((state) => state.profile || {});
+
+    // 🛡️ Fully Memoized Atomic Selectors (Fixes the remaining Redux selector warning)
+    const loading = useSelector((state) => state.profile?.loading) || false;
+    const error = useSelector((state) => state.profile?.error) || null;
+    const successMessage = useSelector((state) => state.profile?.successMessage) || null;
 
     const [isEditing, setIsEditing] = useState(false);
 
@@ -14,7 +18,7 @@ export default function UserProfileModal({ isOpen, onClose }) {
     const [username, setUsername] = useState("");
     const [email, setEmail] = useState("");
     const [phone, setPhone] = useState("");
-    const [password, setPassword] = useState(""); // 🔑 Added Password State
+    const [password, setPassword] = useState(""); 
     const [avatarFile, setAvatarFile] = useState(null);
     const [avatarPreview, setAvatarPreview] = useState("");
 
@@ -25,7 +29,7 @@ export default function UserProfileModal({ isOpen, onClose }) {
             setUsername(user.username || "");
             setEmail(user.email || "");
             setPhone(user.phone || user.phoneNumber || "");
-            setPassword(""); // Keep password field empty by default for security
+            setPassword(""); 
             setAvatarPreview(user.avatar || "");
         }
     }, [user, isOpen]);
@@ -55,7 +59,7 @@ export default function UserProfileModal({ isOpen, onClose }) {
 
     // Toggle into Edit Mode cleanly
     const handleStartEditing = () => {
-        dispatch(clearProfileState()); // Clears any leftover success/error messages
+        dispatch(clearProfileState()); 
         setIsEditing(true);
     };
 
@@ -68,7 +72,7 @@ export default function UserProfileModal({ isOpen, onClose }) {
         setAvatarFile(null);
     };
 
-    // Submit Updated Form Data to API: router.route("/update-profile").put(verifyJwt, uploadfile.single("avatar"), updateProfile)
+    // Submit Updated Form Data to API
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -77,9 +81,9 @@ export default function UserProfileModal({ isOpen, onClose }) {
         formData.append("username", username);
         formData.append("email", email);
         if (phone) formData.append("phone", phone);
-        if (password) formData.append("password", password); // 🔑 Appends password if user entered a new one
+        if (password) formData.append("password", password); 
         if (avatarFile) {
-            formData.append("avatar", avatarFile); // Matches uploadfile.single("avatar")
+            formData.append("avatar", avatarFile); 
         }
 
         const result = await dispatch(updateUserProfile(formData));
@@ -124,7 +128,7 @@ export default function UserProfileModal({ isOpen, onClose }) {
                     </div>
                 )}
 
-                {/* 🛡️ CONDITIONALLY RENDERED FORM: Only active when editing */}
+                {/* CONDITIONALLY RENDERED FORM */}
                 {isEditing ? (
                     <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
                         

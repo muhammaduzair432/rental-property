@@ -11,8 +11,12 @@ export default function MyFavoritesPage() {
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
-    const { favorites = [], loading = false, error = null, actionLoadingId = null, toastMessage = null } = 
-        useSelector((state) => state.favorite || {});
+    // 🛡️ Memoized Selectors (Prevents Selector Unknown reference warning)
+    const favorites = useSelector((state) => state.favorite?.favorites) || [];
+    const loading = useSelector((state) => state.favorite?.loading) || false;
+    const error = useSelector((state) => state.favorite?.error) || null;
+    const actionLoadingId = useSelector((state) => state.favorite?.actionLoadingId) || null;
+    const toastMessage = useSelector((state) => state.favorite?.toastMessage) || null;
 
     useEffect(() => {
         dispatch(fetchUserFavorites());

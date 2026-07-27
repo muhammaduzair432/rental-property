@@ -13,21 +13,21 @@ export default function UserDashboard({
     searchQuery = "", 
     selectedFilter = "all",
     minPrice = 0,
-    maxPrice = Infinity // 👈 Set default to Infinity so no high-value properties are hidden by default!
+    maxPrice = Infinity 
 }) {
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
     const [selectedPropertyId, setSelectedPropertyId] = useState(null);
 
-    // Redux Property State
-    const propertiesState = useSelector((state) => state.properties) || {};
-    const { properties = [], loadingList = false, errorList = null } = propertiesState;
+    // 🛡️ Memoized Selectors (Prevents Selector Unknown reference warning)
+    const properties = useSelector((state) => state.properties?.properties) || [];
+    const loadingList = useSelector((state) => state.properties?.loadingList) || false;
+    const errorList = useSelector((state) => state.properties?.errorList) || null;
 
-    // Redux Favorite State & Toast Notification
-    const { favoriteIds = [], actionLoadingId = null, toastMessage = null } = useSelector(
-        (state) => state.favorite || {}
-    );
+    const favoriteIds = useSelector((state) => state.favorite?.favoriteIds) || [];
+    const actionLoadingId = useSelector((state) => state.favorite?.actionLoadingId) || null;
+    const toastMessage = useSelector((state) => state.favorite?.toastMessage) || null;
 
     useEffect(() => {
         dispatch(fetchProperties());
