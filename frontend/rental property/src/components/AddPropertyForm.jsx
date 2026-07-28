@@ -1,10 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { createProperty, clearPropertyError } from "../store/propertySlice.js";
 
 export default function AddPropertyForm() {
     const dispatch = useDispatch();
-    const { loading, error, successMessage } = useSelector((state) => state.property || {});
+    const { loading, error, successMessage } = useSelector((state) => state.properties || {});
 
     // Form Fields
     const [title, setTitle] = useState("");
@@ -12,8 +12,24 @@ export default function AddPropertyForm() {
     const [type, setType] = useState("house");
     const [pricePerNight, setPricePerNight] = useState("");
     const [location, setLocation] = useState("");
+    
+    // 🛋️ Amenities States
+    const predefinedAmenities = ["WiFi", "Pool", "Air Conditioning", "Free Parking", "Kitchen", "Gym", "Smart TV", "Balcony"];
+    const [selectedAmenities, setSelectedAmenities] = useState(["WiFi", "Air Conditioning"]);
+    const [customAmenityInput, setCustomAmenityInput] = useState("");
+
     const [imageFiles, setImageFiles] = useState([]);
     const [imagePreviews, setImagePreviews] = useState([]);
+
+    // ⏱️ Auto-dismiss success notification banner after 3 seconds
+    useEffect(() => {
+        if (successMessage) {
+            const timer = setTimeout(() => {
+                dispatch(clearPropertyError());
+            }, 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [successMessage, dispatch]);
 
     // Handle multiple image selection (max 10)
     const handleImageChange = (e) => {
@@ -27,16 +43,31 @@ export default function AddPropertyForm() {
         }
     };
 
-  const handleSubmit = async (e) => {
+    // Toggle Checkbox Amenities
+    const toggleAmenity = (amenity) => {
+        if (selectedAmenities.includes(amenity)) {
+            setSelectedAmenities(selectedAmenities.filter((item) => item !== amenity));
+        } else {
+            setSelectedAmenities([...selectedAmenities, amenity]);
+        }
+    };
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
+
+        // Combine checked amenities and custom typed ones
+        const customList = customAmenityInput
+            ? customAmenityInput.split(",").map((item) => item.trim()).filter(Boolean)
+            : [];
+        const combinedAmenities = Array.from(new Set([...selectedAmenities, ...customList]));
 
         const formData = new FormData();
         formData.append("title", title);
         formData.append("description", description);
         formData.append("type", type);
-        formData.append("price", pricePerNight); // 👈 FIXED: Match backend expected key name "price"
+        formData.append("price", pricePerNight); // 👈 Matches backend controller requirement
         formData.append("location", location);
-        formData.append("amenities", "WiFi, Parking, AC"); // 👈 Optional default or connect to an input state
+        formData.append("amenities", combinedAmenities.join(", ")); // Sent as comma-separated string or array
 
         // Append each image file under the key "images" to match uploadfile.array("images", 10)
         imageFiles.forEach((file) => {
@@ -50,6 +81,8 @@ export default function AddPropertyForm() {
             setDescription("");
             setPricePerNight("");
             setLocation("");
+            setCustomAmenityInput("");
+            setSelectedAmenities(["WiFi", "Air Conditioning"]);
             setImageFiles([]);
             setImagePreviews([]);
         }
@@ -63,7 +96,7 @@ export default function AddPropertyForm() {
             </div>
 
             {successMessage && (
-                <div className="bg-emerald-50 text-emerald-800 border border-emerald-200 px-4 py-3 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-2">
+                <div className="bg-emerald-50 text-emerald-800 border border-emerald-200 px-4 py-3 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all">
                     <span>✅</span> {successMessage}
                 </div>
             )}
@@ -73,7 +106,7 @@ export default function AddPropertyForm() {
                 </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-5">
                 <div>
                     <label className="text-[10px] font-bold uppercase text-[#7d8497] block mb-1">Property Title</label>
                     <input
@@ -135,6 +168,49 @@ export default function AddPropertyForm() {
                         required
                         className="w-full text-xs p-2.5 border border-[#e2e8f8] rounded-lg font-bold text-[#151c27] focus:outline-none focus:border-[#151c27]"
                     />
+                </div>
+
+                {/* 🛋️ AMENITIES SELECTION SECTION */}
+                <div className="space-y-2.5 bg-[#f9f9ff] p-4 rounded-xl border border-[#e2e8f8]">
+                    <label className="text-[10px] font-bold uppercase text-[#7d8497] block">
+                        Property Amenities <span className="text-gray-400 font-normal">(Select features)</span>
+                    </label>
+                    
+                    {/* Checkbox Grid */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                        {predefinedAmenities.map((amenity) => {
+                            const isChecked = selectedAmenities.includes(amenity);
+                            return (
+                                <button
+                                    key={amenity}
+                                    type="button"
+                                    onClick={() => toggleAmenity(amenity)}
+                                    className={`px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider border transition-all text-left flex items-center justify-between cursor-pointer ${
+                                        isChecked 
+                                            ? "bg-[#151c27] text-white border-[#151c27]" 
+                                            : "bg-white text-[#151c27] border-[#e2e8f8] hover:border-gray-400"
+                                    }`}
+                                >
+                                    <span>{amenity}</span>
+                                    <span>{isChecked ? "✓" : "+"}</span>
+                                </button>
+                            );
+                        })}
+                    </div>
+
+                    {/* Custom Amenities Text Input */}
+                    <div className="pt-1">
+                        <label className="text-[9px] font-bold uppercase text-gray-400 block mb-1">
+                            Additional Custom Amenities (Comma separated)
+                        </label>
+                        <input
+                            type="text"
+                            value={customAmenityInput}
+                            onChange={(e) => setCustomAmenityInput(e.target.value)}
+                            placeholder="e.g. Ocean View, Private Jacuzzi, BBQ Grill"
+                            className="w-full text-xs p-2.5 border border-[#e2e8f8] rounded-lg bg-white font-bold text-[#151c27] focus:outline-none focus:border-[#151c27]"
+                        />
+                    </div>
                 </div>
 
                 {/* 📸 MULTIPLE IMAGES UPLOAD FIELD (Up to 10 images) */}
