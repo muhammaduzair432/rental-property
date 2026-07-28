@@ -196,28 +196,60 @@ export const getMyProperties = asyncHandler(async (req, res) => {
 // =========================================================================
 export const updateProperty = asyncHandler(async (req, res) => {
     const { propertyId } = req.params;
-    const { title, description, price, location, amenities } = req.body;
+    
+    // 🛡️ Safe guard: fallback to {} if req.body is undefined
+    const body = req.body || {};
+    const { title, description, price, location, amenities, existingImages } = body;
 
     const property = await Property.findOne({ _id: propertyId, owner: req.user._id });
     if (!property) {
-        return res.status(404).json({ success: false, message: "Property not found or unauthorized access." });
+        throw new ApiError(404, "Property not found or unauthorized access.");
     }
 
     if (title) property.title = title;
     if (description) property.description = description;
     if (price) property.price = Number(price);
     if (location) property.location = location;
-    if (amenities) property.amenities = Array.isArray(amenities) ? amenities : amenities.split(",").map(a => a.trim());
 
+    if (amenities) {
+        property.amenities = Array.isArray(amenities) 
+            ? amenities 
+            : amenities.split(",").map(a => a.trim()).filter(Boolean);
+    }
+
+    let finalImages = [];
+    if (existingImages) {
+        try {
+            finalImages = typeof existingImages === "string" ? JSON.parse(existingImages) : existingImages;
+        } catch (e) {
+            finalImages = Array.isArray(existingImages) ? existingImages : [existingImages];
+        }
+    } else {
+        finalImages = property.images || [];
+    }
+
+    const newImageFiles = req.files;
+    if (newImageFiles && newImageFiles.length > 0) {
+        const uploadPromises = newImageFiles.map((file) => uploadOnCloudinary(file.path));
+        const uploadedResults = await Promise.all(uploadPromises);
+
+        const newCloudinaryUrls = uploadedResults
+            .filter((result) => result !== null)
+            .map((result) => (typeof result === "string" ? result : result?.secure_url || result?.url || ""))
+            .filter((url) => url !== "");
+
+        finalImages = [...finalImages, ...newCloudinaryUrls];
+    }
+
+    property.images = finalImages;
     await property.save();
 
     return res.status(200).json({
         success: true,
-        message: "Property listing details updated successfully.",
+        message: "Property listing details, images, and amenities updated successfully.",
         property
     });
 });
-
 // =========================================================================
 // 6. PERMANENTLY REMOVE PROPERTY (DELETE /api/v2/properties/delete/:propertyId)
 // =========================================================================
@@ -226,7 +258,7 @@ export const deleteProperty = asyncHandler(async (req, res) => {
 
     const property = await Property.findOneAndDelete({ _id: propertyId, owner: req.user._id });
     if (!property) {
-        return res.status(404).json({ success: false, message: "Property not found or unauthorized access." });
+        throw new ApiError(404, "Property not found or unauthorized access.");
     }
 
     return res.status(200).json({

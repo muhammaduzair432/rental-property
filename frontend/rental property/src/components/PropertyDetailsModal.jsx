@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchPropertyById } from "../store/propertySlice.js";
-import { createBooking, clearBookingState } from "../store/bookingSlice.js"; // 👈 Import Redux booking action
+import { createBooking, clearBookingState } from "../store/bookingSlice.js"; 
 import PropertyComments from "../components/PropertyComments.jsx";
 
 export default function PropertyDetailsPage() {
@@ -10,11 +10,15 @@ export default function PropertyDetailsPage() {
     const navigate = useNavigate();
     const dispatch = useDispatch();
 
+    // Get current logged-in user to check their role
+    const { user } = useSelector((state) => state.auth || {});
+    const isOwner = user?.role === "owner";
+
     const { selectedProperty, loadingDetails, errorDetails } = useSelector(
         (state) => state.properties || {}
     );
 
-    // 👈 Extract Redux Booking State
+    // Extract Redux Booking State
     const { loading: bookingLoading, error: bookingError, successMessage } = useSelector(
         (state) => state.booking || {}
     );
@@ -50,7 +54,6 @@ export default function PropertyDetailsPage() {
     const totalPrice = totalNights * pricePerNight;
 
     // Handle Redux Booking Submission
-// Handle Redux Booking Submission
     const handleBooking = async (e) => {
         e.preventDefault();
         setLocalError(null);
@@ -67,7 +70,6 @@ export default function PropertyDetailsPage() {
 
         const targetPropertyId = propertyId || selectedProperty?._id || selectedProperty?.id;
 
-        // 🚀 Dispatch createBooking thunk matching POST /bookings/request
         const result = await dispatch(
             createBooking({
                 propertyId: targetPropertyId,
@@ -84,6 +86,16 @@ export default function PropertyDetailsPage() {
         if (createBooking.fulfilled.match(result)) {
             setCheckIn("");
             setCheckOut("");
+        }
+    };
+
+    // ⚡ Dynamic Back Navigation Handler based on User Role
+    const handleBackNavigation = () => {
+        if (isOwner) {
+            // Send owner back to dashboard, or navigate(-1) if they came directly from My Properties
+            navigate(-1);
+        } else {
+            navigate("/dashboard");
         }
     };
 
@@ -105,10 +117,10 @@ export default function PropertyDetailsPage() {
                     ⚠️ {errorDetails || "Property record not found."}
                 </div>
                 <button 
-                    onClick={() => navigate(-1)} 
+                    onClick={handleBackNavigation} 
                     className="px-4 py-2 bg-[#151c27] text-white text-xs font-bold uppercase tracking-wider rounded cursor-pointer"
                 >
-                    Back To Marketplace
+                    {isOwner ? "Back To My Properties" : "Back To Marketplace"}
                 </button>
             </div>
         );
@@ -135,10 +147,10 @@ export default function PropertyDetailsPage() {
             <div className="bg-white border-b border-[#e2e8f8] sticky top-0 z-40 shadow-xs">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
                     <button 
-                        onClick={() => navigate(-1)} 
+                        onClick={handleBackNavigation} 
                         className="text-xs font-bold uppercase tracking-wider text-[#151c27] hover:underline flex items-center gap-2 cursor-pointer"
                     >
-                        ← Back To Marketplace
+                        ← {isOwner ? "Back To My Properties" : "Back To Marketplace"}
                     </button>
                     <span className="text-[10px] font-bold text-[#7d8497] uppercase tracking-widest">
                         Asset ID: {selectedProperty._id || selectedProperty.id}
@@ -193,7 +205,9 @@ export default function PropertyDetailsPage() {
                         <div>
                             <div className="flex justify-between items-center text-[10px] font-black uppercase text-[#7d8497] tracking-widest mb-1">
                                 <span>Category: {selectedProperty.category || selectedProperty.type || "Rental Property"}</span>
-                                <span className="text-emerald-600 font-bold">● Active Listing</span>
+                                <span className={selectedProperty.isApproved ? "text-emerald-600 font-bold" : "text-amber-600 font-bold"}>
+                                    {selectedProperty.isApproved ? "● Verified Active Listing" : "● Pending Admin Approval"}
+                                </span>
                             </div>
                             <h1 className="text-2xl sm:text-3xl font-bold uppercase text-[#151c27] tracking-tight">
                                 {selectedProperty.title || selectedProperty.name || "Untitled Property Listing"}
@@ -241,72 +255,79 @@ export default function PropertyDetailsPage() {
                         </div>
                     </div>
 
-                    {/* RIGHT COLUMN: BOOKING DESK CONNECTED TO REDUX */}
+                    {/* RIGHT COLUMN: BOOKING DESK OR OWNER PREVIEW NOTICE */}
                     <div className="bg-white border border-[#e2e8f8] rounded-xl p-6 space-y-5 shadow-xs sticky top-20">
                         <div className="flex justify-between items-baseline border-b border-[#e2e8f8] pb-4">
                             <span className="text-2xl font-black text-[#151c27]">${pricePerNight}</span>
                             <span className="text-xs font-semibold text-gray-500 uppercase">/ night</span>
                         </div>
                         
-                        <form onSubmit={handleBooking} className="space-y-4">
-                            <div className="space-y-3 text-xs">
-                                <div>
-                                    <label className="block text-[9px] font-bold uppercase text-gray-500 mb-1">Check In</label>
-                                    <input 
-                                        type="date" 
-                                        min={new Date().toISOString().split("T")[0]}
-                                        value={checkIn} 
-                                        onChange={(e) => setCheckIn(e.target.value)} 
-                                        className="w-full bg-[#f9f9ff] border border-[#e2e8f8] p-2.5 rounded-md focus:outline-none focus:border-[#151c27] text-[#151c27]"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-[9px] font-bold uppercase text-gray-500 mb-1">Check Out</label>
-                                    <input 
-                                        type="date" 
-                                        min={checkIn || new Date().toISOString().split("T")[0]}
-                                        value={checkOut} 
-                                        onChange={(e) => setCheckOut(e.target.value)} 
-                                        className="w-full bg-[#f9f9ff] border border-[#e2e8f8] p-2.5 rounded-md focus:outline-none focus:border-[#151c27] text-[#151c27]"
-                                    />
-                                </div>
+                        {isOwner ? (
+                            <div className="bg-amber-50 border border-amber-200 p-4 rounded-xl space-y-2 text-xs text-amber-800">
+                                <span className="font-bold uppercase tracking-wider block">🛡️ Owner Inspection Mode</span>
+                                <p className="text-[11px]">You are viewing your own property asset listing details. Tenant reservation booking actions are disabled for property owners.</p>
                             </div>
-
-                            {/* Live Price Breakdown */}
-                            {totalNights > 0 && (
-                                <div className="bg-[#f9f9ff] p-3.5 rounded-lg border border-[#e2e8f8] space-y-2 text-xs">
-                                    <div className="flex justify-between text-gray-600 font-medium">
-                                        <span>${pricePerNight} × {totalNights} {totalNights === 1 ? "night" : "nights"}</span>
-                                        <span>${totalPrice}</span>
+                        ) : (
+                            <form onSubmit={handleBooking} className="space-y-4">
+                                <div className="space-y-3 text-xs">
+                                    <div>
+                                        <label className="block text-[9px] font-bold uppercase text-gray-500 mb-1">Check In</label>
+                                        <input 
+                                            type="date" 
+                                            min={new Date().toISOString().split("T")[0]}
+                                            value={checkIn} 
+                                            onChange={(e) => setCheckIn(e.target.value)} 
+                                            className="w-full bg-[#f9f9ff] border border-[#e2e8f8] p-2.5 rounded-md focus:outline-none focus:border-[#151c27] text-[#151c27]"
+                                        />
                                     </div>
-                                    <div className="flex justify-between text-xs font-bold text-[#151c27] border-t border-[#e2e8f8] pt-2">
-                                        <span>Total Amount</span>
-                                        <span className="text-emerald-700">${totalPrice}</span>
+                                    <div>
+                                        <label className="block text-[9px] font-bold uppercase text-gray-500 mb-1">Check Out</label>
+                                        <input 
+                                            type="date" 
+                                            min={checkIn || new Date().toISOString().split("T")[0]}
+                                            value={checkOut} 
+                                            onChange={(e) => setCheckOut(e.target.value)} 
+                                            className="w-full bg-[#f9f9ff] border border-[#e2e8f8] p-2.5 rounded-md focus:outline-none focus:border-[#151c27] text-[#151c27]"
+                                        />
                                     </div>
                                 </div>
-                            )}
 
-                            {/* Redux State Alerts */}
-                            {(localError || bookingError) && (
-                                <div className="p-3 text-xs font-bold rounded-md border bg-red-50 text-red-800 border-red-200 uppercase tracking-wider">
-                                    ⚠️ {localError || bookingError}
-                                </div>
-                            )}
+                                {/* Live Price Breakdown */}
+                                {totalNights > 0 && (
+                                    <div className="bg-[#f9f9ff] p-3.5 rounded-lg border border-[#e2e8f8] space-y-2 text-xs">
+                                        <div className="flex justify-between text-gray-600 font-medium">
+                                            <span>${pricePerNight} × {totalNights} {totalNights === 1 ? "night" : "nights"}</span>
+                                            <span>${totalPrice}</span>
+                                        </div>
+                                        <div className="flex justify-between text-xs font-bold text-[#151c27] border-t border-[#e2e8f8] pt-2">
+                                            <span>Total Amount</span>
+                                            <span className="text-emerald-700">${totalPrice}</span>
+                                        </div>
+                                    </div>
+                                )}
 
-                            {successMessage && (
-                                <div className="p-3 text-xs font-bold rounded-md border bg-emerald-50 text-emerald-800 border-emerald-200 uppercase tracking-wider">
-                                    ✓ {successMessage}
-                                </div>
-                            )}
+                                {/* Redux State Alerts */}
+                                {(localError || bookingError) && (
+                                    <div className="p-3 text-xs font-bold rounded-md border bg-red-50 text-red-800 border-red-200 uppercase tracking-wider">
+                                        ⚠️ {localError || bookingError}
+                                    </div>
+                                )}
 
-                            <button 
-                                type="submit" 
-                                disabled={bookingLoading}
-                                className="w-full py-3 bg-[#151c27] hover:bg-black text-white text-xs font-bold uppercase tracking-widest rounded-md transition-all cursor-pointer shadow-sm disabled:opacity-50"
-                            >
-                                {bookingLoading ? "Processing Booking..." : "Confirm Reservation"}
-                            </button>
-                        </form>
+                                {successMessage && (
+                                    <div className="p-3 text-xs font-bold rounded-md border bg-emerald-50 text-emerald-800 border-emerald-200 uppercase tracking-wider">
+                                        ✓ {successMessage}
+                                    </div>
+                                )}
+
+                                <button 
+                                    type="submit" 
+                                    disabled={bookingLoading}
+                                    className="w-full py-3 bg-[#151c27] hover:bg-black text-white text-xs font-bold uppercase tracking-widest rounded-md transition-all cursor-pointer shadow-sm disabled:opacity-50"
+                                >
+                                    {bookingLoading ? "Processing Booking..." : "Confirm Reservation"}
+                                </button>
+                            </form>
+                        )}
                     </div>
 
                 </div>

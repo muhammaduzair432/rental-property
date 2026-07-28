@@ -5,6 +5,8 @@ import { logoutSuccess } from "../store/authSlice.js";
 import UserDashboard from "../components/UserDashboard.jsx";
 import UserProfileModal from "../components/UserProfileModal.jsx";
 import AddPropertyForm from "../components/AddPropertyForm.jsx";
+import OwnerDashboardHome from "../components/OwnerDashboardHome.jsx"; 
+import OwnerPropertiesList from "../components/OwnerPropertiesList.jsx"; // 👈 Imported Dynamic Owner Properties List
 
 export default function DashBoardLayout() {
     const dispatch = useDispatch();
@@ -306,39 +308,13 @@ export default function DashBoardLayout() {
                 ) : user?.role === "owner" ? (
                     <div className="space-y-6">
                         {ownerActiveTab === "home" && (
-                            <div className="space-y-6">
-                                <div className="bg-white p-8 rounded-xl border border-[#e2e8f8] shadow-xs space-y-2">
-                                    <span className="text-[9px] font-bold text-[#7d8497] uppercase tracking-widest">HOST PORTAL HOME</span>
-                                    <h2 className="text-2xl font-bold uppercase text-[#151c27] tracking-tight">Welcome back, {user?.fullname || user?.username}!</h2>
-                                    <p className="text-xs text-gray-500">Here is a live summary of your property performance and incoming tenant bookings.</p>
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                    <div className="bg-white p-6 rounded-xl border border-[#e2e8f8] shadow-xs space-y-1">
-                                        <span className="text-[10px] font-bold text-[#7d8497] uppercase">Properties Listed</span>
-                                        <h3 className="text-2xl font-black text-[#151c27]">3 Units</h3>
-                                    </div>
-                                    <div className="bg-white p-6 rounded-xl border border-[#e2e8f8] shadow-xs space-y-1">
-                                        <span className="text-[10px] font-bold text-[#7d8497] uppercase">Total Earnings</span>
-                                        <h3 className="text-2xl font-black text-emerald-600">$18,400</h3>
-                                    </div>
-                                    <div className="bg-white p-6 rounded-xl border border-[#e2e8f8] shadow-xs space-y-1">
-                                        <span className="text-[10px] font-bold text-[#7d8497] uppercase">Guest Rating</span>
-                                        <h3 className="text-2xl font-black text-[#151c27]">4.92 ⭐</h3>
-                                    </div>
-                                </div>
-                            </div>
+                            <OwnerDashboardHome /> 
                         )}
 
                         {ownerActiveTab === "add-property" && <AddPropertyForm />}
 
                         {ownerActiveTab === "my-properties" && (
-                            <div className="bg-white p-8 rounded-xl border border-[#e2e8f8] shadow-xs space-y-4">
-                                <span className="text-[9px] font-bold text-[#7d8497] uppercase tracking-widest">HOST INVENTORY</span>
-                                <h3 className="text-base font-bold uppercase tracking-wider text-[#151c27]">My Listed Properties</h3>
-                                <div className="p-12 border border-dashed border-[#e2e8f8] text-center text-xs font-bold text-gray-400 uppercase rounded-md tracking-wider">
-                                    No custom owner property listings registered yet. Click 'Add Property' to create your first listing.
-                                </div>
-                            </div>
+                            <OwnerPropertiesList /> // 👈 Dynamic Inventory List with Edit, Delete & Inspection
                         )}
 
                         {ownerActiveTab === "earnings" && (

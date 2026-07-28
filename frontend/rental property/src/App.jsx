@@ -1,24 +1,26 @@
 import React from "react";
-import { Routes, Route, Navigate } from "react-router-dom"; // 👈 Imported Navigate
+import { Routes, Route, Navigate } from "react-router-dom"; 
 import Auth from "./pages/Auth.jsx";
 import Dashboard from "./layouts/DashBoardLayout.jsx"; 
 import PropertyDetailsModal from "./components/PropertyDetailsModal.jsx";
 import MyBookingsPage from "./components/MyBookingsPage.jsx";
-import MyFavoritesPage from "./components/MyFavoritesPage.jsx"; // 👈 New Favorites Page
+import MyFavoritesPage from "./components/MyFavoritesPage.jsx"; 
+import OwnerPropertiesList from "./components/OwnerPropertiesList.jsx"; // 👈 Fixed relative path
 
 export default function App() {
   return (
     <Routes>
-      {/* Dynamic Fallback: If a user hits "/", automatically redirect them straight to the auth page layout! */}
+      {/* Dynamic Fallback */}
       <Route path="/" element={<Navigate to="/auth" replace />} />
       
       <Route path="/auth" element={<Auth />} />
       <Route path="/dashboard" element={<Dashboard />} />
-      {/* 🌟 Dedicated Property Details Page */}
+      
+      {/* Dedicated Property Details Page */}
       <Route path="/property/:propertyId" element={<PropertyDetailsModal />} />
       <Route path="/my-bookings" element={<MyBookingsPage />} />
       
-      {/* ❤️ Favorites routes (both spellings mapped to prevent 404 error) */}
+      {/* ❤️ Favorites routes */}
       <Route path="/favorites" element={<MyFavoritesPage />} />
       <Route path="/favourites" element={<MyFavoritesPage />} />
 
