@@ -1,13 +1,13 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import api from "../utils/api.js";
 
-// Fetch Owner Properties & Reviews Feed
+// Fetch Owner Reviews Feed
 export const fetchOwnerReviewsFeed = createAsyncThunk(
     "ownerReviews/fetchOwnerReviewsFeed",
     async (_, thunkApi) => {
         try {
-            const res = await api.get("properties/owner/reviews-feed");
-            return res.data?.data || res.data?.properties || res.data || [];
+            const res = await api.get("properties/owner/reviews-feed"); // 👈 Added properties/ prefix
+            return res.data?.data || res.data?.reviews || [];
         } catch (error) {
             return thunkApi.rejectWithValue(error.response?.data?.message || error.message);
         }
@@ -17,10 +17,10 @@ export const fetchOwnerReviewsFeed = createAsyncThunk(
 // Reply to a Review
 export const replyToReviewAction = createAsyncThunk(
     "ownerReviews/replyToReview",
-    async ({ reviewId, comment }, thunkApi) => {
+    async ({ reviewId, replyText }, thunkApi) => {
         try {
-            const res = await api.post(`properties/owner/review/reply/${reviewId}`, { comment });
-            return res.data?.data || res.data?.review || res.data;
+            const res = await api.post(`properties/owner/review/reply/${reviewId}`, { replyText }); // 👈 Added properties/ prefix
+            return res.data?.data || res.data;
         } catch (error) {
             return thunkApi.rejectWithValue(error.response?.data?.message || error.message);
         }
@@ -30,10 +30,10 @@ export const replyToReviewAction = createAsyncThunk(
 // Update/Edit Owner Reply
 export const updateOwnerReplyAction = createAsyncThunk(
     "ownerReviews/updateOwnerReply",
-    async ({ reviewId, comment }, thunkApi) => {
+    async ({ reviewId, replyText }, thunkApi) => {
         try {
-            const res = await api.put(`properties/owner/review/reply/edit/${reviewId}`, { comment });
-            return res.data?.data || res.data?.review || res.data;
+            const res = await api.put(`properties/owner/review/reply/edit/${reviewId}`, { replyText }); // 👈 Added properties/ prefix
+            return res.data?.data || res.data;
         } catch (error) {
             return thunkApi.rejectWithValue(error.response?.data?.message || error.message);
         }
@@ -45,7 +45,7 @@ export const deleteOwnerReplyAction = createAsyncThunk(
     "ownerReviews/deleteOwnerReply",
     async (reviewId, thunkApi) => {
         try {
-            await api.delete(`properties/owner/review/reply/delete/${reviewId}`);
+            await api.delete(`properties/owner/review/reply/delete/${reviewId}`); // 👈 Added properties/ prefix
             return reviewId;
         } catch (error) {
             return thunkApi.rejectWithValue(error.response?.data?.message || error.message);
@@ -56,11 +56,10 @@ export const deleteOwnerReplyAction = createAsyncThunk(
 const ownerReviewsSlice = createSlice({
     name: "ownerReviews",
     initialState: {
-        propertiesWithReviews: [],
+        allReviews: [],
         loading: false,
-        actionLoading: false,
-        error: null,
         successMessage: null,
+        error: null,
     },
     reducers: {
         clearReviewNotice: (state) => {
@@ -70,30 +69,26 @@ const ownerReviewsSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder
-            // Fetch Feed
             .addCase(fetchOwnerReviewsFeed.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
             .addCase(fetchOwnerReviewsFeed.fulfilled, (state, action) => {
                 state.loading = false;
-                state.propertiesWithReviews = Array.isArray(action.payload) ? action.payload : [];
+                state.allReviews = Array.isArray(action.payload) ? action.payload : [];
             })
             .addCase(fetchOwnerReviewsFeed.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
             })
-            // Reply
             .addCase(replyToReviewAction.fulfilled, (state) => {
-                state.successMessage = "Reply posted successfully! 💬";
+                state.successMessage = "Host reply posted successfully! 💬";
             })
-            // Edit
             .addCase(updateOwnerReplyAction.fulfilled, (state) => {
-                state.successMessage = "Reply updated successfully! ✅";
+                state.successMessage = "Host reply modified successfully! ✅";
             })
-            // Delete
             .addCase(deleteOwnerReplyAction.fulfilled, (state) => {
-                state.successMessage = "Reply deleted. 🗑️";
+                state.successMessage = "Host reply removed completely. 🗑️";
             });
     }
 });

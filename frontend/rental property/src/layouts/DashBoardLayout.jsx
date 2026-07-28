@@ -7,7 +7,8 @@ import UserProfileModal from "../components/UserProfileModal.jsx";
 import AddPropertyForm from "../components/AddPropertyForm.jsx";
 import OwnerDashboardHome from "../components/OwnerDashboardHome.jsx"; 
 import OwnerPropertiesList from "../components/OwnerPropertiesList.jsx"; 
-import OwnerEarningsPage from "../components/OwnerEarningsPage.jsx"; // 👈 Imported Live Owner Earnings Component
+import OwnerEarningsPage from "../components/OwnerEarningsPage.jsx";
+import OwnerReviewsPage from "../components/OwnerReviewsPage.jsx"; // 👈 Imported Live Owner Reviews Management Page
 
 export default function DashBoardLayout() {
     const dispatch = useDispatch();
@@ -319,17 +320,11 @@ export default function DashBoardLayout() {
                         )}
 
                         {ownerActiveTab === "earnings" && (
-                            <OwnerEarningsPage /> // 👈 Renders live owner earnings metrics & transaction ledger
+                            <OwnerEarningsPage /> 
                         )}
 
                         {ownerActiveTab === "manage-reviews" && (
-                            <div className="bg-white p-8 rounded-xl border border-[#e2e8f8] shadow-xs space-y-4">
-                                <span className="text-[9px] font-bold text-[#7d8497] uppercase tracking-widest">FEEDBACK STREAM</span>
-                                <h3 className="text-base font-bold uppercase tracking-wider text-[#151c27]">View / Manage Tenant Reviews</h3>
-                                <div className="p-12 border border-dashed border-[#e2e8f8] text-center text-xs font-bold text-gray-400 uppercase rounded-md tracking-wider">
-                                    No tenant reviews received yet for your active listings.
-                                </div>
-                            </div>
+                            <OwnerReviewsPage /> // 👈 Renders the dynamic live owner reviews management component
                         )}
                     </div>
                 ) : (

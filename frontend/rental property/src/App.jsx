@@ -7,7 +7,6 @@ import MyBookingsPage from "./components/MyBookingsPage.jsx";
 import MyFavoritesPage from "./components/MyFavoritesPage.jsx"; 
 import OwnerPropertiesList from "./components/OwnerPropertiesList.jsx";
 import OwnerEarningsPage from "./components/OwnerEarningsPage.jsx";
-import OwnerReviewsPage from "./components/OwnerReviewsPage.jsx";
 
 export default function App() {
   return (
@@ -28,9 +27,6 @@ export default function App() {
 
       {/* Catch-all fallback */}
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
-      {ownerActiveTab === "manage-reviews" && (
-    <OwnerReviewsPage /> // 👈 Renders live review cards and interactive popup reply/edit modal
-)}
     </Routes>
   );
 }
