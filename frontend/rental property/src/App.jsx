@@ -5,7 +5,8 @@ import Dashboard from "./layouts/DashBoardLayout.jsx";
 import PropertyDetailsModal from "./components/PropertyDetailsModal.jsx";
 import MyBookingsPage from "./components/MyBookingsPage.jsx";
 import MyFavoritesPage from "./components/MyFavoritesPage.jsx"; 
-import OwnerPropertiesList from "./components/OwnerPropertiesList.jsx"; // 👈 Fixed relative path
+import OwnerPropertiesList from "./components/OwnerPropertiesList.jsx";
+import OwnerEarningsPage from "./components/OwnerEarningsPage.jsx";
 
 export default function App() {
   return (

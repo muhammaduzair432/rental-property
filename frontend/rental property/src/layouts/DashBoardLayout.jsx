@@ -6,7 +6,8 @@ import UserDashboard from "../components/UserDashboard.jsx";
 import UserProfileModal from "../components/UserProfileModal.jsx";
 import AddPropertyForm from "../components/AddPropertyForm.jsx";
 import OwnerDashboardHome from "../components/OwnerDashboardHome.jsx"; 
-import OwnerPropertiesList from "../components/OwnerPropertiesList.jsx"; // 👈 Imported Dynamic Owner Properties List
+import OwnerPropertiesList from "../components/OwnerPropertiesList.jsx"; 
+import OwnerEarningsPage from "../components/OwnerEarningsPage.jsx"; // 👈 Imported Live Owner Earnings Component
 
 export default function DashBoardLayout() {
     const dispatch = useDispatch();
@@ -314,15 +315,11 @@ export default function DashBoardLayout() {
                         {ownerActiveTab === "add-property" && <AddPropertyForm />}
 
                         {ownerActiveTab === "my-properties" && (
-                            <OwnerPropertiesList /> // 👈 Dynamic Inventory List with Edit, Delete & Inspection
+                            <OwnerPropertiesList /> 
                         )}
 
                         {ownerActiveTab === "earnings" && (
-                            <div className="bg-white p-8 rounded-xl border border-[#e2e8f8] shadow-xs space-y-4">
-                                <span className="text-[9px] font-bold text-[#7d8497] uppercase tracking-widest">FINANCIAL LEDGER</span>
-                                <h3 className="text-base font-bold uppercase tracking-wider text-[#151c27]">Earnings & Payouts Report</h3>
-                                <p className="text-xs text-gray-500">Your total pending balance is <strong className="text-[#151c27]">$3,250.00</strong>. Next scheduled bank transfer is on Friday.</p>
-                            </div>
+                            <OwnerEarningsPage /> // 👈 Renders live owner earnings metrics & transaction ledger
                         )}
 
                         {ownerActiveTab === "manage-reviews" && (

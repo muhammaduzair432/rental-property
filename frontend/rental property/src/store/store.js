@@ -5,7 +5,7 @@ import bookingReducer from "./bookingSlice.js"; // 👈 1. Import bookingSlice
 import favoriteReducer from "./favoriteSlice.js";
 import profileReducer from "./profileSlice.js"
 import ownerDashboardReducer from "./ownerDashboardSlice.js"; // 👈 2. Import ownerDashboardSlice
-
+import ownerEarningsReducer from "./ownerEarningsSlice.js"; // 👈 3. Import ownerEarningsSlice
 export const store = configureStore({
   reducer: {
     auth: authReducer,
@@ -13,6 +13,7 @@ export const store = configureStore({
     booking: bookingReducer, // 👈 2. Register 'booking' slice
     favorite: favoriteReducer,
     profile: profileReducer,
-    ownerDashboard: ownerDashboardReducer, // 👈 3. Register 'ownerDashboard' slice
+    ownerDashboard: ownerDashboardReducer,
+    ownerEarnings: ownerEarningsReducer // 👈 3. Register 'ownerDashboard' slice
   },
 });
