@@ -9,7 +9,7 @@ import OwnerDashboardHome from "../components/OwnerDashboardHome.jsx";
 import OwnerPropertiesList from "../components/OwnerPropertiesList.jsx"; 
 import OwnerEarningsPage from "../components/OwnerEarningsPage.jsx";
 import OwnerReviewsPage from "../components/OwnerReviewsPage.jsx";
-import NotificationBell from "../components/NotificationBell.jsx"; // 👈 Role-based Notification Bell
+import NotificationBell from "../components/NotificationBell.jsx";
 
 // 🛡️ Admin Components Import
 import AdminHomeFeed from "../components/admin/AdminHomeFeed.jsx";
@@ -75,7 +75,7 @@ export default function DashBoardLayout() {
     const isAdmin = user?.role === "admin";
 
     return (
-        <div className="min-h-screen w-full bg-[#f9f9ff] text-[#151c27] flex flex-col antialiased font-sans">
+        <div className="min-h-screen w-full bg-[#131313] text-[#e5e2e1] flex flex-col antialiased font-sans selection:bg-[#5ddda1]/30 selection:text-black">
             
             {/* 👤 USER PROFILE POP-UP MODAL */}
             <UserProfileModal 
@@ -84,7 +84,7 @@ export default function DashBoardLayout() {
             />
 
             {/* 🌐 NAV BAR SECTION */}
-            <nav className="w-full bg-white border-b border-[#e2e8f8] shadow-xs sticky top-0 z-50">
+            <nav className="w-full bg-[#080808]/80 backdrop-blur-md border-b border-[#353535] sticky top-0 z-50">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
                     
                     {/* Left: Brand Logo */}
@@ -92,45 +92,45 @@ export default function DashBoardLayout() {
                         onClick={() => navigate("/dashboard")} 
                         className="flex flex-col space-y-0.5 min-w-max cursor-pointer"
                     >
-                        <span className="text-[10px] font-bold tracking-widest text-[#7d8497] uppercase">RENTAL PROPERTY</span>
-                        <span className="text-xs font-bold uppercase tracking-wider text-[#151c27]">
+                        <span className="text-[10px] font-bold tracking-[0.2em] text-[#c4c7c7] uppercase">ESTATE ARCHIVE</span>
+                        <span className="text-xs font-bold uppercase tracking-wider text-[#5ddda1]">
                             {isAdmin ? "Admin Portal" : isOwner ? "Owner Portal" : "Dashboard"}
                         </span>
                     </div>
 
                     {/* Middle Section: Dynamic Navigation based on Role */}
                     {!isAdmin && !isOwner ? (
-                        <div className="hidden md:flex items-center flex-1 max-w-xl mx-4 border border-[#e2e8f8] rounded-md bg-[#f9f9ff] px-3 py-1.5 gap-2 relative">
+                        <div className="hidden md:flex items-center flex-1 max-w-xl mx-4 border border-[#444748] rounded-none bg-[#1c1b1b] px-3 py-1.5 gap-2 relative">
                             <input 
                                 type="text" 
                                 placeholder="Search properties..." 
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="bg-transparent text-xs w-full focus:outline-none text-[#151c27]"
+                                className="bg-transparent text-xs w-full focus:outline-none text-[#e5e2e1] placeholder:text-[#8e9192]"
                             />
-                            <span className="text-gray-300">|</span>
+                            <span className="text-[#444748]">|</span>
                             
                             <select 
                                 value={selectedFilter}
                                 onChange={(e) => setSelectedFilter(e.target.value)}
-                                className="bg-transparent text-[10px] font-bold uppercase tracking-wider text-[#7d8497] cursor-pointer focus:outline-none shrink-0"
+                                className="bg-transparent text-[10px] font-bold uppercase tracking-wider text-[#c4c7c7] cursor-pointer focus:outline-none shrink-0"
                             >
-                                <option value="all">All Types</option>
-                                <option value="house">House</option>
-                                <option value="apartment">Apartment</option>
-                                <option value="villa">Luxury Villa</option>
+                                <option value="all" className="bg-[#1c1b1b]">All Types</option>
+                                <option value="house" className="bg-[#1c1b1b]">House</option>
+                                <option value="apartment" className="bg-[#1c1b1b]">Apartment</option>
+                                <option value="villa" className="bg-[#1c1b1b]">Luxury Villa</option>
                             </select>
 
-                            <span className="text-gray-300">|</span>
+                            <span className="text-[#444748]">|</span>
 
                             <div className="relative shrink-0">
                                 <button
                                     type="button"
                                     onClick={() => setIsPriceFilterOpen(!isPriceFilterOpen)}
-                                    className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded transition-all flex items-center gap-1.5 cursor-pointer ${
+                                    className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-none transition-all flex items-center gap-1.5 cursor-pointer ${
                                         isFilteredActive
-                                            ? "bg-[#151c27] text-white shadow-xs"
-                                            : "text-[#7d8497] hover:text-[#151c27] hover:bg-gray-100"
+                                            ? "bg-[#5ddda1] text-[#003823]"
+                                            : "text-[#c4c7c7] hover:text-[#e5e2e1] hover:bg-[#2a2a2a]"
                                     }`}
                                 >
                                     <span>💵</span>
@@ -143,15 +143,15 @@ export default function DashBoardLayout() {
                                 </button>
 
                                 {isPriceFilterOpen && (
-                                    <div className="absolute top-10 right-0 w-80 bg-white border border-[#e2e8f8] rounded-xl shadow-2xl p-4 space-y-4 z-50">
-                                        <div className="flex justify-between items-center border-b border-gray-100 pb-2">
-                                            <span className="text-[10px] font-bold uppercase tracking-widest text-[#151c27]">
+                                    <div className="absolute top-10 right-0 w-80 bg-[#1c1b1b] border border-[#444748] rounded-none shadow-2xl p-4 space-y-4 z-50">
+                                        <div className="flex justify-between items-center border-b border-[#444748] pb-2">
+                                            <span className="text-[10px] font-bold uppercase tracking-widest text-[#e5e2e1]">
                                                 Price Filter
                                             </span>
                                             {isFilteredActive && (
                                                 <button 
                                                     onClick={resetPriceFilter}
-                                                    className="text-[9px] text-red-600 font-bold uppercase hover:underline cursor-pointer"
+                                                    className="text-[9px] text-[#ffb4ab] font-bold uppercase hover:underline cursor-pointer"
                                                 >
                                                     Reset All
                                                 </button>
@@ -159,29 +159,29 @@ export default function DashBoardLayout() {
                                         </div>
 
                                         <div className="space-y-1">
-                                            <span className="text-[8px] font-bold uppercase text-gray-400 block">Quick Presets</span>
+                                            <span className="text-[8px] font-bold uppercase text-[#c4c7c7] block">Quick Presets</span>
                                             <div className="grid grid-cols-4 gap-1">
-                                                <button onClick={() => applyPreset(1000)} className="px-2 py-1 text-[9px] font-bold bg-[#f9f9ff] hover:bg-gray-200 border border-[#e2e8f8] rounded text-[#151c27] cursor-pointer">&lt; $1k</button>
-                                                <button onClick={() => applyPreset(5000)} className="px-2 py-1 text-[9px] font-bold bg-[#f9f9ff] hover:bg-gray-200 border border-[#e2e8f8] rounded text-[#151c27] cursor-pointer">&lt; $5k</button>
-                                                <button onClick={() => applyPreset(15000)} className="px-2 py-1 text-[9px] font-bold bg-[#f9f9ff] hover:bg-gray-200 border border-[#e2e8f8] rounded text-[#151c27] cursor-pointer">&lt; $15k</button>
-                                                <button onClick={() => applyPreset(Infinity)} className="px-2 py-1 text-[9px] font-bold bg-[#151c27] text-white rounded cursor-pointer">Any</button>
+                                                <button onClick={() => applyPreset(1000)} className="px-2 py-1 text-[9px] font-bold bg-[#0e0e0e] hover:bg-[#2a2a2a] border border-[#444748] rounded-none text-[#e5e2e1] cursor-pointer">&lt; $1k</button>
+                                                <button onClick={() => applyPreset(5000)} className="px-2 py-1 text-[9px] font-bold bg-[#0e0e0e] hover:bg-[#2a2a2a] border border-[#444748] rounded-none text-[#e5e2e1] cursor-pointer">&lt; $5k</button>
+                                                <button onClick={() => applyPreset(15000)} className="px-2 py-1 text-[9px] font-bold bg-[#0e0e0e] hover:bg-[#2a2a2a] border border-[#444748] rounded-none text-[#e5e2e1] cursor-pointer">&lt; $15k</button>
+                                                <button onClick={() => applyPreset(Infinity)} className="px-2 py-1 text-[9px] font-bold bg-[#5ddda1] text-[#003823] rounded-none cursor-pointer">Any</button>
                                             </div>
                                         </div>
 
                                         <div className="flex items-center gap-2 pt-1">
                                             <div className="flex-1">
-                                                <label className="text-[8px] font-bold uppercase text-gray-400 block mb-1">Min Price ($)</label>
+                                                <label className="text-[8px] font-bold uppercase text-[#c4c7c7] block mb-1">Min Price ($)</label>
                                                 <input 
                                                     type="number"
                                                     min="0"
                                                     value={minPrice}
                                                     onChange={(e) => setMinPrice(Number(e.target.value) || 0)}
-                                                    className="w-full text-xs p-2 border border-[#e2e8f8] rounded-md font-bold text-[#151c27] focus:outline-none"
+                                                    className="w-full text-xs p-2 border border-[#444748] bg-[#0e0e0e] rounded-none font-bold text-[#e5e2e1] focus:outline-none"
                                                 />
                                             </div>
-                                            <span className="text-gray-300 self-end pb-2 font-bold">-</span>
+                                            <span className="text-[#8e9192] self-end pb-2 font-bold">-</span>
                                             <div className="flex-1">
-                                                <label className="text-[8px] font-bold uppercase text-gray-400 block mb-1">Max Price ($)</label>
+                                                <label className="text-[8px] font-bold uppercase text-[#c4c7c7] block mb-1">Max Price ($)</label>
                                                 <input 
                                                     type="number"
                                                     min="0"
@@ -191,15 +191,15 @@ export default function DashBoardLayout() {
                                                         const val = e.target.value;
                                                         setMaxPrice(val === "" ? Infinity : Number(val));
                                                     }}
-                                                    className="w-full text-xs p-2 border border-[#e2e8f8] rounded-md font-bold text-[#151c27] focus:outline-none"
+                                                    className="w-full text-xs p-2 border border-[#444748] bg-[#0e0e0e] rounded-none font-bold text-[#e5e2e1] focus:outline-none"
                                                 />
                                             </div>
                                         </div>
 
                                         <div className="space-y-1.5 pt-2">
-                                            <div className="flex justify-between text-[9px] font-bold text-[#7d8497] uppercase">
+                                            <div className="flex justify-between text-[9px] font-bold text-[#c4c7c7] uppercase">
                                                 <span>$0</span>
-                                                <span className="text-[#151c27]">Max Cap: {maxPrice === Infinity ? "Unlimited" : `$${maxPrice}`}</span>
+                                                <span className="text-[#5ddda1]">Max Cap: {maxPrice === Infinity ? "Unlimited" : `$${maxPrice}`}</span>
                                                 <span>${sliderMax.toLocaleString()}</span>
                                             </div>
                                             <input 
@@ -209,13 +209,13 @@ export default function DashBoardLayout() {
                                                 step="250"
                                                 value={maxPrice === Infinity ? sliderMax : maxPrice}
                                                 onChange={handleSliderChange}
-                                                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#151c27]"
+                                                className="w-full h-2 bg-[#2a2a2a] rounded-none appearance-none cursor-pointer accent-[#5ddda1]"
                                             />
                                         </div>
 
                                         <button 
                                             onClick={() => setIsPriceFilterOpen(false)}
-                                            className="w-full py-2 bg-[#151c27] hover:bg-black text-white text-[10px] font-bold uppercase tracking-wider rounded-md cursor-pointer"
+                                            className="w-full py-2 bg-[#5ddda1] hover:bg-[#08a56e] text-[#003823] text-[10px] font-bold uppercase tracking-wider rounded-none cursor-pointer"
                                         >
                                             Apply Filter
                                         </button>
@@ -224,59 +224,59 @@ export default function DashBoardLayout() {
                             </div>
                         </div>
                     ) : isAdmin ? (
-                        <div className="hidden lg:flex items-center space-x-6 text-[10px] font-bold uppercase tracking-wider text-[#7d8497]">
-                            <span onClick={() => setAdminActiveTab("home")} className={`py-2 cursor-pointer transition-colors ${adminActiveTab === "home" ? "text-[#151c27] border-b-2 border-[#151c27]" : "hover:text-[#151c27]"}`}>Home</span>
-                            <span onClick={() => setAdminActiveTab("users")} className={`py-2 cursor-pointer transition-colors ${adminActiveTab === "users" ? "text-[#151c27] border-b-2 border-[#151c27]" : "hover:text-[#151c27]"}`}>Manage Users</span>
-                            <span onClick={() => setAdminActiveTab("reports")} className={`py-2 cursor-pointer transition-colors ${adminActiveTab === "reports" ? "text-[#151c27] border-b-2 border-[#151c27]" : "hover:text-[#151c27]"}`}>Reports</span>
-                            <span onClick={() => setAdminActiveTab("reviews")} className={`py-2 cursor-pointer transition-colors ${adminActiveTab === "reviews" ? "text-[#151c27] border-b-2 border-[#151c27]" : "hover:text-[#151c27]"}`}>Manage Reviews</span>
-                            <span onClick={() => setAdminActiveTab("logs")} className={`py-2 cursor-pointer transition-colors ${adminActiveTab === "logs" ? "text-[#151c27] border-b-2 border-[#151c27]" : "hover:text-[#151c27]"}`}>System Logs</span>
+                        <div className="hidden lg:flex items-center space-x-6 text-[10px] font-bold uppercase tracking-wider text-[#c4c7c7]">
+                            <span onClick={() => setAdminActiveTab("home")} className={`py-2 cursor-pointer transition-colors ${adminActiveTab === "home" ? "text-[#5ddda1] border-b-2 border-[#5ddda1]" : "hover:text-[#e5e2e1]"}`}>Home</span>
+                            <span onClick={() => setAdminActiveTab("users")} className={`py-2 cursor-pointer transition-colors ${adminActiveTab === "users" ? "text-[#5ddda1] border-b-2 border-[#5ddda1]" : "hover:text-[#e5e2e1]"}`}>Manage Users</span>
+                            <span onClick={() => setAdminActiveTab("reports")} className={`py-2 cursor-pointer transition-colors ${adminActiveTab === "reports" ? "text-[#5ddda1] border-b-2 border-[#5ddda1]" : "hover:text-[#e5e2e1]"}`}>Reports</span>
+                            <span onClick={() => setAdminActiveTab("reviews")} className={`py-2 cursor-pointer transition-colors ${adminActiveTab === "reviews" ? "text-[#5ddda1] border-b-2 border-[#5ddda1]" : "hover:text-[#e5e2e1]"}`}>Manage Reviews</span>
+                            <span onClick={() => setAdminActiveTab("logs")} className={`py-2 cursor-pointer transition-colors ${adminActiveTab === "logs" ? "text-[#5ddda1] border-b-2 border-[#5ddda1]" : "hover:text-[#e5e2e1]"}`}>System Logs</span>
                         </div>
                     ) : (
-                        <div className="hidden lg:flex items-center space-x-6 text-[10px] font-bold uppercase tracking-wider text-[#7d8497]">
-                            <span onClick={() => setOwnerActiveTab("home")} className={`py-2 cursor-pointer transition-colors ${ownerActiveTab === "home" ? "text-[#151c27] border-b-2 border-[#151c27]" : "hover:text-[#151c27]"}`}>Home</span>
-                            <span onClick={() => setOwnerActiveTab("add-property")} className={`py-2 cursor-pointer transition-colors ${ownerActiveTab === "add-property" ? "text-[#151c27] border-b-2 border-[#151c27]" : "hover:text-[#151c27]"}`}>Add Property</span>
-                            <span onClick={() => setOwnerActiveTab("my-properties")} className={`py-2 cursor-pointer transition-colors ${ownerActiveTab === "my-properties" ? "text-[#151c27] border-b-2 border-[#151c27]" : "hover:text-[#151c27]"}`}>My Properties</span>
-                            <span onClick={() => setOwnerActiveTab("earnings")} className={`py-2 cursor-pointer transition-colors ${ownerActiveTab === "earnings" ? "text-[#151c27] border-b-2 border-[#151c27]" : "hover:text-[#151c27]"}`}>Earnings</span>
-                            <span onClick={() => setOwnerActiveTab("manage-reviews")} className={`py-2 cursor-pointer transition-colors ${ownerActiveTab === "manage-reviews" ? "text-[#151c27] border-b-2 border-[#151c27]" : "hover:text-[#151c27]"}`}>View/Manage Reviews</span>
+                        <div className="hidden lg:flex items-center space-x-6 text-[10px] font-bold uppercase tracking-wider text-[#c4c7c7]">
+                            <span onClick={() => setOwnerActiveTab("home")} className={`py-2 cursor-pointer transition-colors ${ownerActiveTab === "home" ? "text-[#5ddda1] border-b-2 border-[#5ddda1]" : "hover:text-[#e5e2e1]"}`}>Home</span>
+                            <span onClick={() => setOwnerActiveTab("add-property")} className={`py-2 cursor-pointer transition-colors ${ownerActiveTab === "add-property" ? "text-[#5ddda1] border-b-2 border-[#5ddda1]" : "hover:text-[#e5e2e1]"}`}>Add Property</span>
+                            <span onClick={() => setOwnerActiveTab("my-properties")} className={`py-2 cursor-pointer transition-colors ${ownerActiveTab === "my-properties" ? "text-[#5ddda1] border-b-2 border-[#5ddda1]" : "hover:text-[#e5e2e1]"}`}>My Properties</span>
+                            <span onClick={() => setOwnerActiveTab("earnings")} className={`py-2 cursor-pointer transition-colors ${ownerActiveTab === "earnings" ? "text-[#5ddda1] border-b-2 border-[#5ddda1]" : "hover:text-[#e5e2e1]"}`}>Earnings</span>
+                            <span onClick={() => setOwnerActiveTab("manage-reviews")} className={`py-2 cursor-pointer transition-colors ${ownerActiveTab === "manage-reviews" ? "text-[#5ddda1] border-b-2 border-[#5ddda1]" : "hover:text-[#e5e2e1]"}`}>View/Manage Reviews</span>
                         </div>
                     )}
 
                     {/* Right Side: Notifications / Profile / Logout */}
                     <div className="flex items-center space-x-3 min-w-max">
                         {!isAdmin && !isOwner && (
-                            <div className="hidden lg:flex items-center space-x-6 text-[10px] font-bold uppercase tracking-wider text-[#7d8497] pr-2">
-                                <span onClick={() => navigate("/dashboard")} className="cursor-pointer hover:text-[#151c27]">Browse</span>
-                                <span onClick={() => navigate("/my-bookings")} className="cursor-pointer hover:text-[#151c27]">My Bookings</span>
-                                <span onClick={() => navigate("/favourites")} className="cursor-pointer hover:text-[#151c27]">Favourites</span>
+                            <div className="hidden lg:flex items-center space-x-6 text-[10px] font-bold uppercase tracking-wider text-[#c4c7c7] pr-2">
+                                <span onClick={() => navigate("/dashboard")} className="cursor-pointer hover:text-[#5ddda1]">Browse</span>
+                                <span onClick={() => navigate("/my-bookings")} className="cursor-pointer hover:text-[#5ddda1]">My Bookings</span>
+                                <span onClick={() => navigate("/favourites")} className="cursor-pointer hover:text-[#5ddda1]">Favourites</span>
                             </div>
                         )}
 
                         {/* 🔔 Role-Based Notification Bell */}
                         <NotificationBell />
 
-                        <span className="bg-[#151c27] text-white px-2.5 py-1 rounded text-[9px] lowercase tracking-normal">
+                        <span className="bg-[#2a2a2a] text-[#5ddda1] border border-[#444748] px-2.5 py-1 rounded-none text-[9px] lowercase tracking-normal font-bold">
                             role: {user?.role}
                         </span>
 
                         <div 
                             onClick={() => setIsProfileModalOpen(true)}
-                            className="flex items-center gap-3 cursor-pointer group p-1.5 rounded-lg hover:bg-gray-100 border border-transparent hover:border-[#e2e8f8] transition-all"
+                            className="flex items-center gap-3 cursor-pointer group p-1.5 rounded-none hover:bg-[#1c1b1b] border border-transparent hover:border-[#444748] transition-all"
                             title="Click to view & edit your profile"
                         >
                             <div className="flex flex-col text-right justify-center">
-                                <span className="text-xs font-bold text-[#151c27] group-hover:underline">
+                                <span className="text-xs font-bold text-[#e5e2e1] group-hover:text-[#5ddda1] group-hover:underline">
                                     {user?.fullname || user?.username}
                                 </span>
-                                <span className="text-[9px] font-medium text-[#7d8497]">{user?.email}</span>
+                                <span className="text-[9px] font-medium text-[#c4c7c7]">{user?.email}</span>
                             </div>
                             
                             {user?.avatar ? (
-                                <img src={user.avatar} alt="avatar" className="w-10 h-10 rounded-full border border-[#e2e8f8] object-cover" />
+                                <img src={user.avatar} alt="avatar" className="w-10 h-10 rounded-none border border-[#444748] object-cover" />
                             ) : (
-                                <div className="w-9 h-9 rounded-full border border-[#e2e8f8] bg-blue-50 flex items-center justify-center overflow-hidden">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-6 h-6">
-                                        <circle cx="12" cy="8" r="4" fill="#3B82F6" />
-                                        <path d="M5 20c0-3.3 3-6 7-6s7 2.7 7 6" fill="#3B82F6" />
+                                <div className="w-9 h-9 rounded-none border border-[#444748] bg-[#1c1b1b] flex items-center justify-center overflow-hidden text-[#5ddda1]">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-5 h-5 fill-current">
+                                        <circle cx="12" cy="8" r="4" />
+                                        <path d="M5 20c0-3.3 3-6 7-6s7 2.7 7 6" />
                                     </svg>
                                 </div>
                             )}
@@ -284,7 +284,7 @@ export default function DashBoardLayout() {
 
                         <button 
                             onClick={handleSystemLogout}
-                            className="text-[10px] font-bold uppercase tracking-wider px-3 py-2 border border-[#e2e8f8] text-[#151c27] bg-[#f9f9ff] rounded-md hover:bg-black hover:text-white transition-all cursor-pointer"
+                            className="text-[10px] font-bold uppercase tracking-wider px-3 py-2 border border-[#444748] text-[#e5e2e1] bg-[#1c1b1b] rounded-none hover:bg-[#5ddda1] hover:text-[#003823] transition-all cursor-pointer"
                         >
                             Logout
                         </button>
@@ -319,22 +319,22 @@ export default function DashBoardLayout() {
                         {ownerActiveTab === "manage-reviews" && <OwnerReviewsPage />}
                     </div>
                 ) : (
-                    <div className="bg-white p-8 rounded-md border border-[#e2e8f8] text-center text-xs font-bold uppercase tracking-wider text-gray-400">
+                    <div className="bg-[#1c1b1b] p-8 rounded-none border border-[#444748] text-center text-xs font-bold uppercase tracking-wider text-[#c4c7c7]">
                         Please sign in with a verified account to access this workspace.
                     </div>
                 )}
             </main>
 
             {/* FOOTER SECTION */}
-            <footer className="w-full bg-white border-t border-[#e2e8f8] mt-auto">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-[10px] font-bold uppercase tracking-wider text-[#7d8497]">
+            <footer className="w-full bg-[#0e0e0e] border-t border-[#353535] mt-auto">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-[10px] font-bold uppercase tracking-wider text-[#c4c7c7]">
                     <div>
-                        &copy; {new Date().getFullYear()} Rental Property Platform. Role-Based Dynamic Layout Active.
+                        &copy; {new Date().getFullYear()} ESTATE ARCHIVE. CURATED EXCELLENCE.
                     </div>
                     <div className="flex space-x-6">
-                        <span className="hover:text-[#151c27] cursor-pointer transition-colors">Privacy</span>
-                        <span className="hover:text-[#151c27] cursor-pointer transition-colors">Terms</span>
-                        <span className="hover:text-[#151c27] cursor-pointer transition-colors">Support</span>
+                        <span className="hover:text-[#5ddda1] cursor-pointer transition-colors">Privacy</span>
+                        <span className="hover:text-[#5ddda1] cursor-pointer transition-colors">Terms</span>
+                        <span className="hover:text-[#5ddda1] cursor-pointer transition-colors">Support</span>
                     </div>
                 </div>
             </footer>
