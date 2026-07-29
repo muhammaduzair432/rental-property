@@ -7,6 +7,8 @@ import profileReducer from "./profileSlice.js"
 import ownerDashboardReducer from "./ownerDashboardSlice.js"; // 👈 2. Import ownerDashboardSlice
 import ownerEarningsReducer from "./ownerEarningsSlice.js"; // 👈 3. Import ownerEarningsSlice
 import ownerReviewsReducer from "./ownerReviewsSlice.js";
+import adminReducer from "./adminSlice.js";
+import notificationsReducer from "./notificationsSlice.js"; // 👈 4. Import notificationsSlice
 export const store = configureStore({
   reducer: {
     auth: authReducer,
@@ -17,5 +19,7 @@ export const store = configureStore({
     ownerDashboard: ownerDashboardReducer,
     ownerEarnings: ownerEarningsReducer, // 👈 3. Register 'ownerEarnings' slice
     ownerReviews: ownerReviewsReducer,
+    admin: adminReducer,
+    notifications: notificationsReducer, // 👈 4. Register 'notifications' slice
   },
 });

@@ -274,6 +274,12 @@ export const administrativeReviewPurge = asyncHandler(async (req, res) => {
     });
 });
 
+
+
+export const getAllSystemReviews = asyncHandler(async (req, res) => {
+    const reviews = await Review.find().populate("user property").sort({ createdAt: -1 });
+    return res.status(200).json({ success: true, count: reviews.length, data: reviews });
+});
 // =========================================================================
 // 10. SYSTEM LIVE LOGS AUDIT TRAIL (GET /api/v2/admin/operations/system-logs)
 // 👉 FLOWCHART FEATURE: Operational logging trail

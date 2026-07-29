@@ -8,6 +8,7 @@ import { generateOTP } from "../Utils/generateOtp.js";
 import { verifyOTP } from "./verifyOtp.controller.js";
 import { sendEmail } from "../Utils/sendEmail.js";
 import { Log } from "../Models/log.model.js";
+import { Notification } from "../Models/notification.model.js"; // 👈 Add this line at the top
 
 
 
@@ -368,6 +369,23 @@ const promoteToAdmin = asyncHandler(async (req, res) => {
       role: targetUser.role
     }
   });
+});
+
+
+// Add inside your notification or user/admin controller file:
+export const getMyNotifications = asyncHandler(async (req, res) => {
+    const userId = req.user._id;
+
+    // Fetch all notifications mapped to this user's ID
+    const notifications = await Notification.find({ ownerId: userId })
+        .sort({ createdAt: -1 })
+        .limit(50);
+
+    return res.status(200).json({
+        success: true,
+        count: notifications.length,
+        notifications // Matches your backend response key
+    });
 });
 
 export { registerUser, loginUser, becomeOwner, promoteToAdmin, logoutUser, updateProfile,resendOTP };

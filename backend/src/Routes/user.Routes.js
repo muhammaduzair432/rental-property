@@ -6,6 +6,7 @@ import { loginUser , logoutUser, updateProfile} from "../Controllers/user.contro
 import { verifyJwt } from "../Middlewares/auth.middleware.js";
 import { becomeOwner, promoteToAdmin } from "../Controllers/user.controller.js";
 import { authorizeRoles } from "../Middlewares/auth.middleware.js";
+import { getMyNotifications } from "../Controllers/user.controller.js";
 
 
 
@@ -40,5 +41,6 @@ router.route("/admin/promote").put(
     authorizeRoles("admin"), // 🛡️ Security lock: blocks access from non-admin accounts
     promoteToAdmin
 );
+router.route("/notifications").get(verifyJwt, getMyNotifications);
 
 export default router;

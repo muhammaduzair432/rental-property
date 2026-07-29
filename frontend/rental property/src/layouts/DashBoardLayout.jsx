@@ -8,7 +8,15 @@ import AddPropertyForm from "../components/AddPropertyForm.jsx";
 import OwnerDashboardHome from "../components/OwnerDashboardHome.jsx"; 
 import OwnerPropertiesList from "../components/OwnerPropertiesList.jsx"; 
 import OwnerEarningsPage from "../components/OwnerEarningsPage.jsx";
-import OwnerReviewsPage from "../components/OwnerReviewsPage.jsx"; // 👈 Imported Live Owner Reviews Management Page
+import OwnerReviewsPage from "../components/OwnerReviewsPage.jsx";
+import NotificationBell from "../components/NotificationBell.jsx"; // 👈 Role-based Notification Bell
+
+// 🛡️ Admin Components Import
+import AdminHomeFeed from "../components/admin/AdminHomeFeed.jsx";
+import AdminUsersDirectory from "../components/admin/AdminUsersDirectory.jsx";
+import AdminReportsPage from "../components/admin/AdminReportsPage.jsx";
+import AdminReviewsModeration from "../components/admin/AdminReviewsModeration.jsx";
+import AdminSystemLogs from "../components/admin/AdminSystemLogs.jsx";
 
 export default function DashBoardLayout() {
     const dispatch = useDispatch();
@@ -28,8 +36,9 @@ export default function DashBoardLayout() {
     const [sliderMax, setSliderMax] = useState(50000); 
     const [isPriceFilterOpen, setIsPriceFilterOpen] = useState(false);
 
-    // Owner Internal View Tab State
+    // Internal View Tab States for Roles
     const [ownerActiveTab, setOwnerActiveTab] = useState("home");
+    const [adminActiveTab, setAdminActiveTab] = useState("home");
 
     // User Profile Pop-up Modal State
     const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
@@ -63,6 +72,7 @@ export default function DashBoardLayout() {
 
     const isFilteredActive = minPrice > 0 || maxPrice !== Infinity;
     const isOwner = user?.role === "owner";
+    const isAdmin = user?.role === "admin";
 
     return (
         <div className="min-h-screen w-full bg-[#f9f9ff] text-[#151c27] flex flex-col antialiased font-sans">
@@ -84,12 +94,12 @@ export default function DashBoardLayout() {
                     >
                         <span className="text-[10px] font-bold tracking-widest text-[#7d8497] uppercase">RENTAL PROPERTY</span>
                         <span className="text-xs font-bold uppercase tracking-wider text-[#151c27]">
-                            {isOwner ? "Owner Portal" : "Dashboard"}
+                            {isAdmin ? "Admin Portal" : isOwner ? "Owner Portal" : "Dashboard"}
                         </span>
                     </div>
 
-                    {/* Middle Section: Dynamic Navigation */}
-                    {!isOwner ? (
+                    {/* Middle Section: Dynamic Navigation based on Role */}
+                    {!isAdmin && !isOwner ? (
                         <div className="hidden md:flex items-center flex-1 max-w-xl mx-4 border border-[#e2e8f8] rounded-md bg-[#f9f9ff] px-3 py-1.5 gap-2 relative">
                             <input 
                                 type="text" 
@@ -213,51 +223,36 @@ export default function DashBoardLayout() {
                                 )}
                             </div>
                         </div>
+                    ) : isAdmin ? (
+                        <div className="hidden lg:flex items-center space-x-6 text-[10px] font-bold uppercase tracking-wider text-[#7d8497]">
+                            <span onClick={() => setAdminActiveTab("home")} className={`py-2 cursor-pointer transition-colors ${adminActiveTab === "home" ? "text-[#151c27] border-b-2 border-[#151c27]" : "hover:text-[#151c27]"}`}>Home</span>
+                            <span onClick={() => setAdminActiveTab("users")} className={`py-2 cursor-pointer transition-colors ${adminActiveTab === "users" ? "text-[#151c27] border-b-2 border-[#151c27]" : "hover:text-[#151c27]"}`}>Manage Users</span>
+                            <span onClick={() => setAdminActiveTab("reports")} className={`py-2 cursor-pointer transition-colors ${adminActiveTab === "reports" ? "text-[#151c27] border-b-2 border-[#151c27]" : "hover:text-[#151c27]"}`}>Reports</span>
+                            <span onClick={() => setAdminActiveTab("reviews")} className={`py-2 cursor-pointer transition-colors ${adminActiveTab === "reviews" ? "text-[#151c27] border-b-2 border-[#151c27]" : "hover:text-[#151c27]"}`}>Manage Reviews</span>
+                            <span onClick={() => setAdminActiveTab("logs")} className={`py-2 cursor-pointer transition-colors ${adminActiveTab === "logs" ? "text-[#151c27] border-b-2 border-[#151c27]" : "hover:text-[#151c27]"}`}>System Logs</span>
+                        </div>
                     ) : (
                         <div className="hidden lg:flex items-center space-x-6 text-[10px] font-bold uppercase tracking-wider text-[#7d8497]">
-                            <span 
-                                onClick={() => setOwnerActiveTab("home")}
-                                className={`py-2 cursor-pointer transition-colors ${ownerActiveTab === "home" ? "text-[#151c27] border-b-2 border-[#151c27]" : "hover:text-[#151c27]"}`}
-                            >
-                                Home
-                            </span>
-                            <span 
-                                onClick={() => setOwnerActiveTab("add-property")}
-                                className={`py-2 cursor-pointer transition-colors ${ownerActiveTab === "add-property" ? "text-[#151c27] border-b-2 border-[#151c27]" : "hover:text-[#151c27]"}`}
-                            >
-                                Add Property
-                            </span>
-                            <span 
-                                onClick={() => setOwnerActiveTab("my-properties")}
-                                className={`py-2 cursor-pointer transition-colors ${ownerActiveTab === "my-properties" ? "text-[#151c27] border-b-2 border-[#151c27]" : "hover:text-[#151c27]"}`}
-                            >
-                                My Properties
-                            </span>
-                            <span 
-                                onClick={() => setOwnerActiveTab("earnings")}
-                                className={`py-2 cursor-pointer transition-colors ${ownerActiveTab === "earnings" ? "text-[#151c27] border-b-2 border-[#151c27]" : "hover:text-[#151c27]"}`}
-                            >
-                                Earnings
-                            </span>
-                            <span 
-                                onClick={() => setOwnerActiveTab("manage-reviews")}
-                                className={`py-2 cursor-pointer transition-colors ${ownerActiveTab === "manage-reviews" ? "text-[#151c27] border-b-2 border-[#151c27]" : "hover:text-[#151c27]"}`}
-                            >
-                                View/Manage Reviews
-                            </span>
+                            <span onClick={() => setOwnerActiveTab("home")} className={`py-2 cursor-pointer transition-colors ${ownerActiveTab === "home" ? "text-[#151c27] border-b-2 border-[#151c27]" : "hover:text-[#151c27]"}`}>Home</span>
+                            <span onClick={() => setOwnerActiveTab("add-property")} className={`py-2 cursor-pointer transition-colors ${ownerActiveTab === "add-property" ? "text-[#151c27] border-b-2 border-[#151c27]" : "hover:text-[#151c27]"}`}>Add Property</span>
+                            <span onClick={() => setOwnerActiveTab("my-properties")} className={`py-2 cursor-pointer transition-colors ${ownerActiveTab === "my-properties" ? "text-[#151c27] border-b-2 border-[#151c27]" : "hover:text-[#151c27]"}`}>My Properties</span>
+                            <span onClick={() => setOwnerActiveTab("earnings")} className={`py-2 cursor-pointer transition-colors ${ownerActiveTab === "earnings" ? "text-[#151c27] border-b-2 border-[#151c27]" : "hover:text-[#151c27]"}`}>Earnings</span>
+                            <span onClick={() => setOwnerActiveTab("manage-reviews")} className={`py-2 cursor-pointer transition-colors ${ownerActiveTab === "manage-reviews" ? "text-[#151c27] border-b-2 border-[#151c27]" : "hover:text-[#151c27]"}`}>View/Manage Reviews</span>
                         </div>
                     )}
 
-                    {/* Right Side: Profile / Logout */}
-                    <div className="flex items-center space-x-4 min-w-max">
-                        
-                        {!isOwner && (
+                    {/* Right Side: Notifications / Profile / Logout */}
+                    <div className="flex items-center space-x-3 min-w-max">
+                        {!isAdmin && !isOwner && (
                             <div className="hidden lg:flex items-center space-x-6 text-[10px] font-bold uppercase tracking-wider text-[#7d8497] pr-2">
                                 <span onClick={() => navigate("/dashboard")} className="cursor-pointer hover:text-[#151c27]">Browse</span>
                                 <span onClick={() => navigate("/my-bookings")} className="cursor-pointer hover:text-[#151c27]">My Bookings</span>
                                 <span onClick={() => navigate("/favourites")} className="cursor-pointer hover:text-[#151c27]">Favourites</span>
                             </div>
                         )}
+
+                        {/* 🔔 Role-Based Notification Bell */}
+                        <NotificationBell />
 
                         <span className="bg-[#151c27] text-white px-2.5 py-1 rounded text-[9px] lowercase tracking-normal">
                             role: {user?.role}
@@ -300,7 +295,15 @@ export default function DashBoardLayout() {
 
             {/* MAIN CONTENT SECTION */}
             <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
-                {user?.role === "user" ? (
+                {isAdmin ? (
+                    <div className="space-y-6">
+                        {adminActiveTab === "home" && <AdminHomeFeed />}
+                        {adminActiveTab === "users" && <AdminUsersDirectory />}
+                        {adminActiveTab === "reports" && <AdminReportsPage />}
+                        {adminActiveTab === "reviews" && <AdminReviewsModeration />}
+                        {adminActiveTab === "logs" && <AdminSystemLogs />}
+                    </div>
+                ) : user?.role === "user" ? (
                     <UserDashboard 
                         searchQuery={searchQuery} 
                         selectedFilter={selectedFilter}
@@ -309,23 +312,11 @@ export default function DashBoardLayout() {
                     />
                 ) : user?.role === "owner" ? (
                     <div className="space-y-6">
-                        {ownerActiveTab === "home" && (
-                            <OwnerDashboardHome /> 
-                        )}
-
+                        {ownerActiveTab === "home" && <OwnerDashboardHome />}
                         {ownerActiveTab === "add-property" && <AddPropertyForm />}
-
-                        {ownerActiveTab === "my-properties" && (
-                            <OwnerPropertiesList /> 
-                        )}
-
-                        {ownerActiveTab === "earnings" && (
-                            <OwnerEarningsPage /> 
-                        )}
-
-                        {ownerActiveTab === "manage-reviews" && (
-                            <OwnerReviewsPage /> // 👈 Renders the dynamic live owner reviews management component
-                        )}
+                        {ownerActiveTab === "my-properties" && <OwnerPropertiesList />}
+                        {ownerActiveTab === "earnings" && <OwnerEarningsPage />}
+                        {ownerActiveTab === "manage-reviews" && <OwnerReviewsPage />}
                     </div>
                 ) : (
                     <div className="bg-white p-8 rounded-md border border-[#e2e8f8] text-center text-xs font-bold uppercase tracking-wider text-gray-400">
