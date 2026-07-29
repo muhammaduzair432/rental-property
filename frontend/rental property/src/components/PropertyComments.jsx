@@ -73,14 +73,13 @@ export default function PropertyComments({ propertyId }) {
         setEditRating(review.rating || 5);
     };
 
- // 💾 Submit Updated Review
+    // 💾 Submit Updated Review
     const handleUpdateReview = async (reviewId) => {
         if (!editCommentText.trim()) return;
 
         try {
             setStatusMessage({ type: "info", text: "Updating review..." });
 
-            // ✅ Exact match: PUT /properties/review/edit/:reviewId
             const res = await api.put(`properties/review/edit/${reviewId}`, {
                 comment: editCommentText,
                 rating: Number(editRating)
@@ -89,7 +88,7 @@ export default function PropertyComments({ propertyId }) {
             if (res.data) {
                 setEditingReviewId(null);
                 setStatusMessage({ type: "success", text: "Review updated successfully!" });
-                fetchReviews(); // Refresh review list
+                fetchReviews(); 
                 setTimeout(() => setStatusMessage(null), 3000);
             }
         } catch (err) {
@@ -108,12 +107,11 @@ export default function PropertyComments({ propertyId }) {
         try {
             setStatusMessage({ type: "info", text: "Deleting review..." });
 
-            // ✅ Exact match: DELETE /properties/review/delete/:reviewId
             const res = await api.delete(`properties/review/delete/${reviewId}`);
 
             if (res.data || res.status === 200) {
                 setStatusMessage({ type: "success", text: "Review deleted successfully!" });
-                fetchReviews(); // Refresh review list
+                fetchReviews(); 
                 setTimeout(() => setStatusMessage(null), 3000);
             }
         } catch (err) {
@@ -206,6 +204,7 @@ export default function PropertyComments({ propertyId }) {
                         
                         // Check if current user owns this review
                         const isOwner = Boolean(currentUserId && reviewUserId && String(currentUserId) === String(reviewUserId));
+                        const hostReply = rev.reply; // 🛡️ Host reply string from database
 
                         return (
                             <div key={reviewId} className="space-y-3 border-b border-[#e2e8f8] pb-6 last:border-b-0">
@@ -279,6 +278,21 @@ export default function PropertyComments({ propertyId }) {
                                             <p className="text-xs text-[#45464c] leading-relaxed">
                                                 {rev.comment || rev.content || rev.text}
                                             </p>
+                                        )}
+
+                                        {/* 🛡️ HOST REPLY BADGE & RESPONSE BOX */}
+                                        {hostReply && (
+                                            <div className="mt-3 bg-[#f9f9ff] border border-blue-100 p-3.5 rounded-xl space-y-1.5 shadow-2xs">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="bg-[#151c27] text-white text-[9px] font-black px-2 py-0.5 rounded uppercase tracking-wider">
+                                                        HOST
+                                                    </span>
+                                                    <span className="text-[10px] font-bold text-[#7d8497] uppercase">Property Host Response</span>
+                                                </div>
+                                                <p className="text-xs text-[#151c27] leading-relaxed">
+                                                    {hostReply}
+                                                </p>
+                                            </div>
                                         )}
 
                                         {/* Owner Action Buttons (Edit / Delete) */}
