@@ -8,6 +8,28 @@ import {
 } from "../store/favoriteSlice.js"; 
 import PropertyDetailsModal from "./PropertyDetailsModal.jsx";
 import { useNavigate } from "react-router-dom";
+import { BadgeCheck, Globe, ConciergeBell } from "lucide-react";
+
+const features = [
+  {
+    icon: BadgeCheck,
+    title: "Expert Curation",
+    description:
+      "Every property in our archive undergoes a rigorous 200-point inspection to ensure it meets our standards of architectural brilliance.",
+  },
+  {
+    icon: Globe,
+    title: "Global Reach",
+    description:
+      "Our network spans 45 countries, providing exclusive access to off-market estates and rare residential opportunities worldwide.",
+  },
+  {
+    icon: ConciergeBell,
+    title: "White-Glove Service",
+    description:
+      "From private viewing jet charters to bespoke legal advisory, our concierge team handles every detail of your acquisition journey.",
+  },
+];
 
 export default function UserDashboard({ 
     searchQuery = "", 
@@ -137,7 +159,7 @@ export default function UserDashboard({
     }
 
     return (
-        <div className="space-y-10 relative bg-[#131313] text-[#e5e2e1] min-h-screen pb-16">
+        <div className="space-y-12 relative bg-[#131313] text-[#e5e2e1] min-h-screen pb-16">
             
             {/* 🍞 FLOATING TOAST POPUP NOTIFICATION */}
             {toastMessage && (
@@ -264,66 +286,36 @@ export default function UserDashboard({
                 </div>
             </section>
 
-            {/* 🛡️ SINGLE UNIFIED FEATURE HIGHLIGHT CARD WITH EMBEDDED FIGMA ICON IFRAMES */}
-            <section className="bg-[#1c1b1b] border border-[#353535] rounded-none shadow-2xl grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-[#353535]">
-                
-                {/* Feature Item 1: Expert Curation */}
-                <div className="p-8 flex items-start gap-4">
-                    <div className="shrink-0 w-14 h-14 bg-[#0e0e0e] border border-[#444748] overflow-hidden flex items-center justify-center">
-                        <iframe 
-                            style={{ border: "none", width: "56px", height: "56px", pointerEvents: "none" }} 
-                            src="https://embed.figma.com/design/1T03iRAIEkRfXCDOUsrU78/Untitled?node-id=1-244&embed-host=share" 
-                            title="Expert Curation Icon"
-                        ></iframe>
-                    </div>
-                    <div className="space-y-1.5">
-                        <h3 className="font-serif text-lg font-semibold text-[#e5e2e1] uppercase tracking-wide">
-                            Expert Curation
-                        </h3>
-                        <p className="text-xs text-[#c4c7c7] leading-relaxed">
-                            Every property undergoes a rigorous 200-point inspection to ensure absolute architectural brilliance.
-                        </p>
-                    </div>
-                </div>
+            {/* 🌟 FEATURES SECTION */}
+            <section className="bg-[#131313] py-16 px-4 md:px-8">
+                <div className="mx-auto grid max-w-7xl grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+                    {features.map((feature, index) => {
+                        const Icon = feature.icon;
 
-                {/* Feature Item 2: Global Reach */}
-                <div className="p-8 flex items-start gap-4">
-                    <div className="shrink-0 w-14 h-14 bg-[#0e0e0e] border border-[#444748] overflow-hidden flex items-center justify-center">
-                        <iframe 
-                            style={{ border: "none", width: "56px", height: "56px", pointerEvents: "none" }} 
-                            src="https://embed.figma.com/design/1T03iRAIEkRfXCDOUsrU78/Untitled?node-id=1-251&embed-host=share" 
-                            title="Global Reach Icon"
-                        ></iframe>
-                    </div>
-                    <div className="space-y-1.5">
-                        <h3 className="font-serif text-lg font-semibold text-[#e5e2e1] uppercase tracking-wide">
-                            Global Reach
-                        </h3>
-                        <p className="text-xs text-[#c4c7c7] leading-relaxed">
-                            Our network spans 45 countries, providing exclusive access to off-market estates worldwide.
-                        </p>
-                    </div>
-                </div>
+                        return (
+                            <div 
+                                key={index} 
+                                className="bg-[#1c1b1b] border border-[#353535] p-10 rounded-none shadow-2xl flex flex-col justify-between min-h-[280px]"
+                            >
+                                <div>
+                                    <Icon
+                                        size={32}
+                                        strokeWidth={2.3}
+                                        className="mb-6 text-[#5ddda1]"
+                                    />
 
-                {/* Feature Item 3: White-Glove Service */}
-                <div className="p-8 flex items-start gap-4">
-                    <div className="shrink-0 w-14 h-14 bg-[#0e0e0e] border border-[#444748] overflow-hidden flex items-center justify-center">
-                        <iframe 
-                            style={{ border: "none", width: "56px", height: "56px", pointerEvents: "none" }} 
-                            src="https://embed.figma.com/design/1T03iRAIEkRfXCDOUsrU78/Untitled?node-id=1-259&embed-host=share" 
-                            title="White-Glove Service Icon"
-                        ></iframe>
-                    </div>
-                    <div className="space-y-1.5">
-                        <h3 className="font-serif text-lg font-semibold text-[#e5e2e1] uppercase tracking-wide">
-                            White-Glove Service
-                        </h3>
-                        <p className="text-xs text-[#c4c7c7] leading-relaxed">
-                            From private viewings to bespoke legal advisory, our concierge team handles every detail.
-                        </p>
-                    </div>
-                </div>
+                                    <h3 className="mb-4 font-serif text-2xl font-bold leading-tight text-[#E5E2E1]">
+                                        {feature.title}
+                                    </h3>
 
+                                    <p className="font-sans text-sm leading-relaxed text-[#A5A7B5]">
+                                        {feature.description}
+                                    </p>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
             </section>
 
             {/* CATALOG HEADER BAR */}
@@ -446,7 +438,7 @@ export default function UserDashboard({
                                 : "bg-[#1c1b1b] text-[#5ddda1] border-[#444748] hover:bg-[#5ddda1] hover:text-[#003823] cursor-pointer shadow-xl"
                         }`}
                     >
-                        ← Previous 3 Cards
+                        ← Previous 
                     </button>
 
                     <span className="text-xs font-bold tracking-[0.25em] uppercase text-[#c4c7c7]">
@@ -462,10 +454,38 @@ export default function UserDashboard({
                                 : "bg-[#1c1b1b] text-[#5ddda1] border-[#444748] hover:bg-[#5ddda1] hover:text-[#003823] cursor-pointer shadow-xl"
                         }`}
                     >
-                        Next 3 Cards →
+                        Next  →
                     </button>
                 </div>
             )}
+
+            {/* 🌟 PARTNER / CTA CARD PLACED BELOW PROPERTY CARDS & ABOVE FOOTER */}
+            <section className="relative overflow-hidden border border-[#353535] bg-[#0e0e0e] p-12 lg:p-16 rounded-none shadow-2xl mt-16 text-center">
+                <div className="absolute inset-0 z-0 opacity-15 pointer-events-none">
+                    <img 
+                        src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=1600" 
+                        alt="Library Background" 
+                        className="w-full h-full object-cover filter grayscale"
+                    />
+                </div>
+                <div className="relative z-10 max-w-3xl mx-auto space-y-6">
+                    <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-[#5ddda1] block">
+                        Partner With Excellence
+                    </span>
+                    <h2 className="text-3xl md:text-5xl font-serif font-bold text-[#e5e2e1] uppercase tracking-tight leading-tight">
+                        List Your Property with the World's Best
+                    </h2>
+                    <div className="pt-4 flex justify-center">
+                        <button 
+                            onClick={() => navigate("/dashboard")}
+                            className="bg-[#5ddda1] hover:bg-[#08a56e] text-[#003823] px-12 py-4 text-xs font-bold uppercase tracking-widest rounded-none transition-all cursor-pointer shadow-xl"
+                        >
+                            Become a Partner
+                        </button>
+                    </div>
+                </div>
+            </section>
+
         </div>
     );
 }
