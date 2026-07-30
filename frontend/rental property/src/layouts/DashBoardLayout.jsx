@@ -76,7 +76,7 @@ export default function DashBoardLayout() {
                             RENTAL PROPERTY
                         </span>
                         <span className="text-[9px] font-bold tracking-[0.25em] text-[#5ddda1] uppercase">
-                            {isAdmin ? "Admin Portal" : isOwner ? "Owner Portal" : "Dashboard"}
+                            {isAdmin ? "Admin Portal" : isOwner ? "Owner Portal" : "Curated Excellence"}
                         </span>
                     </div>
 
@@ -121,9 +121,9 @@ export default function DashBoardLayout() {
                             </div>
 
                             {user?.avatar ? (
-                                <img src={user.avatar} alt="avatar" className="w-9 h-9 rounded-none border border-[#444748] object-cover" />
+                                <img src={user.avatar} alt="avatar" className="w-10 h-10 rounded-full border-2  border-[#444748] object-cover" />
                             ) : (
-                                <div className="w-9 h-9 rounded-none border border-[#444748] bg-[#1c1b1b] flex items-center justify-center text-[#5ddda1]">
+                                <div className="w-10 h-10 rounded-full border border-[#444748] bg-[#1c1b1b] flex items-center justify-center text-[#5ddda1]">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-4 h-4 fill-current">
                                         <circle cx="12" cy="8" r="4" />
                                         <path d="M5 20c0-3.3 3-6 7-6s7 2.7 7 6" />
