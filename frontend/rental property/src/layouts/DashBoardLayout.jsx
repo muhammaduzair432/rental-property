@@ -26,15 +26,13 @@ export default function DashBoardLayout() {
     // 🛡️ Memoized Selector (Prevents anonymous object reference warning)
     const user = useSelector((state) => state.auth?.user);
 
-    // States for Search query inputs (User View)
+    // States for Search query inputs (passed down to UserDashboard hero banner)
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedFilter, setSelectedFilter] = useState("all");
 
-    // Price Range States (User View)
+    // Price Range States (passed down to UserDashboard hero banner)
     const [minPrice, setMinPrice] = useState(0);
     const [maxPrice, setMaxPrice] = useState(Infinity);
-    const [sliderMax, setSliderMax] = useState(50000); 
-    const [isPriceFilterOpen, setIsPriceFilterOpen] = useState(false);
 
     // Internal View Tab States for Roles
     const [ownerActiveTab, setOwnerActiveTab] = useState("home");
@@ -52,25 +50,6 @@ export default function DashBoardLayout() {
         navigate("/auth");
     };
 
-    const handleSliderChange = (e) => {
-        const val = Number(e.target.value);
-        setMaxPrice(val);
-    };
-
-    const resetPriceFilter = () => {
-        setMinPrice(0);
-        setMaxPrice(Infinity);
-    };
-
-    const applyPreset = (max) => {
-        setMinPrice(0);
-        setMaxPrice(max);
-        if (max !== Infinity && max > sliderMax) {
-            setSliderMax(max);
-        }
-    };
-
-    const isFilteredActive = minPrice > 0 || maxPrice !== Infinity;
     const isOwner = user?.role === "owner";
     const isAdmin = user?.role === "admin";
 
@@ -83,7 +62,7 @@ export default function DashBoardLayout() {
                 onClose={() => setIsProfileModalOpen(false)} 
             />
 
-            {/* 🌐 NAV BAR SECTION */}
+            {/* 🌐 NAV BAR SECTION (Cleaned up: Search & filters removed and relocated to hero banner) */}
             <nav className="w-full bg-[#080808]/80 backdrop-blur-md border-b border-[#353535] sticky top-0 z-50">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
                     
@@ -98,132 +77,8 @@ export default function DashBoardLayout() {
                         </span>
                     </div>
 
-                    {/* Middle Section: Dynamic Navigation based on Role */}
-                    {!isAdmin && !isOwner ? (
-                        <div className="hidden md:flex items-center flex-1 max-w-xl mx-4 border border-[#444748] rounded-none bg-[#1c1b1b] px-3 py-1.5 gap-2 relative">
-                            <input 
-                                type="text" 
-                                placeholder="Search properties..." 
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="bg-transparent text-xs w-full focus:outline-none text-[#e5e2e1] placeholder:text-[#8e9192]"
-                            />
-                            <span className="text-[#444748]">|</span>
-                            
-                            <select 
-                                value={selectedFilter}
-                                onChange={(e) => setSelectedFilter(e.target.value)}
-                                className="bg-transparent text-[10px] font-bold uppercase tracking-wider text-[#c4c7c7] cursor-pointer focus:outline-none shrink-0"
-                            >
-                                <option value="all" className="bg-[#1c1b1b]">All Types</option>
-                                <option value="house" className="bg-[#1c1b1b]">House</option>
-                                <option value="apartment" className="bg-[#1c1b1b]">Apartment</option>
-                                <option value="villa" className="bg-[#1c1b1b]">Luxury Villa</option>
-                            </select>
-
-                            <span className="text-[#444748]">|</span>
-
-                            <div className="relative shrink-0">
-                                <button
-                                    type="button"
-                                    onClick={() => setIsPriceFilterOpen(!isPriceFilterOpen)}
-                                    className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-none transition-all flex items-center gap-1.5 cursor-pointer ${
-                                        isFilteredActive
-                                            ? "bg-[#5ddda1] text-[#003823]"
-                                            : "text-[#c4c7c7] hover:text-[#e5e2e1] hover:bg-[#2a2a2a]"
-                                    }`}
-                                >
-                                    <span>💵</span>
-                                    <span>
-                                        {maxPrice === Infinity 
-                                            ? minPrice > 0 ? `> $${minPrice}` : "Any Price" 
-                                            : `$${minPrice} - $${maxPrice}`}
-                                    </span>
-                                    <span className="text-[8px]">{isPriceFilterOpen ? "▲" : "▼"}</span>
-                                </button>
-
-                                {isPriceFilterOpen && (
-                                    <div className="absolute top-10 right-0 w-80 bg-[#1c1b1b] border border-[#444748] rounded-none shadow-2xl p-4 space-y-4 z-50">
-                                        <div className="flex justify-between items-center border-b border-[#444748] pb-2">
-                                            <span className="text-[10px] font-bold uppercase tracking-widest text-[#e5e2e1]">
-                                                Price Filter
-                                            </span>
-                                            {isFilteredActive && (
-                                                <button 
-                                                    onClick={resetPriceFilter}
-                                                    className="text-[9px] text-[#ffb4ab] font-bold uppercase hover:underline cursor-pointer"
-                                                >
-                                                    Reset All
-                                                </button>
-                                            )}
-                                        </div>
-
-                                        <div className="space-y-1">
-                                            <span className="text-[8px] font-bold uppercase text-[#c4c7c7] block">Quick Presets</span>
-                                            <div className="grid grid-cols-4 gap-1">
-                                                <button onClick={() => applyPreset(1000)} className="px-2 py-1 text-[9px] font-bold bg-[#0e0e0e] hover:bg-[#2a2a2a] border border-[#444748] rounded-none text-[#e5e2e1] cursor-pointer">&lt; $1k</button>
-                                                <button onClick={() => applyPreset(5000)} className="px-2 py-1 text-[9px] font-bold bg-[#0e0e0e] hover:bg-[#2a2a2a] border border-[#444748] rounded-none text-[#e5e2e1] cursor-pointer">&lt; $5k</button>
-                                                <button onClick={() => applyPreset(15000)} className="px-2 py-1 text-[9px] font-bold bg-[#0e0e0e] hover:bg-[#2a2a2a] border border-[#444748] rounded-none text-[#e5e2e1] cursor-pointer">&lt; $15k</button>
-                                                <button onClick={() => applyPreset(Infinity)} className="px-2 py-1 text-[9px] font-bold bg-[#5ddda1] text-[#003823] rounded-none cursor-pointer">Any</button>
-                                            </div>
-                                        </div>
-
-                                        <div className="flex items-center gap-2 pt-1">
-                                            <div className="flex-1">
-                                                <label className="text-[8px] font-bold uppercase text-[#c4c7c7] block mb-1">Min Price ($)</label>
-                                                <input 
-                                                    type="number"
-                                                    min="0"
-                                                    value={minPrice}
-                                                    onChange={(e) => setMinPrice(Number(e.target.value) || 0)}
-                                                    className="w-full text-xs p-2 border border-[#444748] bg-[#0e0e0e] rounded-none font-bold text-[#e5e2e1] focus:outline-none"
-                                                />
-                                            </div>
-                                            <span className="text-[#8e9192] self-end pb-2 font-bold">-</span>
-                                            <div className="flex-1">
-                                                <label className="text-[8px] font-bold uppercase text-[#c4c7c7] block mb-1">Max Price ($)</label>
-                                                <input 
-                                                    type="number"
-                                                    min="0"
-                                                    value={maxPrice === Infinity ? "" : maxPrice}
-                                                    placeholder="Unlimited"
-                                                    onChange={(e) => {
-                                                        const val = e.target.value;
-                                                        setMaxPrice(val === "" ? Infinity : Number(val));
-                                                    }}
-                                                    className="w-full text-xs p-2 border border-[#444748] bg-[#0e0e0e] rounded-none font-bold text-[#e5e2e1] focus:outline-none"
-                                                />
-                                            </div>
-                                        </div>
-
-                                        <div className="space-y-1.5 pt-2">
-                                            <div className="flex justify-between text-[9px] font-bold text-[#c4c7c7] uppercase">
-                                                <span>$0</span>
-                                                <span className="text-[#5ddda1]">Max Cap: {maxPrice === Infinity ? "Unlimited" : `$${maxPrice}`}</span>
-                                                <span>${sliderMax.toLocaleString()}</span>
-                                            </div>
-                                            <input 
-                                                type="range"
-                                                min="0"
-                                                max={sliderMax}
-                                                step="250"
-                                                value={maxPrice === Infinity ? sliderMax : maxPrice}
-                                                onChange={handleSliderChange}
-                                                className="w-full h-2 bg-[#2a2a2a] rounded-none appearance-none cursor-pointer accent-[#5ddda1]"
-                                            />
-                                        </div>
-
-                                        <button 
-                                            onClick={() => setIsPriceFilterOpen(false)}
-                                            className="w-full py-2 bg-[#5ddda1] hover:bg-[#08a56e] text-[#003823] text-[10px] font-bold uppercase tracking-wider rounded-none cursor-pointer"
-                                        >
-                                            Apply Filter
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    ) : isAdmin ? (
+                    {/* Middle Section: Dynamic Navigation for Admin or Owner */}
+                    {isAdmin ? (
                         <div className="hidden lg:flex items-center space-x-6 text-[10px] font-bold uppercase tracking-wider text-[#c4c7c7]">
                             <span onClick={() => setAdminActiveTab("home")} className={`py-2 cursor-pointer transition-colors ${adminActiveTab === "home" ? "text-[#5ddda1] border-b-2 border-[#5ddda1]" : "hover:text-[#e5e2e1]"}`}>Home</span>
                             <span onClick={() => setAdminActiveTab("users")} className={`py-2 cursor-pointer transition-colors ${adminActiveTab === "users" ? "text-[#5ddda1] border-b-2 border-[#5ddda1]" : "hover:text-[#e5e2e1]"}`}>Manage Users</span>
@@ -231,7 +86,7 @@ export default function DashBoardLayout() {
                             <span onClick={() => setAdminActiveTab("reviews")} className={`py-2 cursor-pointer transition-colors ${adminActiveTab === "reviews" ? "text-[#5ddda1] border-b-2 border-[#5ddda1]" : "hover:text-[#e5e2e1]"}`}>Manage Reviews</span>
                             <span onClick={() => setAdminActiveTab("logs")} className={`py-2 cursor-pointer transition-colors ${adminActiveTab === "logs" ? "text-[#5ddda1] border-b-2 border-[#5ddda1]" : "hover:text-[#e5e2e1]"}`}>System Logs</span>
                         </div>
-                    ) : (
+                    ) : isOwner ? (
                         <div className="hidden lg:flex items-center space-x-6 text-[10px] font-bold uppercase tracking-wider text-[#c4c7c7]">
                             <span onClick={() => setOwnerActiveTab("home")} className={`py-2 cursor-pointer transition-colors ${ownerActiveTab === "home" ? "text-[#5ddda1] border-b-2 border-[#5ddda1]" : "hover:text-[#e5e2e1]"}`}>Home</span>
                             <span onClick={() => setOwnerActiveTab("add-property")} className={`py-2 cursor-pointer transition-colors ${ownerActiveTab === "add-property" ? "text-[#5ddda1] border-b-2 border-[#5ddda1]" : "hover:text-[#e5e2e1]"}`}>Add Property</span>
@@ -239,18 +94,16 @@ export default function DashBoardLayout() {
                             <span onClick={() => setOwnerActiveTab("earnings")} className={`py-2 cursor-pointer transition-colors ${ownerActiveTab === "earnings" ? "text-[#5ddda1] border-b-2 border-[#5ddda1]" : "hover:text-[#e5e2e1]"}`}>Earnings</span>
                             <span onClick={() => setOwnerActiveTab("manage-reviews")} className={`py-2 cursor-pointer transition-colors ${ownerActiveTab === "manage-reviews" ? "text-[#5ddda1] border-b-2 border-[#5ddda1]" : "hover:text-[#e5e2e1]"}`}>View/Manage Reviews</span>
                         </div>
+                    ) : (
+                        <div className="hidden lg:flex items-center space-x-6 text-[10px] font-bold uppercase tracking-wider text-[#c4c7c7]">
+                            <span onClick={() => navigate("/dashboard")} className="cursor-pointer hover:text-[#5ddda1]">Browse Catalog</span>
+                            <span onClick={() => navigate("/my-bookings")} className="cursor-pointer hover:text-[#5ddda1]">My Bookings</span>
+                            <span onClick={() => navigate("/favourites")} className="cursor-pointer hover:text-[#5ddda1]">Favourites</span>
+                        </div>
                     )}
 
                     {/* Right Side: Notifications / Profile / Logout */}
                     <div className="flex items-center space-x-3 min-w-max">
-                        {!isAdmin && !isOwner && (
-                            <div className="hidden lg:flex items-center space-x-6 text-[10px] font-bold uppercase tracking-wider text-[#c4c7c7] pr-2">
-                                <span onClick={() => navigate("/dashboard")} className="cursor-pointer hover:text-[#5ddda1]">Browse</span>
-                                <span onClick={() => navigate("/my-bookings")} className="cursor-pointer hover:text-[#5ddda1]">My Bookings</span>
-                                <span onClick={() => navigate("/favourites")} className="cursor-pointer hover:text-[#5ddda1]">Favourites</span>
-                            </div>
-                        )}
-
                         {/* 🔔 Role-Based Notification Bell */}
                         <NotificationBell />
 
@@ -306,9 +159,13 @@ export default function DashBoardLayout() {
                 ) : user?.role === "user" ? (
                     <UserDashboard 
                         searchQuery={searchQuery} 
+                        setSearchQuery={setSearchQuery}
                         selectedFilter={selectedFilter}
+                        setSelectedFilter={setSelectedFilter}
                         minPrice={minPrice}
+                        setMinPrice={setMinPrice}
                         maxPrice={maxPrice}
+                        setMaxPrice={setMaxPrice}
                     />
                 ) : user?.role === "owner" ? (
                     <div className="space-y-6">
