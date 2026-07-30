@@ -110,83 +110,84 @@ export default function MyBookingsPage() {
     };
 
     return (
-        <div className="min-h-screen bg-[#f9f9ff] text-[#151c27] font-sans antialiased">
-            {/* Header Navigation */}
-            <div className="bg-white border-b border-[#e2e8f8] sticky top-0 z-30 shadow-xs">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-                    <button
-                        onClick={() => navigate("/dashboard")}
-                        className="text-xs font-bold uppercase tracking-wider text-[#151c27] hover:underline flex items-center gap-2 cursor-pointer"
-                    >
-                        ← Back to Marketplace
-                    </button>
-                    <h1 className="text-xs font-black uppercase tracking-widest text-[#151c27]">
-                        Tenant Portal
-                    </h1>
-                </div>
+        <div className="space-y-8 sm:space-y-10 relative bg-[#131313] text-[#e5e2e1] min-h-screen pb-16 px-4 sm:px-6 lg:px-8">
+            
+            {/* Top Action Navigator Bar */}
+            <div className="flex items-center justify-between border-b border-[#353535] pb-4 pt-2">
+                <button
+                    onClick={() => navigate("/dashboard")}
+                    className="text-[11px] sm:text-xs font-bold uppercase tracking-widest text-[#5ddda1] hover:underline flex items-center gap-2 cursor-pointer transition-all"
+                >
+                    ← Back to Catalog
+                </button>
+                <span className="text-[9px] sm:text-[10px] font-bold text-[#c4c7c7] uppercase tracking-[0.25em]">
+                    TENANT PORTAL
+                </span>
             </div>
 
             {/* Main Content Container */}
-            <div className="max-w-5xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+            <div className="space-y-6 max-w-6xl mx-auto">
                 
-                {/* Header title showing live active count */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#e2e8f8] pb-4">
+                {/* Header Title & Refresh Action */}
+                <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-[#353535] pb-4">
                     <div>
-                        <span className="text-[10px] font-bold text-[#7d8497] uppercase tracking-widest block">
-                            MY RESERVATIONS
+                        <span className="text-[9px] sm:text-[10px] font-bold text-[#c4c7c7] uppercase tracking-[0.2em] block">
+                            RESERVATION ARCHIVE
                         </span>
-                        <h2 className="text-2xl font-bold uppercase text-[#151c27] tracking-tight">
+                        <h2 className="text-xl sm:text-2xl font-serif font-bold uppercase tracking-tight text-[#e5e2e1] mt-1">
                             Booked Stays ({userBookings.length})
                         </h2>
                     </div>
 
                     <button 
                         onClick={fetchUserBookings}
-                        className="px-3 py-1.5 bg-white border border-[#e2e8f8] text-xs font-bold uppercase tracking-wider rounded hover:bg-[#f9f9ff] transition-all cursor-pointer self-start sm:self-auto"
+                        className="px-4 py-2.5 bg-[#1c1b1b] border border-[#444748] text-[10px] font-bold uppercase tracking-widest text-[#5ddda1] hover:bg-[#5ddda1] hover:text-[#003823] transition-all cursor-pointer self-start sm:self-auto rounded-none shadow-md"
                     >
-                        🔄 Refresh List
+                        ↻ Refresh Records
                     </button>
                 </div>
 
                 {/* Notifications */}
                 {successMessage && (
-                    <div className="p-3 text-xs font-bold rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200 uppercase tracking-wider">
-                        ✓ {safeText(successMessage)}
+                    <div className="p-4 text-xs font-bold rounded-none bg-[#5ddda1] text-[#003823] border border-[#5ddda1] uppercase tracking-wider shadow-lg flex items-center gap-2">
+                        <span>✓</span> {safeText(successMessage)}
                     </div>
                 )}
 
                 {error && (
-                    <div className="p-3 text-xs font-bold rounded-md bg-red-50 text-red-800 border border-red-200 uppercase tracking-wider">
-                        ⚠️ {safeText(error)}
+                    <div className="p-4 text-xs font-bold rounded-none bg-[#1c1b1b] text-[#ffb4ab] border border-[#444748] uppercase tracking-wider shadow-lg flex items-center gap-2">
+                        <span>⚠️</span> {safeText(error)}
                     </div>
                 )}
 
                 {/* Content Stream */}
                 {loading ? (
-                    <div className="p-16 flex flex-col items-center justify-center space-y-3">
-                        <div className="w-8 h-8 border-3 border-[#151c27] border-t-transparent rounded-full animate-spin"></div>
-                        <div className="text-xs font-bold uppercase tracking-widest text-gray-400 font-mono">
-                            Retrieving Reservation Records...
+                    <div className="p-16 sm:p-20 flex flex-col items-center justify-center space-y-4 bg-[#1c1b1b] border border-[#353535]">
+                        <div className="w-8 h-8 border-2 border-[#5ddda1] border-t-transparent rounded-none animate-spin"></div>
+                        <div className="text-[10px] font-bold tracking-[0.25em] text-[#c4c7c7] uppercase font-mono text-center">
+                            Syncing reservation logs...
                         </div>
                     </div>
                 ) : userBookings.length === 0 ? (
-                    <div className="bg-white border border-[#e2e8f8] rounded-xl p-12 text-center space-y-4 shadow-xs">
-                        <div className="text-4xl">🏨</div>
-                        <h3 className="text-base font-bold uppercase tracking-wide text-[#151c27]">
-                            No Active Stays
+                    <div className="bg-[#1c1b1b] border border-[#353535] rounded-none p-10 sm:p-16 text-center space-y-4 shadow-2xl">
+                        <div className="text-3xl">🏛️</div>
+                        <h3 className="text-sm font-serif font-bold uppercase tracking-widest text-[#e5e2e1]">
+                            No Active Stays Registered
                         </h3>
-                        <p className="text-xs text-gray-500 max-w-sm mx-auto">
-                            You currently have no active property reservations.
+                        <p className="text-xs text-[#c4c7c7] max-w-sm mx-auto leading-relaxed">
+                            You currently possess no verified property reservations within our secure repository.
                         </p>
-                        <button
-                            onClick={() => navigate("/dashboard")}
-                            className="px-5 py-2.5 bg-[#151c27] hover:bg-black text-white text-xs font-bold uppercase tracking-wider rounded-md transition-all cursor-pointer shadow-sm"
-                        >
-                            Browse Marketplace
-                        </button>
+                        <div className="pt-2">
+                            <button
+                                onClick={() => navigate("/dashboard")}
+                                className="w-full sm:w-auto px-6 py-3 bg-[#5ddda1] hover:bg-[#08a56e] text-[#003823] text-xs font-bold uppercase tracking-widest rounded-none transition-all cursor-pointer shadow-lg"
+                            >
+                                Explore Portfolio Catalog →
+                            </button>
+                        </div>
                     </div>
                 ) : (
-                    <div className="space-y-4">
+                    <div className="space-y-6">
                         {userBookings.map((booking) => {
                             const bookingId = booking._id || booking.id;
                             const property = booking.property || booking.propertyDetails || {};
@@ -198,101 +199,100 @@ export default function MyBookingsPage() {
                             const statusRaw = booking.status || "pending";
                             const status = typeof statusRaw === "string" ? statusRaw.toLowerCase() : "pending";
 
-                            const propTitle = safeText(property.title || property.name, "Reserved Property Space");
-                            const propLocation = safeText(property.location || property.address, "Verified location");
-                            const propType = safeText(property.type || property.category, "Rental Space");
+                            const propTitle = safeText(property.title || property.name, "Reserved Property Asset");
+                            const propLocation = safeText(property.location || property.address, "Verified coordinate archive");
+                            const propType = safeText(property.type || property.category, "Estate Space");
 
                             return (
                                 <div
                                     key={String(bookingId)}
-                                    className="bg-white border border-[#e2e8f8] hover:border-gray-300 rounded-xl p-5 sm:p-6 shadow-xs flex flex-col md:flex-row gap-6 items-start md:items-center justify-between transition-all"
+                                    className="bg-[#1c1b1b] border border-[#353535] rounded-none p-4 sm:p-6 shadow-2xl flex flex-col lg:flex-row gap-6 items-start lg:items-center justify-between hover:border-[#5ddda1] transition-all duration-500 group"
                                 >
                                     {/* Left: Property Thumbnail & Details */}
-                                    <div className="flex gap-4 items-start sm:items-center w-full md:w-auto">
-                                        <div className="w-24 h-24 sm:w-28 sm:h-28 bg-[#f9f9ff] rounded-lg border border-[#e2e8f8] overflow-hidden shrink-0">
+                                    <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center w-full lg:w-auto flex-1">
+                                        <div className="w-full sm:w-28 h-40 sm:h-28 bg-[#0e0e0e] rounded-none border border-[#444748] overflow-hidden shrink-0">
                                             {typeof property.image === "string" || (Array.isArray(property.images) && typeof property.images[0] === "string") ? (
                                                 <img
                                                     src={property.image || property.images[0]}
                                                     alt={propTitle}
-                                                    className="w-full h-full object-cover"
+                                                    className="w-full h-full object-cover filter contrast-110 group-hover:scale-105 transition-transform duration-700"
                                                 />
                                             ) : (
-                                                <div className="w-full h-full flex items-center justify-center text-[9px] text-gray-400 font-bold uppercase text-center p-2">
-                                                    No Image
+                                                <div className="w-full h-full flex items-center justify-center text-[9px] text-[#8e9192] font-bold uppercase text-center p-2">
+                                                    No Image Record
                                                 </div>
                                             )}
                                         </div>
 
-                                        <div className="space-y-1.5 flex-1">
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-[10px] font-bold uppercase tracking-widest text-[#7d8497]">
-                                                    {propType}
-                                                </span>
-                                                <span className="text-gray-300">•</span>
-                                                <span className="text-[10px] font-mono text-gray-400 uppercase">
-                                                    Ref: {String(bookingId).slice(-6)}
+                                        <div className="space-y-2 flex-1 w-full">
+                                            <div className="flex flex-wrap items-center gap-2 text-[9px] font-bold uppercase text-[#8e9192] tracking-[0.2em]">
+                                                <span>{propType}</span>
+                                                <span>•</span>
+                                                <span className="font-mono text-[#5ddda1]">
+                                                    REF: {String(bookingId).slice(-6)}
                                                 </span>
                                             </div>
 
-                                            <h3 
+                                            <h4 
                                                 onClick={() => property._id && navigate(`/property/${property._id}`)}
-                                                className="text-base font-bold uppercase text-[#151c27] tracking-tight hover:underline cursor-pointer"
+                                                className="font-serif text-base sm:text-lg font-semibold text-[#e5e2e1] tracking-tight hover:text-[#5ddda1] cursor-pointer transition-colors line-clamp-1"
                                             >
                                                 {propTitle}
-                                            </h3>
+                                            </h4>
 
-                                            <p className="text-xs text-gray-500 font-medium">
+                                            <p className="text-xs text-[#c4c7c7] font-sans line-clamp-1">
                                                 📍 {propLocation}
                                             </p>
 
                                             <div className="pt-1">
                                                 <span
-                                                    className={`px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-wider inline-block ${
+                                                    className={`px-3 py-1 rounded-none text-[9px] font-bold uppercase tracking-wider inline-flex items-center gap-1.5 border ${
                                                         status === "confirmed"
-                                                            ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
-                                                            : "bg-amber-100 text-amber-800 border border-amber-200"
+                                                            ? "bg-[#083823]/50 text-[#5ddda1] border-[#5ddda1]"
+                                                            : "bg-[#2a2a2a] text-[#c4c7c7] border-[#444748]"
                                                     }`}
                                                 >
-                                                    ● {status}
+                                                    <span className={`w-1.5 h-1.5 rounded-full ${status === "confirmed" ? "bg-[#5ddda1]" : "bg-[#c4c7c7]"}`}></span>
+                                                    {status}
                                                 </span>
                                             </div>
                                         </div>
                                     </div>
 
-                                    {/* Middle: Dates & Pricing */}
-                                    <div className="w-full md:w-auto bg-[#f9f9ff] border border-[#e2e8f8] p-3.5 rounded-lg space-y-2 text-xs">
-                                        <span className="text-[9px] font-bold uppercase tracking-wider text-[#7d8497] block">
-                                            Selected Stay Window
+                                    {/* Middle: Dates & Financial Valuation */}
+                                    <div className="w-full lg:w-80 bg-[#0e0e0e] border border-[#353535] p-4 rounded-none space-y-3 text-xs shrink-0">
+                                        <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#c4c7c7] block">
+                                            Stay Allocation Window
                                         </span>
 
-                                        <div className="flex items-center gap-3 font-semibold text-[#151c27]">
+                                        <div className="flex items-center justify-between text-[#e5e2e1] font-sans">
                                             <div>
-                                                <span className="text-[9px] text-gray-400 block uppercase">Check In</span>
-                                                <span>{formatDate(startDate)}</span>
+                                                <span className="text-[8px] text-[#8e9192] block uppercase tracking-wider">Check In</span>
+                                                <span className="font-bold text-xs">{formatDate(startDate)}</span>
                                             </div>
-                                            <span className="text-gray-400">→</span>
-                                            <div>
-                                                <span className="text-[9px] text-gray-400 block uppercase">Check Out</span>
-                                                <span>{formatDate(endDate)}</span>
+                                            <span className="text-[#5ddda1]">→</span>
+                                            <div className="text-right">
+                                                <span className="text-[8px] text-[#8e9192] block uppercase tracking-wider">Check Out</span>
+                                                <span className="font-bold text-xs">{formatDate(endDate)}</span>
                                             </div>
                                         </div>
 
-                                        <div className="border-t border-[#e2e8f8] pt-1.5 flex justify-between items-center text-[10px] text-gray-600 font-medium">
+                                        <div className="border-t border-[#353535] pt-2 flex justify-between items-center text-[10px] text-[#c4c7c7] uppercase font-bold tracking-wider">
                                             <span>Duration: {nights} {nights === 1 ? "Night" : "Nights"}</span>
-                                            <span className="font-bold text-[#151c27]">
-                                                Total: ${safeText(booking.totalPrice || (property.pricePerNight * nights) || 0)}
+                                            <span className="text-[#5ddda1]">
+                                                ${safeText(booking.totalPrice || (property.pricePerNight * nights) || 0)}
                                             </span>
                                         </div>
                                     </div>
 
-                                    {/* Right: Cancel Action */}
-                                    <div className="w-full md:w-auto flex md:flex-col justify-end items-end gap-2 shrink-0">
+                                    {/* Right: Cancellation Action */}
+                                    <div className="w-full lg:w-auto flex lg:flex-col justify-end items-end gap-2 shrink-0">
                                         <button
                                             onClick={() => handleCancel(bookingId)}
                                             disabled={cancelLoadingId === bookingId}
-                                            className="w-full md:w-auto px-4 py-2.5 bg-red-50 hover:bg-red-600 text-red-600 hover:text-white border border-red-200 hover:border-red-600 text-xs font-bold uppercase tracking-wider rounded-md transition-all cursor-pointer disabled:opacity-50"
+                                            className="w-full lg:w-auto px-6 py-3 bg-[#080808] hover:bg-[#93000a] text-[#ffb4ab] hover:text-[#ffdad6] border border-[#444748] hover:border-[#93000a] text-[10px] font-bold uppercase tracking-[0.15em] rounded-none transition-all duration-300 cursor-pointer disabled:opacity-40 shadow-lg text-center"
                                         >
-                                            {cancelLoadingId === bookingId ? "Canceling..." : "Cancel Reservation"}
+                                            {cancelLoadingId === bookingId ? "Revoking..." : "Cancel Reservation"}
                                         </button>
                                     </div>
 

@@ -99,7 +99,7 @@ export default function DashBoardLayout() {
                         </div>
                     ) : (
                         <div className="hidden lg:flex gap-10 items-center text-xs font-bold tracking-[0.15em] uppercase text-[#c4c7c7]">
-                            <span onClick={() => navigate("/dashboard")} className="cursor-pointer hover:text-[#5ddda1] transition-colors pb-1 hover:underline">Browse</span>
+                            <span onClick={() => navigate("/dashboard")} className="cursor-pointer hover:text-[#5ddda1] transition-colors pb-1 hover:underline">Home</span>
                             <span onClick={() => navigate("/my-bookings")} className="cursor-pointer hover:text-[#5ddda1] transition-colors pb-1 hover:underline">My Bookings</span>
                             <span onClick={() => navigate("/favourites")} className="cursor-pointer hover:text-[#5ddda1] transition-colors pb-1 hover:underline">Favourites</span>
                         </div>

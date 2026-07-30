@@ -6,7 +6,7 @@ export default function UserProfileModal({ isOpen, onClose }) {
     const dispatch = useDispatch();
     const { user } = useSelector((state) => state.auth);
 
-    // 🛡️ Fully Memoized Atomic Selectors (Fixes the remaining Redux selector warning)
+    // 🛡️ Fully Memoized Atomic Selectors
     const loading = useSelector((state) => state.profile?.loading) || false;
     const error = useSelector((state) => state.profile?.error) || null;
     const successMessage = useSelector((state) => state.profile?.successMessage) || null;
@@ -94,23 +94,23 @@ export default function UserProfileModal({ isOpen, onClose }) {
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-fadeIn">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#080808]/85 backdrop-blur-sm p-4 animate-fadeIn">
             
             {/* Modal Container */}
-            <div className="bg-white border border-[#e2e8f8] w-full max-w-md rounded-2xl shadow-2xl overflow-hidden flex flex-col relative">
+            <div className="bg-[#1c1b1b] border border-[#353535] w-full max-w-md rounded-none shadow-2xl overflow-hidden flex flex-col relative text-[#e5e2e1]">
                 
                 {/* Header */}
-                <div className="bg-[#151c27] text-white px-6 py-4 flex items-center justify-between">
+                <div className="bg-[#0e0e0e] border-b border-[#353535] text-[#e5e2e1] px-6 py-4 flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                        <span className="text-lg">👤</span>
-                        <h3 className="text-xs font-black uppercase tracking-widest">
+                        <span className="text-sm text-[#5ddda1]">👤</span>
+                        <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-[#e5e2e1]">
                             {isEditing ? "Edit Account Profile" : "User Profile Details"}
                         </h3>
                     </div>
                     <button
                         type="button"
                         onClick={onClose}
-                        className="text-gray-400 hover:text-white text-sm font-bold p-1 cursor-pointer transition-colors"
+                        className="text-[#8e9192] hover:text-[#5ddda1] text-xs font-bold p-1 cursor-pointer transition-colors"
                     >
                         ✕
                     </button>
@@ -118,12 +118,12 @@ export default function UserProfileModal({ isOpen, onClose }) {
 
                 {/* System Feedback Badges */}
                 {successMessage && !isEditing && (
-                    <div className="bg-emerald-50 text-emerald-800 border-b border-emerald-200 px-6 py-2.5 text-[11px] font-bold uppercase tracking-wider flex items-center gap-2">
-                        <span>✅</span> {successMessage}
+                    <div className="bg-[#083823]/50 text-[#5ddda1] border-b border-[#5ddda1] px-6 py-3 text-[10px] font-bold uppercase tracking-widest flex items-center gap-2">
+                        <span>✓</span> {successMessage}
                     </div>
                 )}
                 {error && (
-                    <div className="bg-red-50 text-red-800 border-b border-red-200 px-6 py-2.5 text-[11px] font-bold uppercase tracking-wider flex items-center gap-2">
+                    <div className="bg-[#1c1b1b] text-[#ffb4ab] border-b border-[#444748] px-6 py-3 text-[10px] font-bold uppercase tracking-widest flex items-center gap-2">
                         <span>⚠️</span> {error}
                     </div>
                 )}
@@ -142,20 +142,20 @@ export default function UserProfileModal({ isOpen, onClose }) {
                                         <img
                                             src={avatarPreview}
                                             alt="User Avatar"
-                                            className="w-24 h-24 rounded-full border-2 border-[#151c27] object-cover shadow-md"
+                                            className="w-24 h-24 rounded-none border-2 border-[#5ddda1] object-cover shadow-2xl"
                                         />
                                     ) : (
-                                        <div className="w-24 h-24 rounded-full border-2 border-[#151c27] bg-blue-50 flex items-center justify-center shadow-md">
-                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-12 h-12">
-                                                <circle cx="12" cy="8" r="4" fill="#3B82F6" />
-                                                <path d="M5 20c0-3.3 3-6 7-6s7 2.7 7 6" fill="#3B82F6" />
+                                        <div className="w-24 h-24 rounded-none border-2 border-[#444748] bg-[#0e0e0e] flex items-center justify-center shadow-2xl text-[#5ddda1]">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-10 h-10 fill-current">
+                                                <circle cx="12" cy="8" r="4" />
+                                                <path d="M5 20c0-3.3 3-6 7-6s7 2.7 7 6" />
                                             </svg>
                                         </div>
                                     )}
 
-                                    <label className="absolute inset-0 bg-black/60 rounded-full flex flex-col items-center justify-center text-white cursor-pointer opacity-90 hover:opacity-100 transition-opacity">
-                                        <span className="text-xl">📷</span>
-                                        <span className="text-[8px] font-bold uppercase tracking-wider">Upload</span>
+                                    <label className="absolute inset-0 bg-black/70 rounded-none flex flex-col items-center justify-center text-[#5ddda1] cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <span className="text-lg">📷</span>
+                                        <span className="text-[9px] font-bold uppercase tracking-widest mt-1">Upload</span>
                                         <input
                                             type="file"
                                             accept="image/*"
@@ -166,8 +166,8 @@ export default function UserProfileModal({ isOpen, onClose }) {
                                 </div>
 
                                 <div className="text-center">
-                                    <span className="inline-block bg-[#151c27] text-white px-2.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider">
-                                        Role: {user.role || "user"}
+                                    <span className="inline-block bg-[#0e0e0e] text-[#5ddda1] border border-[#444748] px-3 py-1 rounded-none text-[9px] font-bold uppercase tracking-wider">
+                                        role: {user.role || "user"}
                                     </span>
                                 </div>
                             </div>
@@ -175,7 +175,7 @@ export default function UserProfileModal({ isOpen, onClose }) {
                             {/* Edit Mode Inputs */}
                             <div className="space-y-4">
                                 <div>
-                                    <label className="text-[10px] font-bold uppercase text-[#7d8497] block mb-1">
+                                    <label className="text-[9px] font-bold uppercase tracking-widest text-[#5ddda1] block mb-1">
                                         Full Name
                                     </label>
                                     <input
@@ -183,12 +183,12 @@ export default function UserProfileModal({ isOpen, onClose }) {
                                         value={fullname}
                                         onChange={(e) => setFullname(e.target.value)}
                                         required
-                                        className="w-full text-xs p-2.5 border border-[#e2e8f8] rounded-lg font-bold text-[#151c27] focus:outline-none focus:border-[#151c27]"
+                                        className="w-full text-xs p-3 border border-[#444748] bg-[#0e0e0e] text-[#e5e2e1] rounded-none focus:outline-none focus:border-[#5ddda1]"
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="text-[10px] font-bold uppercase text-[#7d8497] block mb-1">
+                                    <label className="text-[9px] font-bold uppercase tracking-widest text-[#5ddda1] block mb-1">
                                         Username
                                     </label>
                                     <input
@@ -196,12 +196,12 @@ export default function UserProfileModal({ isOpen, onClose }) {
                                         value={username}
                                         onChange={(e) => setUsername(e.target.value)}
                                         required
-                                        className="w-full text-xs p-2.5 border border-[#e2e8f8] rounded-lg font-bold text-[#151c27] focus:outline-none focus:border-[#151c27]"
+                                        className="w-full text-xs p-3 border border-[#444748] bg-[#0e0e0e] text-[#e5e2e1] rounded-none focus:outline-none focus:border-[#5ddda1]"
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="text-[10px] font-bold uppercase text-[#7d8497] block mb-1">
+                                    <label className="text-[9px] font-bold uppercase tracking-widest text-[#5ddda1] block mb-1">
                                         Email Address
                                     </label>
                                     <input
@@ -209,12 +209,12 @@ export default function UserProfileModal({ isOpen, onClose }) {
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
                                         required
-                                        className="w-full text-xs p-2.5 border border-[#e2e8f8] rounded-lg font-bold text-[#151c27] focus:outline-none focus:border-[#151c27]"
+                                        className="w-full text-xs p-3 border border-[#444748] bg-[#0e0e0e] text-[#e5e2e1] rounded-none focus:outline-none focus:border-[#5ddda1]"
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="text-[10px] font-bold uppercase text-[#7d8497] block mb-1">
+                                    <label className="text-[9px] font-bold uppercase tracking-widest text-[#5ddda1] block mb-1">
                                         Phone Number
                                     </label>
                                     <input
@@ -222,20 +222,20 @@ export default function UserProfileModal({ isOpen, onClose }) {
                                         value={phone}
                                         onChange={(e) => setPhone(e.target.value)}
                                         placeholder="+1 (555) 000-0000"
-                                        className="w-full text-xs p-2.5 border border-[#e2e8f8] rounded-lg font-bold text-[#151c27] focus:outline-none focus:border-[#151c27]"
+                                        className="w-full text-xs p-3 border border-[#444748] bg-[#0e0e0e] text-[#e5e2e1] rounded-none focus:outline-none focus:border-[#5ddda1]"
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="text-[10px] font-bold uppercase text-[#7d8497] block mb-1">
-                                        New Password <span className="text-gray-400 font-normal">(Leave blank to keep current)</span>
+                                    <label className="text-[9px] font-bold uppercase tracking-widest text-[#5ddda1] block mb-1">
+                                        New Password <span className="text-[#8e9192] font-normal lowercase">(leave blank to keep current)</span>
                                     </label>
                                     <input
                                         type="password"
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
                                         placeholder="••••••••••••"
-                                        className="w-full text-xs p-2.5 border border-[#e2e8f8] rounded-lg font-bold text-[#151c27] focus:outline-none focus:border-[#151c27]"
+                                        className="w-full text-xs p-3 border border-[#444748] bg-[#0e0e0e] text-[#e5e2e1] rounded-none focus:outline-none focus:border-[#5ddda1]"
                                     />
                                 </div>
                             </div>
@@ -243,22 +243,22 @@ export default function UserProfileModal({ isOpen, onClose }) {
                         </div>
 
                         {/* Footer Action Buttons (Edit Mode) */}
-                        <div className="bg-[#f9f9ff] border-t border-[#e2e8f8] px-6 py-4 flex items-center justify-between gap-3 mt-auto">
+                        <div className="bg-[#0e0e0e] border-t border-[#353535] px-6 py-4 flex items-center justify-between gap-3 mt-auto">
                             <button
                                 type="button"
                                 onClick={handleCancelEditing}
                                 disabled={loading}
-                                className="px-4 py-2 bg-white border border-[#e2e8f8] text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-gray-100 transition-all cursor-pointer"
+                                className="px-5 py-3 bg-[#1c1b1b] border border-[#444748] text-xs font-bold uppercase tracking-widest text-[#e5e2e1] hover:bg-[#353535] transition-all cursor-pointer rounded-none"
                             >
                                 Cancel
                             </button>
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="px-5 py-2 bg-[#151c27] text-white text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-black transition-all cursor-pointer flex items-center gap-2 shadow-xs disabled:opacity-50"
+                                className="px-6 py-3 bg-[#5ddda1] text-[#003823] text-xs font-bold uppercase tracking-widest rounded-none hover:bg-[#08a56e] transition-all cursor-pointer flex items-center gap-2 shadow-xl disabled:opacity-40"
                             >
                                 {loading && (
-                                    <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                    <div className="w-3.5 h-3.5 border-2 border-[#003823] border-t-transparent rounded-none animate-spin"></div>
                                 )}
                                 {loading ? "Saving..." : "Save Changes"}
                             </button>
@@ -266,7 +266,7 @@ export default function UserProfileModal({ isOpen, onClose }) {
 
                     </form>
                 ) : (
-                    /* VIEW MODE (Non-Form Container) */
+                    /* VIEW MODE */
                     <div className="flex flex-col flex-1 overflow-hidden">
                         
                         <div className="p-6 space-y-6 flex-1 overflow-y-auto max-h-[70vh]">
@@ -278,64 +278,64 @@ export default function UserProfileModal({ isOpen, onClose }) {
                                         <img
                                             src={avatarPreview}
                                             alt="User Avatar"
-                                            className="w-24 h-24 rounded-full border-2 border-[#151c27] object-cover shadow-md"
+                                            className="w-24 h-24 rounded-none border-2 border-[#5ddda1] object-cover shadow-2xl"
                                         />
                                     ) : (
-                                        <div className="w-24 h-24 rounded-full border-2 border-[#151c27] bg-blue-50 flex items-center justify-center shadow-md">
-                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-12 h-12">
-                                                <circle cx="12" cy="8" r="4" fill="#3B82F6" />
-                                                <path d="M5 20c0-3.3 3-6 7-6s7 2.7 7 6" fill="#3B82F6" />
+                                        <div className="w-24 h-24 rounded-none border-2 border-[#444748] bg-[#0e0e0e] flex items-center justify-center shadow-2xl text-[#5ddda1]">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-10 h-10 fill-current">
+                                                <circle cx="12" cy="8" r="4" />
+                                                <path d="M5 20c0-3.3 3-6 7-6s7 2.7 7 6" />
                                             </svg>
                                         </div>
                                     )}
                                 </div>
 
                                 <div className="text-center">
-                                    <span className="inline-block bg-[#151c27] text-white px-2.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider">
-                                        Role: {user.role || "user"}
+                                    <span className="inline-block bg-[#0e0e0e] text-[#5ddda1] border border-[#444748] px-3 py-1 rounded-none text-[9px] font-bold uppercase tracking-wider">
+                                        role: {user.role || "user"}
                                     </span>
                                 </div>
                             </div>
 
-                            {/* View Mode Card */}
-                            <div className="space-y-3 bg-[#f9f9ff] p-4 rounded-xl border border-[#e2e8f8]">
-                                <div className="flex justify-between items-center border-b border-[#e2e8f8] pb-2">
-                                    <span className="text-[10px] font-bold uppercase text-[#7d8497]">Full Name</span>
-                                    <span className="text-xs font-bold text-[#151c27]">{user.fullname || user.name || "N/A"}</span>
+                            {/* View Mode Details Card */}
+                            <div className="space-y-3 bg-[#0e0e0e] p-5 rounded-none border border-[#353535]">
+                                <div className="flex justify-between items-center border-b border-[#353535] pb-3">
+                                    <span className="text-[9px] font-bold uppercase tracking-widest text-[#8e9192]">Full Name</span>
+                                    <span className="text-xs font-bold text-[#e5e2e1]">{user.fullname || user.name || "N/A"}</span>
                                 </div>
-                                <div className="flex justify-between items-center border-b border-[#e2e8f8] pb-2">
-                                    <span className="text-[10px] font-bold uppercase text-[#7d8497]">Username</span>
-                                    <span className="text-xs font-bold text-[#151c27]">@{user.username || "N/A"}</span>
+                                <div className="flex justify-between items-center border-b border-[#353535] pb-3">
+                                    <span className="text-[9px] font-bold uppercase tracking-widest text-[#8e9192]">Username</span>
+                                    <span className="text-xs font-bold text-[#e5e2e1]">@{user.username || "N/A"}</span>
                                 </div>
-                                <div className="flex justify-between items-center border-b border-[#e2e8f8] pb-2">
-                                    <span className="text-[10px] font-bold uppercase text-[#7d8497]">Email Address</span>
-                                    <span className="text-xs font-bold text-[#151c27]">{user.email || "N/A"}</span>
+                                <div className="flex justify-between items-center border-b border-[#353535] pb-3">
+                                    <span className="text-[9px] font-bold uppercase tracking-widest text-[#8e9192]">Email Address</span>
+                                    <span className="text-xs font-bold text-[#e5e2e1]">{user.email || "N/A"}</span>
                                 </div>
-                                <div className="flex justify-between items-center border-b border-[#e2e8f8] pb-2">
-                                    <span className="text-[10px] font-bold uppercase text-[#7d8497]">Phone Number</span>
-                                    <span className="text-xs font-bold text-[#151c27]">{user.phone || user.phoneNumber || "Not Specified"}</span>
+                                <div className="flex justify-between items-center border-b border-[#353535] pb-3">
+                                    <span className="text-[9px] font-bold uppercase tracking-widest text-[#8e9192]">Phone Number</span>
+                                    <span className="text-xs font-bold text-[#e5e2e1]">{user.phone || user.phoneNumber || "Not Specified"}</span>
                                 </div>
                                 <div className="flex justify-between items-center">
-                                    <span className="text-[10px] font-bold uppercase text-[#7d8497]">Password</span>
-                                    <span className="text-xs font-bold text-[#151c27]">••••••••••••</span>
+                                    <span className="text-[9px] font-bold uppercase tracking-widest text-[#8e9192]">Password</span>
+                                    <span className="text-xs font-bold text-[#e5e2e1]">••••••••••••</span>
                                 </div>
                             </div>
 
                         </div>
 
                         {/* Footer Action Buttons (View Mode) */}
-                        <div className="bg-[#f9f9ff] border-t border-[#e2e8f8] px-6 py-4 flex items-center justify-between gap-3 mt-auto">
+                        <div className="bg-[#0e0e0e] border-t border-[#353535] px-6 py-4 flex items-center justify-between gap-3 mt-auto">
                             <button
                                 type="button"
                                 onClick={onClose}
-                                className="px-4 py-2 bg-white border border-[#e2e8f8] text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-gray-100 transition-all cursor-pointer"
+                                className="px-5 py-3 bg-[#1c1b1b] border border-[#444748] text-xs font-bold uppercase tracking-widest text-[#e5e2e1] hover:bg-[#353535] transition-all cursor-pointer rounded-none"
                             >
                                 Close
                             </button>
                             <button
                                 type="button"
                                 onClick={handleStartEditing}
-                                className="px-5 py-2 bg-[#151c27] text-white text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-black transition-all cursor-pointer flex items-center gap-1.5 shadow-xs"
+                                className="px-6 py-3 bg-[#5ddda1] text-[#003823] text-xs font-bold uppercase tracking-widest rounded-none hover:bg-[#08a56e] transition-all cursor-pointer flex items-center gap-2 shadow-xl"
                             >
                                 ✏️ Edit Profile
                             </button>
