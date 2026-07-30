@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom"; // 👈 Imported useNavigate for full-page routing
+import { useNavigate } from "react-router-dom";
 import { fetchOwnerProperties, deletePropertyListing, updatePropertyDetails, clearPropertyError } from "../store/propertySlice.js";
 
 const predefinedAmenities = ["WiFi", "Pool", "Air Conditioning", "Free Parking", "Kitchen", "Gym", "Smart TV", "Balcony"];
 
 export default function OwnerPropertiesList() {
     const dispatch = useDispatch();
-    const navigate = useNavigate(); // 👈 Initialized navigate hook
+    const navigate = useNavigate();
     const { ownerProperties = [], loadingOwnerList, successMessage } = useSelector((state) => state.properties || {});
 
     const [editingProperty, setEditingProperty] = useState(null);
@@ -40,7 +40,7 @@ export default function OwnerPropertiesList() {
 
     const handleDelete = (e, id) => {
         e.stopPropagation();
-        if (window.confirm("Are you sure you want to permanently remove this property listing?")) {
+        if (window.confirm("Are you sure you want to permanently remove this property listing? This action cannot be undone.")) {
             dispatch(deletePropertyListing(id));
         }
     };
@@ -112,126 +112,35 @@ export default function OwnerPropertiesList() {
     };
 
     return (
-        <div className="space-y-6">
+        <div className="w-full max-w-7xl mx-auto space-y-8 text-[#e5e2e1] font-sans antialiased p-1 sm:p-2 lg:p-4">
 
-            {/* Edit Modal with Images & Amenities Management */}
-            {editingProperty && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 overflow-y-auto">
-                    <form onSubmit={handleUpdateSubmit} className="bg-white border border-[#e2e8f8] w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col p-6 space-y-4 max-h-[90vh] overflow-y-auto">
-                        <div className="flex justify-between items-center border-b pb-2">
-                            <h3 className="text-xs font-black uppercase tracking-wider text-[#151c27]">Edit Property Listing, Images & Amenities</h3>
-                            <button type="button" onClick={() => setEditingProperty(null)} className="font-bold text-gray-400 hover:text-black cursor-pointer">✕</button>
-                        </div>
-
-                        <div>
-                            <label className="text-[10px] font-bold uppercase text-[#7d8497] block mb-1">Title</label>
-                            <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} required className="w-full text-xs p-2.5 border rounded-lg font-bold text-[#151c27]" />
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <label className="text-[10px] font-bold uppercase text-[#7d8497] block mb-1">Price Per Night ($)</label>
-                                <input type="number" value={price} onChange={(e) => setPrice(e.target.value)} required className="w-full text-xs p-2.5 border rounded-lg font-bold text-[#151c27]" />
-                            </div>
-                            <div>
-                                <label className="text-[10px] font-bold uppercase text-[#7d8497] block mb-1">Location</label>
-                                <input type="text" value={location} onChange={(e) => setLocation(e.target.value)} required className="w-full text-xs p-2.5 border rounded-lg font-bold text-[#151c27]" />
-                            </div>
-                        </div>
-
-                        <div>
-                            <label className="text-[10px] font-bold uppercase text-[#7d8497] block mb-1">Description</label>
-                            <textarea rows="3" value={description} onChange={(e) => setDescription(e.target.value)} required className="w-full text-xs p-2.5 border rounded-lg text-[#151c27]" />
-                        </div>
-
-                        {/* 🖼️ Manage Images Section */}
-                        <div className="space-y-2 border-t pt-3">
-                            <label className="text-[10px] font-bold uppercase text-[#7d8497] block">Manage Current Images (Click 'X' to remove)</label>
-                            <div className="grid grid-cols-4 gap-2">
-                                {currentImages.map((imgUrl, idx) => (
-                                    <div key={idx} className="relative h-20 rounded-lg border overflow-hidden group">
-                                        <img src={imgUrl} alt={`Existing ${idx}`} className="w-full h-full object-cover" />
-                                        <button
-                                            type="button"
-                                            onClick={() => handleRemoveExistingImage(idx)}
-                                            className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-bold shadow hover:bg-red-700 cursor-pointer"
-                                            title="Remove image"
-                                        >
-                                            ✕
-                                        </button>
-                                    </div>
-                                ))}
-                            </div>
-
-                            <label className="text-[10px] font-bold uppercase text-[#7d8497] block pt-2">Upload New Images</label>
-                            <input type="file" accept="image/*" multiple onChange={handleNewImagesChange} className="text-xs file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-[#151c27] file:text-white hover:file:bg-black cursor-pointer" />
-                            
-                            {newImagePreviews.length > 0 && (
-                                <div className="grid grid-cols-4 gap-2 pt-2">
-                                    {newImagePreviews.map((src, idx) => (
-                                        <div key={idx} className="relative h-20 rounded-lg border overflow-hidden">
-                                            <img src={src} alt={`New Preview ${idx}`} className="w-full h-full object-cover" />
-                                            <span className="absolute bottom-1 right-1 bg-emerald-600 text-white text-[8px] px-1 rounded font-bold">NEW</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-
-                        {/* 🛋️ Amenities Section */}
-                        <div className="space-y-2 border-t pt-3">
-                            <label className="text-[10px] font-bold uppercase text-[#7d8497] block">Property Amenities</label>
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                                {predefinedAmenities.map((amenity) => {
-                                    const isChecked = selectedAmenities.includes(amenity);
-                                    return (
-                                        <button
-                                            key={amenity}
-                                            type="button"
-                                            onClick={() => toggleAmenity(amenity)}
-                                            className={`px-2 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-wider border transition-all text-left flex items-center justify-between cursor-pointer ${
-                                                isChecked ? "bg-[#151c27] text-white border-[#151c27]" : "bg-white text-[#151c27] border-[#e2e8f8]"
-                                            }`}
-                                        >
-                                            <span>{amenity}</span>
-                                            <span>{isChecked ? "✓" : "+"}</span>
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                            <input
-                                type="text"
-                                value={customAmenityInput}
-                                onChange={(e) => setCustomAmenityInput(e.target.value)}
-                                placeholder="Add custom amenities (comma separated)..."
-                                className="w-full text-xs p-2 border rounded-lg mt-1 text-[#151c27]"
-                            />
-                        </div>
-
-                        <div className="flex justify-end gap-2 pt-4 border-t">
-                            <button type="button" onClick={() => setEditingProperty(null)} className="px-4 py-2 bg-gray-100 text-xs font-bold uppercase rounded-lg cursor-pointer">Cancel</button>
-                            <button type="submit" className="px-5 py-2 bg-[#151c27] text-white text-xs font-bold uppercase rounded-lg cursor-pointer hover:bg-black">Save Updates</button>
-                        </div>
-                    </form>
-                </div>
-            )}
-
-            <div className="bg-white p-8 rounded-xl border border-[#e2e8f8] shadow-xs space-y-2">
-                <span className="text-[9px] font-bold text-[#7d8497] uppercase tracking-widest">HOST INVENTORY</span>
-                <h2 className="text-2xl font-bold uppercase text-[#151c27] tracking-tight">My Published Properties ({ownerProperties.length})</h2>
-                <p className="text-xs text-gray-500">Manage your active real estate portfolio listings, update pricing, images, amenities, or remove units.</p>
+            {/* Header Section */}
+            <div className="bg-[#1c1b1b] p-6 sm:p-8 rounded-none border border-[#353535] shadow-2xl space-y-2">
+                <span className="text-[9px] sm:text-[10px] font-bold text-[#5ddda1] uppercase tracking-[0.25em]">HOST INVENTORY</span>
+                <h2 className="text-xl sm:text-2xl font-serif font-bold uppercase tracking-wider text-[#e5e2e1]">
+                    My Published Properties ({ownerProperties.length})
+                </h2>
+                <p className="text-xs text-[#c4c7c7] font-sans max-w-3xl">
+                    Manage your active real estate portfolio listings. Click on a card to view details, or use the actions below to update pricing, images, amenities, or remove units.
+                </p>
             </div>
 
             {successMessage && (
-                <div className="bg-emerald-50 text-emerald-800 border border-emerald-200 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider">
-                    {successMessage}
+                <div className="bg-[#083823]/50 text-[#5ddda1] border border-[#5ddda1] px-4 py-3.5 rounded-none text-xs font-bold uppercase tracking-wider shadow-lg flex items-center gap-2">
+                    <span>✓</span> {successMessage}
                 </div>
             )}
 
+            {/* 🏡 Property Grid Section */}
             {loadingOwnerList ? (
-                <div className="p-12 flex justify-center"><div className="w-6 h-6 border-2 border-[#151c27] border-t-transparent rounded-full animate-spin"></div></div>
+                <div className="p-16 flex flex-col items-center justify-center space-y-3 bg-[#1c1b1b] border border-[#353535]">
+                    <div className="w-8 h-8 border-2 border-[#5ddda1] border-t-transparent rounded-none animate-spin"></div>
+                    <div className="text-[10px] font-bold tracking-[0.25em] text-[#8e9192] uppercase font-mono">
+                        Loading Portfolio...
+                    </div>
+                </div>
             ) : ownerProperties.length === 0 ? (
-                <div className="bg-white p-12 border border-dashed border-[#e2e8f8] text-center text-xs font-bold text-gray-400 uppercase rounded-xl tracking-wider">
+                <div className="bg-[#1c1b1b] p-12 border border-dashed border-[#444748] text-center text-xs font-bold text-[#8e9192] uppercase rounded-none tracking-widest shadow-2xl">
                     No custom owner properties registered yet. Go to 'Add Property' to create your first listing.
                 </div>
             ) : (
@@ -242,42 +151,64 @@ export default function OwnerPropertiesList() {
                         return (
                             <div 
                                 key={pId} 
-                                onClick={() => navigate(`/property/${pId}`)} // 👈 Instantly navigates to PropertyDetailsPage on click
-                                className="bg-white border border-[#e2e8f8] hover:border-[#151c27] rounded-xl overflow-hidden shadow-xs flex flex-col justify-between cursor-pointer group transition-all"
+                                onClick={() => navigate(`/property/${pId}`)}
+                                className="bg-[#1c1b1b] border border-[#353535] hover:border-[#5ddda1] rounded-none overflow-hidden shadow-2xl flex flex-col cursor-pointer group transition-all duration-300 transform hover:-translate-y-1"
                             >
-                                <div className="h-48 bg-[#f9f9ff] relative border-b border-[#e2e8f8]">
+                                {/* Image Container */}
+                                <div className="h-52 bg-[#0e0e0e] relative border-b border-[#353535] overflow-hidden">
                                     {mainImg ? (
-                                        <img src={mainImg} alt={item.title} className="w-full h-full object-cover" />
+                                        <img 
+                                            src={mainImg} 
+                                            alt={item.title} 
+                                            className="w-full h-full object-cover filter contrast-110 group-hover:scale-105 transition-transform duration-500" 
+                                        />
                                     ) : (
-                                        <div className="w-full h-full flex items-center justify-center text-[9px] font-bold text-gray-400 uppercase">No Image</div>
+                                        <div className="w-full h-full flex items-center justify-center text-[9px] font-bold text-[#8e9192] uppercase tracking-wider">
+                                            No Asset Image
+                                        </div>
                                     )}
-                                    <span className="absolute bottom-3 left-3 px-2 py-1 bg-[#151c27] text-white text-[10px] font-black rounded uppercase">
+                                    {/* Price Tag */}
+                                    <span className="absolute bottom-3 left-3 px-3 py-1.5 bg-[#080808]/90 text-[#5ddda1] text-[10px] font-black rounded-none uppercase tracking-wider border border-[#5ddda1]">
                                         ${item.pricePerNight || item.price || "0"} / night
+                                    </span>
+                                    {/* Ref ID */}
+                                    <span className="absolute top-2 right-2 bg-[#080808]/90 text-[#8e9192] text-[8px] font-mono px-2 py-0.5 uppercase tracking-wider border border-[#444748]">
+                                        REF: {pId.slice(-6)}
                                     </span>
                                 </div>
 
-                                <div className="p-4 flex-1 flex flex-col justify-between space-y-4">
-                                    <div className="space-y-1">
-                                        <div className="flex justify-between items-center text-[9px] font-black uppercase text-[#7d8497]">
-                                            <span>{item.type || "Unit"}</span>
-                                            <span className={item.isApproved ? "text-emerald-600" : "text-amber-600"}>
-                                                {item.isApproved ? "● Verified" : "● Pending Review"}
+                                {/* Content Body */}
+                                <div className="p-5 flex-1 flex flex-col justify-between space-y-5">
+                                    <div className="space-y-2">
+                                        {/* Type & Status Header */}
+                                        <div className="flex justify-between items-center text-[9px] font-bold uppercase tracking-wider">
+                                            <span className="text-[#5ddda1] bg-[#083823] px-2 py-0.5 border border-[#5ddda1]">
+                                                {item.type || "Rental Unit"}
+                                            </span>
+                                            <span className={item.isApproved ? "text-[#5ddda1]" : "text-[#ffdf9e]"}>
+                                                ● {item.isApproved ? "Verified" : "Pending Review"}
                                             </span>
                                         </div>
-                                        <h4 className="text-xs font-bold uppercase tracking-wide text-[#151c27] group-hover:underline line-clamp-1">{item.title}</h4>
-                                        <p className="text-[11px] text-[#45464c] line-clamp-2">{item.description}</p>
+                                        {/* Title & Description */}
+                                        <h4 className="text-sm font-serif font-bold uppercase text-[#e5e2e1] group-hover:text-[#5ddda1] transition-colors line-clamp-1">
+                                            {item.title}
+                                        </h4>
+                                        <p className="text-xs text-[#c4c7c7] font-sans line-clamp-2 leading-relaxed">
+                                            {item.description}
+                                        </p>
                                     </div>
 
-                                    <div className="flex items-center gap-2 pt-2 border-t border-[#e2e8f8]">
+                                    {/* Action Buttons */}
+                                    <div className="flex items-center gap-3 pt-4 border-t border-[#353535]">
                                         <button 
                                             onClick={(e) => startEditing(e, item)}
-                                            className="flex-1 py-1.5 bg-[#f9f9ff] hover:bg-gray-200 border text-[#151c27] text-[10px] font-bold uppercase rounded cursor-pointer"
+                                            className="flex-1 py-2.5 bg-[#1c1b1b] hover:bg-[#353535] border border-[#444748] text-[#e5e2e1] text-[10px] font-bold uppercase tracking-widest rounded-none cursor-pointer transition-all shadow-md"
                                         >
                                             ✏️ Edit
                                         </button>
                                         <button 
                                             onClick={(e) => handleDelete(e, pId)}
-                                            className="flex-1 py-1.5 bg-red-50 hover:bg-red-600 text-red-600 hover:text-white border border-red-200 text-[10px] font-bold uppercase rounded cursor-pointer"
+                                            className="flex-1 py-2.5 bg-[#1c1b1b] hover:bg-[#ffb4ab] text-[#ffb4ab] hover:text-[#380007] border border-[#444748] hover:border-[#ffb4ab] text-[10px] font-bold uppercase tracking-widest rounded-none cursor-pointer transition-all shadow-md"
                                         >
                                             🗑️ Delete
                                         </button>
@@ -288,6 +219,144 @@ export default function OwnerPropertiesList() {
                     })}
                 </div>
             )}
+
+            {/* ✏️ EDIT MODAL SECTION ✏️ */}
+            {editingProperty && (
+                <div className="fixed inset-0 w-screen h-screen z-[99999] flex items-center justify-center bg-[#080808]/90 backdrop-blur-md p-4 overflow-y-auto">
+                    <form onSubmit={handleUpdateSubmit} className="bg-[#1c1b1b] border border-[#353535] w-full max-w-3xl rounded-none shadow-2xl overflow-hidden flex flex-col my-auto max-h-[95vh]">
+                        
+                        {/* Modal Header */}
+                        <div className="bg-[#0e0e0e] border-b border-[#353535] px-6 py-5 flex items-center justify-between sticky top-0 z-10">
+                            <h3 className="text-xs font-bold uppercase text-[#e5e2e1] tracking-widest">
+                                Edit Listing: <span className="text-[#5ddda1] font-mono">{editingProperty.title}</span>
+                            </h3>
+                            <button 
+                                type="button" 
+                                onClick={() => setEditingProperty(null)} 
+                                className="font-bold text-[#8e9192] hover:text-[#5ddda1] cursor-pointer px-2 py-1 text-sm transition-colors"
+                            >
+                                ✕
+                            </button>
+                        </div>
+
+                        {/* Scrollable Modal Body */}
+                        <div className="p-6 sm:p-8 space-y-6 flex-1 overflow-y-auto">
+                            
+                            {/* Basic Info Fields */}
+                            <div className="space-y-4">
+                                <div className="space-y-1.5">
+                                    <label className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#5ddda1] block">Title</label>
+                                    <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} required className="w-full text-xs p-3.5 border border-[#444748] rounded-none font-sans bg-[#0e0e0e] text-[#e5e2e1] focus:outline-none focus:border-[#5ddda1] focus:ring-1 focus:ring-[#5ddda1]" />
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                                    <div className="space-y-1.5">
+                                        <label className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#5ddda1] block">Price Per Night ($)</label>
+                                        <input type="number" value={price} onChange={(e) => setPrice(e.target.value)} required className="w-full text-xs p-3.5 border border-[#444748] rounded-none font-sans bg-[#0e0e0e] text-[#e5e2e1] focus:outline-none focus:border-[#5ddda1] focus:ring-1 focus:ring-[#5ddda1]" />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#5ddda1] block">Location</label>
+                                        <input type="text" value={location} onChange={(e) => setLocation(e.target.value)} required className="w-full text-xs p-3.5 border border-[#444748] rounded-none font-sans bg-[#0e0e0e] text-[#e5e2e1] focus:outline-none focus:border-[#5ddda1] focus:ring-1 focus:ring-[#5ddda1]" />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-1.5">
+                                    <label className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#5ddda1] block">Description</label>
+                                    <textarea rows="4" value={description} onChange={(e) => setDescription(e.target.value)} required className="w-full text-xs p-3.5 border border-[#444748] rounded-none font-sans bg-[#0e0e0e] text-[#e5e2e1] focus:outline-none focus:border-[#5ddda1] focus:ring-1 focus:ring-[#5ddda1] resize-none" />
+                                </div>
+                            </div>
+
+                            {/* 🖼️ Manage Images Section */}
+                            <div className="space-y-3.5 border-t border-[#353535] pt-5">
+                                <label className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#5ddda1] block">
+                                    Manage Images <span className="text-[#8e9192] font-normal lowercase">(Click '✕' to stage for removal)</span>
+                                </label>
+                                
+                                {/* Existing Images Grid */}
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                    {currentImages.map((imgUrl, idx) => (
+                                        <div key={idx} className="relative h-24 rounded-none border border-[#444748] overflow-hidden group bg-[#0e0e0e]">
+                                            <img src={imgUrl} alt={`Existing ${idx}`} className="w-full h-full object-cover filter contrast-110" />
+                                            <button
+                                                type="button"
+                                                onClick={() => handleRemoveExistingImage(idx)}
+                                                className="absolute top-1 right-1 bg-[#ffb4ab] text-[#380007] rounded-none w-6 h-6 flex items-center justify-center text-[10px] font-bold shadow hover:bg-white cursor-pointer transition-colors"
+                                                title="Remove image"
+                                            >
+                                                ✕
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <label className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#5ddda1] block pt-2">Upload New Images</label>
+                                <input type="file" accept="image/*" multiple onChange={handleNewImagesChange} className="w-full text-xs text-[#c4c7c7] file:mr-4 file:py-2.5 file:px-4 file:rounded-none file:border-0 file:text-[9px] file:font-bold file:uppercase file:bg-[#5ddda1] file:text-[#003823] file:cursor-pointer hover:file:bg-[#08a56e] bg-[#0e0e0e] border border-[#444748]" />
+                                
+                                {newImagePreviews.length > 0 && (
+                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+                                        {newImagePreviews.map((src, idx) => (
+                                            <div key={idx} className="relative h-24 rounded-none border border-[#444748] overflow-hidden bg-[#0e0e0e]">
+                                                <img src={src} alt={`New Preview ${idx}`} className="w-full h-full object-cover filter contrast-110" />
+                                                <span className="absolute bottom-1 right-1 bg-[#5ddda1] text-[#003823] text-[8px] px-1.5 py-0.5 font-bold uppercase">NEW</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* 🛋️ Amenities Section */}
+                            <div className="space-y-3.5 border-t border-[#353535] pt-5">
+                                <label className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#5ddda1] block">Property Amenities</label>
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                    {predefinedAmenities.map((amenity) => {
+                                        const isChecked = selectedAmenities.includes(amenity);
+                                        return (
+                                            <button
+                                                key={amenity}
+                                                type="button"
+                                                onClick={() => toggleAmenity(amenity)}
+                                                className={`px-3.5 py-2.5 rounded-none text-[10px] font-bold uppercase tracking-wider border transition-all text-left flex items-center justify-between cursor-pointer ${
+                                                    isChecked 
+                                                        ? "bg-[#5ddda1] text-[#003823] border-[#5ddda1] shadow-md" 
+                                                        : "bg-[#0e0e0e] text-[#e5e2e1] border-[#444748] hover:border-[#5ddda1]"
+                                                }`}
+                                            >
+                                                <span>{amenity}</span>
+                                                <span>{isChecked ? "✓" : "+"}</span>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                                <input
+                                    type="text"
+                                    value={customAmenityInput}
+                                    onChange={(e) => setCustomAmenityInput(e.target.value)}
+                                    placeholder="Add custom amenities (comma separated)..."
+                                    className="w-full text-xs p-3.5 border border-[#444748] rounded-none bg-[#0e0e0e] font-sans text-[#e5e2e1] focus:outline-none focus:border-[#5ddda1]"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Modal Footer */}
+                        <div className="bg-[#0e0e0e] border-t border-[#353535] px-6 py-4 flex justify-end gap-3 sticky bottom-0 z-10">
+                            <button 
+                                type="button" 
+                                onClick={() => setEditingProperty(null)} 
+                                className="px-5 py-2.5 bg-[#1c1b1b] hover:bg-[#353535] text-[#c4c7c7] border border-[#444748] text-xs font-bold uppercase tracking-widest rounded-none cursor-pointer transition-all"
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                type="submit" 
+                                className="px-6 py-2.5 bg-[#5ddda1] hover:bg-[#08a56e] text-[#003823] text-xs font-bold uppercase tracking-widest rounded-none cursor-pointer transition-all shadow-lg"
+                            >
+                                Save Updates
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            )}
+
         </div>
     );
 }

@@ -78,107 +78,109 @@ export default function OwnerReviewsPage() {
     };
 
     return (
-        <div className="space-y-6">
+        <div className="w-full max-w-7xl mx-auto space-y-8 text-[#e5e2e1] font-sans antialiased p-1 sm:p-2 lg:p-4">
             
             {/* 💬 POPUP REVIEWS MODAL */}
             {activePropertyModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 overflow-y-auto">
-                    <div className="bg-white border border-[#e2e8f8] w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col p-6 space-y-6 max-h-[90vh] overflow-y-auto">
+                <div className="fixed inset-0 w-screen h-screen z-[99999] flex items-center justify-center bg-[#080808]/90 backdrop-blur-md p-4 overflow-y-auto">
+                    <div className="bg-[#1c1b1b] border border-[#353535] w-full max-w-2xl rounded-none shadow-2xl overflow-hidden flex flex-col my-auto max-h-[90vh]">
                         
-                        <div className="flex justify-between items-center border-b pb-3">
+                        {/* Modal Header */}
+                        <div className="bg-[#0e0e0e] border-b border-[#353535] px-6 py-5 flex justify-between items-center sticky top-0 z-10">
                             <div>
-                                <span className="text-[9px] font-bold text-[#7d8497] uppercase tracking-widest">Property Feedback Stream</span>
-                                <h3 className="text-sm font-black uppercase text-[#151c27]">{activePropertyModal.title}</h3>
+                                <span className="text-[9px] font-bold text-[#5ddda1] uppercase tracking-[0.25em] block">Feedback Stream</span>
+                                <h3 className="text-sm font-serif font-bold uppercase text-[#e5e2e1] tracking-wide mt-0.5">{activePropertyModal.title}</h3>
                             </div>
                             <button 
                                 onClick={() => setSelectedPropertyId(null)} 
-                                className="font-bold text-gray-400 hover:text-black cursor-pointer px-2 py-1"
+                                className="font-bold text-[#8e9192] hover:text-[#5ddda1] cursor-pointer px-2 py-1 text-sm transition-colors"
                             >
                                 ✕
                             </button>
                         </div>
 
                         {/* Reviews List */}
-                        <div className="space-y-4">
+                        <div className="p-6 sm:p-8 space-y-5 overflow-y-auto flex-1">
                             {activePropertyModal.reviews.map((rev) => {
                                 const rId = rev._id || rev.id;
                                 const user = rev.user || {};
                                 const hostReply = rev.reply;
 
                                 return (
-                                    <div key={rId} className="bg-[#f9f9ff] border border-[#e2e8f8] p-4 rounded-xl space-y-3">
+                                    <div key={rId} className="bg-[#0e0e0e] border border-[#353535] p-5 rounded-none space-y-3.5 shadow-xl">
+                                        
                                         {/* User Header with Avatar */}
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-3">
                                                 {user.avatar ? (
-                                                    <img src={user.avatar} alt="" className="w-8 h-8 rounded-full object-cover border" />
+                                                    <img src={user.avatar} alt="" className="w-9 h-9 rounded-full object-cover border border-[#444748]" />
                                                 ) : (
-                                                    <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-800 font-bold flex items-center justify-center text-xs">
+                                                    <div className="w-9 h-9 rounded-full bg-[#1c1b1b] text-[#5ddda1] border border-[#444748] font-bold flex items-center justify-center text-xs">
                                                         {(user.fullname || user.username || "U").charAt(0).toUpperCase()}
                                                     </div>
                                                 )}
                                                 <div>
-                                                    <h5 className="text-xs font-bold text-[#151c27]">{user.fullname || user.username || "Verified Tenant"}</h5>
-                                                    <span className="text-[9px] text-gray-400">{new Date(rev.createdAt || Date.now()).toLocaleDateString()}</span>
+                                                    <h5 className="text-xs font-bold text-[#e5e2e1]">{user.fullname || user.username || "Verified Tenant"}</h5>
+                                                    <span className="text-[9px] text-[#8e9192] font-mono">{new Date(rev.createdAt || Date.now()).toLocaleDateString()}</span>
                                                 </div>
                                             </div>
-                                            <span className="text-xs font-black text-amber-500">★ {rev.rating || "5"} / 5</span>
+                                            <span className="text-xs font-black text-[#5ddda1] font-mono bg-[#083823] px-2 py-0.5 border border-[#5ddda1]">★ {rev.rating || "5"} / 5</span>
                                         </div>
 
                                         {/* Review Comment */}
-                                        <p className="text-xs text-[#45464c] leading-relaxed pl-11">
+                                        <p className="text-xs text-[#c4c7c7] font-sans leading-relaxed pl-12">
                                             "{rev.comment}"
                                         </p>
 
                                         {/* Owner Reply Section */}
-                                        <div className="pl-11 pt-2 border-t border-gray-200/60 space-y-2">
+                                        <div className="pl-12 pt-3 border-t border-[#353535] space-y-3">
                                             {hostReply && editingReplyId !== rId ? (
-                                                <div className="bg-white p-3 rounded-lg border border-[#e2e8f8] space-y-1">
-                                                    <div className="flex justify-between items-center text-[9px] font-bold uppercase text-[#7d8497]">
-                                                        <span>Your Host Reply</span>
-                                                        <div className="flex gap-2">
+                                                <div className="bg-[#1c1b1b] p-3.5 rounded-none border border-[#353535] space-y-1.5 shadow-md">
+                                                    <div className="flex justify-between items-center text-[9px] font-bold uppercase tracking-widest text-[#5ddda1]">
+                                                        <span>Your Host Response</span>
+                                                        <div className="flex gap-3">
                                                             <button 
                                                                 onClick={() => {
                                                                     setEditingReplyId(rId);
                                                                     setReplyInputs({ ...replyInputs, [rId]: hostReply });
                                                                 }}
-                                                                className="hover:text-blue-600 cursor-pointer"
+                                                                className="hover:text-white cursor-pointer transition-colors"
                                                             >
                                                                 ✏️ Edit
                                                             </button>
                                                             <button 
                                                                 onClick={() => handleDeleteReply(rId)}
-                                                                className="hover:text-red-600 cursor-pointer"
+                                                                className="hover:text-[#ffb4ab] cursor-pointer transition-colors text-[#ffb4ab]"
                                                             >
                                                                 🗑️ Delete
                                                             </button>
                                                         </div>
                                                     </div>
-                                                    <p className="text-xs text-[#151c27]">{hostReply}</p>
+                                                    <p className="text-xs text-[#e5e2e1] font-sans">{hostReply}</p>
                                                 </div>
                                             ) : (
-                                                <div className="space-y-2">
+                                                <div className="space-y-2.5">
                                                     <textarea 
                                                         rows="2"
-                                                        placeholder={editingReplyId === rId ? "Edit your reply..." : "Write a reply to this review..."}
+                                                        placeholder={editingReplyId === rId ? "Edit your response..." : "Write a professional response to this tenant review..."}
                                                         value={replyInputs[rId] || ""}
                                                         onChange={(e) => setReplyInputs({ ...replyInputs, [rId]: e.target.value })}
-                                                        className="w-full text-xs p-2.5 bg-white border rounded-lg focus:outline-none"
+                                                        className="w-full text-xs p-3 bg-[#1c1b1b] border border-[#444748] rounded-none text-[#e5e2e1] focus:outline-none focus:border-[#5ddda1] placeholder:text-[#8e9192] resize-none"
                                                     />
-                                                    <div className="flex justify-end gap-2">
+                                                    <div className="flex justify-end gap-2.5">
                                                         {editingReplyId === rId && (
                                                             <button 
                                                                 onClick={() => setEditingReplyId(null)} 
-                                                                className="px-3 py-1 bg-gray-100 text-[10px] font-bold uppercase rounded cursor-pointer"
+                                                                className="px-4 py-2 bg-[#1c1b1b] text-[#c4c7c7] border border-[#444748] text-[10px] font-bold uppercase tracking-widest rounded-none cursor-pointer hover:bg-[#353535]"
                                                             >
                                                                 Cancel
                                                             </button>
                                                         )}
                                                         <button 
                                                             onClick={() => editingReplyId === rId ? handleEditSubmit(rId) : handleReplySubmit(rId)}
-                                                            className="px-4 py-1.5 bg-[#151c27] text-white text-[10px] font-bold uppercase rounded-lg cursor-pointer hover:bg-black"
+                                                            className="px-5 py-2 bg-[#5ddda1] hover:bg-[#08a56e] text-[#003823] text-[10px] font-bold uppercase tracking-widest rounded-none cursor-pointer shadow-md transition-all"
                                                         >
-                                                            {editingReplyId === rId ? "Save Reply" : "Post Reply"}
+                                                            {editingReplyId === rId ? "Save Response" : "Post Response"}
                                                         </button>
                                                     </div>
                                                 </div>
@@ -194,58 +196,77 @@ export default function OwnerReviewsPage() {
                 </div>
             )}
 
-            {/* Header Banner */}
-            <div className="bg-white p-8 rounded-xl border border-[#e2e8f8] shadow-xs space-y-2">
-                <span className="text-[9px] font-bold text-[#7d8497] uppercase tracking-widest">FEEDBACK STREAM</span>
-                <h2 className="text-2xl font-bold uppercase text-[#151c27] tracking-tight">View & Manage Property Reviews</h2>
-                <p className="text-xs text-gray-500">Click on any property card below to view tenant reviews, post replies, edit responses, or delete feedback.</p>
+            {/* Hero Banner with Themed Visual & Dark Vignette Filter */}
+            <div className="relative w-full h-64 sm:h-80 bg-[#0e0e0e] border border-[#353535] rounded-none overflow-hidden shadow-2xl flex flex-col justify-end p-6 sm:p-10">
+                <div 
+                    className="absolute inset-0 bg-cover bg-center" 
+                    style={{ backgroundImage: `url('https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=1600&q=90')` }}
+                ></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-[#080808] via-[#080808]/70 to-[#080808]/30"></div>
+
+                <div className="relative z-10 space-y-2 max-w-2xl">
+                    <span className="text-[9px] sm:text-[10px] font-bold text-[#5ddda1] uppercase tracking-[0.3em]">
+                        FEEDBACK STREAM
+                    </span>
+                    <h2 className="text-xl sm:text-3xl font-serif font-bold uppercase text-[#e5e2e1] tracking-tight">
+                        View & Manage Property Reviews
+                    </h2>
+                    <p className="text-xs sm:text-sm text-[#c4c7c7] font-sans leading-relaxed">
+                        Click on any property asset card below to inspect tenant feedback ratings, post official replies, or manage host responses.
+                    </p>
+                </div>
             </div>
 
             {successMessage && (
-                <div className="bg-emerald-50 text-emerald-800 border border-emerald-200 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider">
-                    {successMessage}
+                <div className="bg-[#083823]/50 text-[#5ddda1] border border-[#5ddda1] px-4 py-3.5 rounded-none text-xs font-bold uppercase tracking-wider shadow-lg flex items-center gap-2">
+                    <span>✓</span> {successMessage}
                 </div>
             )}
             {error && (
-                <div className="bg-red-50 text-red-800 border border-red-200 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider">
-                    ⚠️ {error}
+                <div className="bg-[#1c1b1b] text-[#ffb4ab] border border-[#444748] px-4 py-3.5 rounded-none text-xs font-bold uppercase tracking-wider shadow-lg flex items-center gap-2">
+                    <span>⚠️</span> {error}
                 </div>
             )}
 
-            {/* Property Cards Grid (Only properties that have reviews) */}
+            {/* Property Cards Grid (Compact & Stylized) */}
             {loading ? (
-                <div className="p-12 flex justify-center"><div className="w-6 h-6 border-2 border-[#151c27] border-t-transparent rounded-full animate-spin"></div></div>
+                <div className="p-16 flex flex-col items-center justify-center space-y-3 bg-[#1c1b1b] border border-[#353535]">
+                    <div className="w-8 h-8 border-2 border-[#5ddda1] border-t-transparent rounded-none animate-spin"></div>
+                    <div className="text-[10px] font-bold tracking-[0.25em] text-[#8e9192] uppercase font-mono">
+                        Retrieving Review Feeds...
+                    </div>
+                </div>
             ) : groupedProperties.length === 0 ? (
-                <div className="bg-white p-12 border border-dashed border-[#e2e8f8] text-center text-xs font-bold text-gray-400 uppercase rounded-xl tracking-wider">
+                <div className="bg-[#1c1b1b] p-12 border border-dashed border-[#444748] text-center text-xs font-bold text-[#8e9192] uppercase rounded-none tracking-widest shadow-2xl">
                     No property review feeds found yet.
                 </div>
             ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                     {groupedProperties.map((prop) => {
                         const pId = prop._id || prop.id;
-                        const mainImg = prop.images?.[0] || "";
+                        const mainImg = prop.images?.[0] || prop.image || "";
                         const reviewsCount = prop.reviews.length;
 
                         return (
                             <div 
                                 key={pId}
                                 onClick={() => setSelectedPropertyId(pId)}
-                                className="bg-white border border-[#e2e8f8] hover:border-[#151c27] rounded-xl overflow-hidden shadow-xs flex flex-col justify-between cursor-pointer group transition-all"
+                                className="bg-[#1c1b1b] border border-[#353535] hover:border-[#5ddda1] rounded-none overflow-hidden shadow-2xl flex flex-col justify-between cursor-pointer group transition-all duration-300 transform hover:-translate-y-1"
                             >
-                                <div className="h-48 bg-[#f9f9ff] relative border-b border-[#e2e8f8]">
+                                <div className="h-40 bg-[#0e0e0e] relative border-b border-[#353535] overflow-hidden">
                                     {mainImg ? (
-                                        <img src={mainImg} alt={prop.title} className="w-full h-full object-cover" />
+                                        <img src={mainImg} alt={prop.title} className="w-full h-full object-cover filter contrast-110 group-hover:scale-105 transition-transform duration-500" />
                                     ) : (
-                                        <div className="w-full h-full flex items-center justify-center text-[9px] font-bold text-gray-400 uppercase">No Image</div>
+                                        <div className="w-full h-full flex items-center justify-center text-[9px] font-bold text-[#8e9192] uppercase tracking-wider">No Asset Image</div>
                                     )}
-                                    <span className="absolute bottom-3 left-3 px-2.5 py-1 bg-[#151c27] text-white text-[10px] font-black rounded uppercase">
+                                    <span className="absolute bottom-2.5 left-2.5 px-2.5 py-1 bg-[#080808]/90 text-[#5ddda1] text-[9px] font-black rounded-none uppercase tracking-wider border border-[#5ddda1]">
                                         ⭐ {reviewsCount} {reviewsCount === 1 ? "Review" : "Reviews"}
                                     </span>
                                 </div>
 
-                                <div className="p-4 space-y-2">
-                                    <h4 className="text-xs font-bold uppercase tracking-wide text-[#151c27] group-hover:underline line-clamp-1">{prop.title}</h4>
-                                    <p className="text-[11px] text-gray-500">Click to inspect tenant feedback, ratings, and manage host replies.</p>
+                                <div className="p-4 space-y-1.5">
+                                    <h4 className="text-xs font-serif font-bold uppercase tracking-wide text-[#e5e2e1] group-hover:text-[#5ddda1] transition-colors line-clamp-1">{prop.title}</h4>
+                                    <p className="text-[10px] text-[#8e9192] uppercase tracking-wider">Inspect tenant feedback →</p>
                                 </div>
                             </div>
                         );
