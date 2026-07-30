@@ -92,7 +92,6 @@ export default function PropertyDetailsPage() {
     // ⚡ Dynamic Back Navigation Handler based on User Role
     const handleBackNavigation = () => {
         if (isOwner) {
-            // Send owner back to dashboard, or navigate(-1) if they came directly from My Properties
             navigate(-1);
         } else {
             navigate("/dashboard");
@@ -101,10 +100,10 @@ export default function PropertyDetailsPage() {
 
     if (loadingDetails) {
         return (
-            <div className="min-h-screen w-full bg-[#f9f9ff] flex flex-col items-center justify-center p-12 space-y-3">
-                <div className="w-8 h-8 border-3 border-[#151c27] border-t-transparent rounded-full animate-spin"></div>
-                <div className="text-xs font-bold uppercase tracking-widest text-gray-400 font-mono">
-                    Loading Property Details...
+            <div className="min-h-screen w-full bg-[#131313] flex flex-col items-center justify-center p-12 space-y-4">
+                <div className="w-8 h-8 border-2 border-[#5ddda1] border-t-transparent rounded-none animate-spin"></div>
+                <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#c4c7c7] font-mono">
+                    Loading Asset Specifications...
                 </div>
             </div>
         );
@@ -112,15 +111,15 @@ export default function PropertyDetailsPage() {
 
     if (errorDetails || !selectedProperty) {
         return (
-            <div className="min-h-screen w-full bg-[#f9f9ff] p-8 flex flex-col items-center justify-center space-y-4">
-                <div className="p-6 text-xs font-bold text-red-700 bg-red-50 border border-red-200 rounded-md uppercase tracking-wider max-w-lg w-full text-center">
+            <div className="min-h-screen w-full bg-[#131313] p-8 flex flex-col items-center justify-center space-y-4 text-[#e5e2e1]">
+                <div className="p-4 text-xs font-bold text-[#ffb4ab] bg-[#1c1b1b] border border-[#444748] rounded-none uppercase tracking-wider max-w-lg w-full text-center shadow-xl">
                     ⚠️ {errorDetails || "Property record not found."}
                 </div>
                 <button 
                     onClick={handleBackNavigation} 
-                    className="px-4 py-2 bg-[#151c27] text-white text-xs font-bold uppercase tracking-wider rounded cursor-pointer"
+                    className="px-6 py-3 bg-[#5ddda1] hover:bg-[#08a56e] text-[#003823] text-xs font-bold uppercase tracking-widest rounded-none transition-all cursor-pointer shadow-lg"
                 >
-                    {isOwner ? "Back To My Properties" : "Back To Marketplace"}
+                    {isOwner ? "Back To My Properties" : "Back To Catalog"}
                 </button>
             </div>
         );
@@ -141,41 +140,41 @@ export default function PropertyDetailsPage() {
             : ["WiFi", "Air Conditioning", "Parking", "Kitchen", "Security"];
 
     return (
-        <div className="min-h-screen w-full bg-[#f9f9ff] text-[#151c27] font-sans antialiased">
+        <div className="min-h-screen w-full bg-[#131313] text-[#e5e2e1] font-sans antialiased pb-20">
             
             {/* TOP NAVIGATION BAR */}
-            <div className="bg-white border-b border-[#e2e8f8] sticky top-0 z-40 shadow-xs">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div className="bg-[#080808]/90 backdrop-blur-md border-b border-[#353535] sticky top-0 z-40">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
                     <button 
                         onClick={handleBackNavigation} 
-                        className="text-xs font-bold uppercase tracking-wider text-[#151c27] hover:underline flex items-center gap-2 cursor-pointer"
+                        className="text-xs font-bold uppercase tracking-widest text-[#5ddda1] hover:underline flex items-center gap-2 cursor-pointer transition-all"
                     >
-                        ← {isOwner ? "Back To My Properties" : "Back To Marketplace"}
+                        ← {isOwner ? "Back To My Properties" : "Back To Catalog"}
                     </button>
-                    <span className="text-[10px] font-bold text-[#7d8497] uppercase tracking-widest">
+                    <span className="text-[9px] font-mono font-bold text-[#8e9192] uppercase tracking-[0.2em]">
                         Asset ID: {selectedProperty._id || selectedProperty.id}
                     </span>
                 </div>
             </div>
 
             {/* MAIN CONTENT BODY */}
-            <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
+            <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-10 pt-10">
                 
                 {/* GALLERY SECTION */}
-                <div className="bg-white border border-[#e2e8f8] rounded-xl overflow-hidden shadow-xs p-4 space-y-4">
-                    <div className="w-full h-96 sm:h-[480px] bg-[#f9f9ff] rounded-lg overflow-hidden relative border border-[#e2e8f8]">
+                <div className="bg-[#1c1b1b] border border-[#353535] rounded-none overflow-hidden shadow-2xl p-4 sm:p-6 space-y-4">
+                    <div className="w-full h-96 sm:h-[520px] bg-[#0e0e0e] rounded-none overflow-hidden relative border border-[#444748]">
                         {imagesList.length > 0 ? (
                             <img 
                                 src={imagesList[activeImageIndex]} 
                                 alt={selectedProperty.title} 
-                                className="w-full h-full object-cover transition-all duration-300"
+                                className="w-full h-full object-cover filter contrast-110 transition-all duration-700"
                             />
                         ) : (
-                            <div className="w-full h-full flex items-center justify-center text-xs font-bold uppercase text-gray-400 tracking-widest">
+                            <div className="w-full h-full flex items-center justify-center text-xs font-bold uppercase text-[#8e9192] tracking-widest">
                                 No Images Uploaded
                             </div>
                         )}
-                        <span className="absolute bottom-4 left-4 bg-[#151c27] text-white text-xs font-black px-3 py-1.5 rounded-md uppercase tracking-wider shadow-md">
+                        <span className="absolute bottom-6 left-6 bg-[#080808]/90 backdrop-blur-md text-[#5ddda1] border border-[#444748] px-4 py-2 text-xs font-bold rounded-none uppercase tracking-widest shadow-xl">
                             ${pricePerNight} / Night
                         </span>
                     </div>
@@ -186,8 +185,8 @@ export default function PropertyDetailsPage() {
                                 <button
                                     key={index}
                                     onClick={() => setActiveImageIndex(index)}
-                                    className={`w-20 h-20 shrink-0 rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${
-                                        activeImageIndex === index ? "border-[#151c27] scale-95 shadow-md" : "border-[#e2e8f8] opacity-70 hover:opacity-100"
+                                    className={`w-24 h-24 shrink-0 rounded-none overflow-hidden border-2 transition-all cursor-pointer ${
+                                        activeImageIndex === index ? "border-[#5ddda1] scale-95 shadow-2xl" : "border-[#444748] opacity-50 hover:opacity-100"
                                     }`}
                                 >
                                     <img src={imgUrl} alt="thumbnail" className="w-full h-full object-cover" />
@@ -201,54 +200,55 @@ export default function PropertyDetailsPage() {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
                     
                     {/* LEFT COLUMNS: PROPERTY SPECIFICATIONS */}
-                    <div className="lg:col-span-2 bg-white border border-[#e2e8f8] rounded-xl p-6 sm:p-8 space-y-8 shadow-xs">
+                    <div className="lg:col-span-2 bg-[#1c1b1b] border border-[#353535] rounded-none p-6 sm:p-10 space-y-8 shadow-2xl">
                         <div>
-                            <div className="flex justify-between items-center text-[10px] font-black uppercase text-[#7d8497] tracking-widest mb-1">
+                            <div className="flex justify-between items-center text-[10px] font-bold uppercase text-[#8e9192] tracking-[0.2em] mb-2">
                                 <span>Category: {selectedProperty.category || selectedProperty.type || "Rental Property"}</span>
-                                <span className={selectedProperty.isApproved ? "text-emerald-600 font-bold" : "text-amber-600 font-bold"}>
-                                    {selectedProperty.isApproved ? "● Verified Active Listing" : "● Pending Admin Approval"}
+                                <span className={selectedProperty.isApproved ? "text-[#5ddda1] font-bold flex items-center gap-1.5" : "text-[#ffb4ab] font-bold flex items-center gap-1.5"}>
+                                    <span className={`w-1.5 h-1.5 rounded-full ${selectedProperty.isApproved ? "bg-[#5ddda1]" : "bg-[#ffb4ab]"}`}></span>
+                                    {selectedProperty.isApproved ? "Verified Active Listing" : "Pending Admin Approval"}
                                 </span>
                             </div>
-                            <h1 className="text-2xl sm:text-3xl font-bold uppercase text-[#151c27] tracking-tight">
+                            <h1 className="text-2xl sm:text-3xl font-serif font-bold uppercase text-[#e5e2e1] tracking-tight">
                                 {selectedProperty.title || selectedProperty.name || "Untitled Property Listing"}
                             </h1>
-                            <p className="text-xs text-gray-500 mt-2 font-semibold flex items-center gap-1">
+                            <p className="text-xs text-[#c4c7c7] mt-2 font-sans flex items-center gap-1.5">
                                 📍 {selectedProperty.location || selectedProperty.address || "Location verified"}
                             </p>
                         </div>
 
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 bg-[#f9f9ff] rounded-lg border border-[#e2e8f8]">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-5 bg-[#0e0e0e] rounded-none border border-[#353535]">
                             <div>
-                                <span className="text-[9px] font-bold uppercase text-[#7d8497] block">Type</span>
-                                <span className="text-xs font-bold text-[#151c27] uppercase">{selectedProperty.type || "Apartment"}</span>
+                                <span className="text-[9px] font-bold uppercase tracking-widest text-[#8e9192] block">Type</span>
+                                <span className="text-xs font-bold text-[#e5e2e1] uppercase">{selectedProperty.type || "Apartment"}</span>
                             </div>
                             <div>
-                                <span className="text-[9px] font-bold uppercase text-[#7d8497] block">Max Guests</span>
-                                <span className="text-xs font-bold text-[#151c27]">{selectedProperty.maxGuests || selectedProperty.guests || "4"} People</span>
+                                <span className="text-[9px] font-bold uppercase tracking-widest text-[#8e9192] block">Max Guests</span>
+                                <span className="text-xs font-bold text-[#e5e2e1]">{selectedProperty.maxGuests || selectedProperty.guests || "4"} People</span>
                             </div>
                             <div>
-                                <span className="text-[9px] font-bold uppercase text-[#7d8497] block">Bedrooms</span>
-                                <span className="text-xs font-bold text-[#151c27]">{selectedProperty.bedrooms || selectedProperty.beds || "2"} Rooms</span>
+                                <span className="text-[9px] font-bold uppercase tracking-widest text-[#8e9192] block">Bedrooms</span>
+                                <span className="text-xs font-bold text-[#e5e2e1]">{selectedProperty.bedrooms || selectedProperty.beds || "2"} Rooms</span>
                             </div>
                             <div>
-                                <span className="text-[9px] font-bold uppercase text-[#7d8497] block">Bathrooms</span>
-                                <span className="text-xs font-bold text-[#151c27]">{selectedProperty.bathrooms || selectedProperty.baths || "2"} Baths</span>
+                                <span className="text-[9px] font-bold uppercase tracking-widest text-[#8e9192] block">Bathrooms</span>
+                                <span className="text-xs font-bold text-[#e5e2e1]">{selectedProperty.bathrooms || selectedProperty.baths || "2"} Baths</span>
                             </div>
                         </div>
 
-                        <div className="space-y-3 border-t border-[#e2e8f8] pt-6">
-                            <h3 className="text-xs font-bold uppercase text-[#7d8497] tracking-widest">Property Description</h3>
-                            <p className="text-xs text-[#45464c] leading-relaxed whitespace-pre-line">
+                        <div className="space-y-3 border-t border-[#353535] pt-6">
+                            <h3 className="text-xs font-bold uppercase text-[#5ddda1] tracking-[0.2em]">Property Description</h3>
+                            <p className="text-xs text-[#c4c7c7] leading-relaxed whitespace-pre-line font-sans">
                                 {selectedProperty.description || "No detailed description provided."}
                             </p>
                         </div>
 
-                        <div className="space-y-3 border-t border-[#e2e8f8] pt-6">
-                            <h3 className="text-xs font-bold uppercase text-[#7d8497] tracking-widest">Included Amenities</h3>
-                            <div className="flex flex-wrap gap-2">
+                        <div className="space-y-3 border-t border-[#353535] pt-6">
+                            <h3 className="text-xs font-bold uppercase text-[#5ddda1] tracking-[0.2em]">Included Amenities</h3>
+                            <div className="flex flex-wrap gap-2.5">
                                 {amenitiesList.map((item, index) => (
-                                    <span key={index} className="px-3 py-1.5 bg-[#f9f9ff] text-[#151c27] border border-[#e2e8f8] rounded-md text-[11px] font-bold uppercase tracking-wider">
-                                        ✓ {item}
+                                    <span key={index} className="px-3.5 py-2 bg-[#0e0e0e] text-[#e5e2e1] border border-[#353535] rounded-none text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5">
+                                        <span className="text-[#5ddda1]">✓</span> {item}
                                     </span>
                                 ))}
                             </div>
@@ -256,65 +256,65 @@ export default function PropertyDetailsPage() {
                     </div>
 
                     {/* RIGHT COLUMN: BOOKING DESK OR OWNER PREVIEW NOTICE */}
-                    <div className="bg-white border border-[#e2e8f8] rounded-xl p-6 space-y-5 shadow-xs sticky top-20">
-                        <div className="flex justify-between items-baseline border-b border-[#e2e8f8] pb-4">
-                            <span className="text-2xl font-black text-[#151c27]">${pricePerNight}</span>
-                            <span className="text-xs font-semibold text-gray-500 uppercase">/ night</span>
+                    <div className="bg-[#1c1b1b] border border-[#353535] rounded-none p-6 sm:p-8 space-y-6 shadow-2xl sticky top-28">
+                        <div className="flex justify-between items-baseline border-b border-[#353535] pb-4">
+                            <span className="text-2xl font-serif font-bold text-[#e5e2e1]">${pricePerNight}</span>
+                            <span className="text-xs font-bold text-[#8e9192] uppercase tracking-widest">/ night</span>
                         </div>
                         
                         {isOwner ? (
-                            <div className="bg-amber-50 border border-amber-200 p-4 rounded-xl space-y-2 text-xs text-amber-800">
-                                <span className="font-bold uppercase tracking-wider block">🛡️ Owner Inspection Mode</span>
-                                <p className="text-[11px]">You are viewing your own property asset listing details. Tenant reservation booking actions are disabled for property owners.</p>
+                            <div className="bg-[#0e0e0e] border border-[#353535] p-5 rounded-none space-y-2 text-xs text-[#c4c7c7]">
+                                <span className="font-bold uppercase tracking-[0.2em] text-[#5ddda1] block">🛡️ Owner Inspection Mode</span>
+                                <p className="text-xs leading-relaxed">You are viewing your own property asset listing details. Tenant reservation booking actions are disabled for property owners.</p>
                             </div>
                         ) : (
-                            <form onSubmit={handleBooking} className="space-y-4">
-                                <div className="space-y-3 text-xs">
+                            <form onSubmit={handleBooking} className="space-y-5">
+                                <div className="space-y-4 text-xs">
                                     <div>
-                                        <label className="block text-[9px] font-bold uppercase text-gray-500 mb-1">Check In</label>
+                                        <label className="block text-[9px] font-bold uppercase tracking-[0.2em] text-[#5ddda1] mb-1.5">Check In</label>
                                         <input 
                                             type="date" 
                                             min={new Date().toISOString().split("T")[0]}
                                             value={checkIn} 
                                             onChange={(e) => setCheckIn(e.target.value)} 
-                                            className="w-full bg-[#f9f9ff] border border-[#e2e8f8] p-2.5 rounded-md focus:outline-none focus:border-[#151c27] text-[#151c27]"
+                                            className="w-full bg-[#0e0e0e] border border-[#444748] p-3 rounded-none focus:outline-none focus:border-[#5ddda1] text-[#e5e2e1]"
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-[9px] font-bold uppercase text-gray-500 mb-1">Check Out</label>
+                                        <label className="block text-[9px] font-bold uppercase tracking-[0.2em] text-[#5ddda1] mb-1.5">Check Out</label>
                                         <input 
                                             type="date" 
                                             min={checkIn || new Date().toISOString().split("T")[0]}
                                             value={checkOut} 
                                             onChange={(e) => setCheckOut(e.target.value)} 
-                                            className="w-full bg-[#f9f9ff] border border-[#e2e8f8] p-2.5 rounded-md focus:outline-none focus:border-[#151c27] text-[#151c27]"
+                                            className="w-full bg-[#0e0e0e] border border-[#444748] p-3 rounded-none focus:outline-none focus:border-[#5ddda1] text-[#e5e2e1]"
                                         />
                                     </div>
                                 </div>
 
                                 {/* Live Price Breakdown */}
                                 {totalNights > 0 && (
-                                    <div className="bg-[#f9f9ff] p-3.5 rounded-lg border border-[#e2e8f8] space-y-2 text-xs">
-                                        <div className="flex justify-between text-gray-600 font-medium">
+                                    <div className="bg-[#0e0e0e] p-4 rounded-none border border-[#353535] space-y-2.5 text-xs">
+                                        <div className="flex justify-between text-[#c4c7c7] font-medium">
                                             <span>${pricePerNight} × {totalNights} {totalNights === 1 ? "night" : "nights"}</span>
                                             <span>${totalPrice}</span>
                                         </div>
-                                        <div className="flex justify-between text-xs font-bold text-[#151c27] border-t border-[#e2e8f8] pt-2">
+                                        <div className="flex justify-between text-xs font-bold text-[#e5e2e1] border-t border-[#353535] pt-2.5 uppercase tracking-wider">
                                             <span>Total Amount</span>
-                                            <span className="text-emerald-700">${totalPrice}</span>
+                                            <span className="text-[#5ddda1]">${totalPrice}</span>
                                         </div>
                                     </div>
                                 )}
 
                                 {/* Redux State Alerts */}
                                 {(localError || bookingError) && (
-                                    <div className="p-3 text-xs font-bold rounded-md border bg-red-50 text-red-800 border-red-200 uppercase tracking-wider">
+                                    <div className="p-3.5 text-xs font-bold rounded-none border bg-[#0e0e0e] text-[#ffb4ab] border-[#444748] uppercase tracking-wider shadow-lg">
                                         ⚠️ {localError || bookingError}
                                     </div>
                                 )}
 
                                 {successMessage && (
-                                    <div className="p-3 text-xs font-bold rounded-md border bg-emerald-50 text-emerald-800 border-emerald-200 uppercase tracking-wider">
+                                    <div className="p-3.5 text-xs font-bold rounded-none border bg-[#083823]/50 text-[#5ddda1] border-[#5ddda1] uppercase tracking-wider shadow-lg">
                                         ✓ {successMessage}
                                     </div>
                                 )}
@@ -322,7 +322,7 @@ export default function PropertyDetailsPage() {
                                 <button 
                                     type="submit" 
                                     disabled={bookingLoading}
-                                    className="w-full py-3 bg-[#151c27] hover:bg-black text-white text-xs font-bold uppercase tracking-widest rounded-md transition-all cursor-pointer shadow-sm disabled:opacity-50"
+                                    className="w-full py-3.5 bg-[#5ddda1] hover:bg-[#08a56e] text-[#003823] text-xs font-bold uppercase tracking-[0.2em] rounded-none transition-all cursor-pointer shadow-xl disabled:opacity-40"
                                 >
                                     {bookingLoading ? "Processing Booking..." : "Confirm Reservation"}
                                 </button>

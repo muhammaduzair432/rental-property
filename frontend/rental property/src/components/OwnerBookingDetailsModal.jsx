@@ -9,41 +9,59 @@ export default function OwnerBookingDetailsModal({ booking, onClose }) {
     const checkOut = booking.endDate || booking.checkOut;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
-            <div className="bg-white border border-[#e2e8f8] w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+        <div className="fixed inset-0 w-screen h-screen z-[99999] flex items-center justify-center bg-[#080808]/90 backdrop-blur-md p-4 overflow-y-auto">
+            <div className="bg-[#1c1b1b] border border-[#353535] w-full max-w-lg rounded-none shadow-2xl overflow-hidden flex flex-col text-[#e5e2e1] my-auto">
                 
-                <div className="bg-[#151c27] text-white px-6 py-4 flex items-center justify-between">
-                    <h3 className="text-xs font-black uppercase tracking-widest">Reservation Inspection Docket</h3>
-                    <button onClick={onClose} className="text-gray-400 hover:text-white text-sm font-bold cursor-pointer">✕</button>
+                {/* Modal Header */}
+                <div className="bg-[#0e0e0e] border-b border-[#353535] px-6 py-5 flex items-center justify-between">
+                    <div>
+                        <span className="text-[9px] font-bold text-[#5ddda1] uppercase tracking-[0.25em] block">HOST VERIFICATION</span>
+                        <h3 className="text-xs font-bold uppercase text-[#e5e2e1] tracking-wider mt-1">Reservation Inspection Docket</h3>
+                    </div>
+                    <button 
+                        onClick={onClose} 
+                        className="font-bold text-[#8e9192] hover:text-[#5ddda1] cursor-pointer px-2 py-1 text-sm transition-colors"
+                    >
+                        ✕
+                    </button>
                 </div>
 
-                <div className="p-6 space-y-4 text-xs">
-                    <div className="bg-[#f9f9ff] p-4 rounded-xl border border-[#e2e8f8] space-y-2">
-                        <span className="text-[9px] font-bold text-[#7d8497] uppercase tracking-wider block">Property Asset</span>
-                        <h4 className="font-bold text-[#151c27] text-sm uppercase">{property.title || "Rental Unit"}</h4>
-                        <p className="text-gray-500">📍 {property.location || "Location not specified"}</p>
+                {/* Modal Body Content */}
+                <div className="p-6 sm:p-8 space-y-4 text-xs">
+                    
+                    {/* Property Asset Card */}
+                    <div className="bg-[#0e0e0e] p-4 sm:p-5 rounded-none border border-[#353535] space-y-2 shadow-xl">
+                        <span className="text-[9px] font-bold text-[#5ddda1] uppercase tracking-[0.2em] block">Property Asset</span>
+                        <h4 className="font-serif font-bold text-[#e5e2e1] text-sm uppercase tracking-wide">{property.title || "Rental Unit"}</h4>
+                        <p className="text-[#c4c7c7] font-sans">📍 {property.location || "Location not specified"}</p>
                     </div>
 
-                    <div className="bg-[#f9f9ff] p-4 rounded-xl border border-[#e2e8f8] space-y-2">
-                        <span className="text-[9px] font-bold text-[#7d8497] uppercase tracking-wider block">Tenant Profile</span>
-                        <p className="font-bold text-[#151c27]">Name: {tenant.fullname || tenant.username || "Verified User"}</p>
-                        <p className="text-gray-600">Email: {tenant.email || "N/A"}</p>
-                        <p className="text-gray-600">Phone: {tenant.phone || "Not provided"}</p>
+                    {/* Tenant Profile Card */}
+                    <div className="bg-[#0e0e0e] p-4 sm:p-5 rounded-none border border-[#353535] space-y-2 shadow-xl">
+                        <span className="text-[9px] font-bold text-[#5ddda1] uppercase tracking-[0.2em] block">Tenant Profile</span>
+                        <p className="font-bold text-[#e5e2e1]">Name: <span className="font-normal text-[#c4c7c7]">{tenant.fullname || tenant.username || "Verified User"}</span></p>
+                        <p className="text-[#c4c7c7]">Email: <span className="font-mono text-[#e5e2e1]">{tenant.email || "N/A"}</span></p>
+                        <p className="text-[#c4c7c7]">Phone: <span className="font-mono text-[#e5e2e1]">{tenant.phone || "Not provided"}</span></p>
                     </div>
 
-                    <div className="bg-[#f9f9ff] p-4 rounded-xl border border-[#e2e8f8] space-y-2">
-                        <span className="text-[9px] font-bold text-[#7d8497] uppercase tracking-wider block">Stay Financials & Schedule</span>
-                        <div className="grid grid-cols-2 gap-2 text-gray-700">
-                            <p>Check-In: <strong>{checkIn ? new Date(checkIn).toLocaleDateString() : "N/A"}</strong></p>
-                            <p>Check-Out: <strong>{checkOut ? new Date(checkOut).toLocaleDateString() : "N/A"}</strong></p>
-                            <p>Total Revenue: <strong className="text-emerald-600">${booking.totalPrice || "0"}</strong></p>
-                            <p>Status: <strong className="uppercase">{booking.status || "pending"}</strong></p>
+                    {/* Stay Financials & Schedule Card */}
+                    <div className="bg-[#0e0e0e] p-4 sm:p-5 rounded-none border border-[#353535] space-y-2.5 shadow-xl">
+                        <span className="text-[9px] font-bold text-[#5ddda1] uppercase tracking-[0.2em] block">Stay Financials & Schedule</span>
+                        <div className="grid grid-cols-2 gap-3 text-[#c4c7c7]">
+                            <p>Check-In: <strong className="text-[#e5e2e1] block font-mono mt-0.5">{checkIn ? new Date(checkIn).toLocaleDateString() : "N/A"}</strong></p>
+                            <p>Check-Out: <strong className="text-[#e5e2e1] block font-mono mt-0.5">{checkOut ? new Date(checkOut).toLocaleDateString() : "N/A"}</strong></p>
+                            <p>Total Revenue: <strong className="text-[#5ddda1] block font-mono text-sm mt-0.5">${booking.totalPrice || "0"}</strong></p>
+                            <p>Status: <strong className="uppercase text-[#5ddda1] block tracking-wider mt-0.5">{booking.status || "pending"}</strong></p>
                         </div>
                     </div>
                 </div>
 
-                <div className="bg-[#f9f9ff] border-t border-[#e2e8f8] px-6 py-4 flex justify-end">
-                    <button onClick={onClose} className="px-4 py-2 bg-[#151c27] text-white text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-black cursor-pointer">
+                {/* Modal Footer */}
+                <div className="bg-[#0e0e0e] border-t border-[#353535] px-6 py-4 flex justify-end">
+                    <button 
+                        onClick={onClose} 
+                        className="px-6 py-3 bg-[#5ddda1] text-[#003823] text-[10px] font-bold uppercase tracking-widest rounded-none hover:bg-[#08a56e] cursor-pointer transition-all shadow-lg"
+                    >
                         Close Inspector
                     </button>
                 </div>

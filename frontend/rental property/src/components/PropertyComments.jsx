@@ -126,39 +126,39 @@ export default function PropertyComments({ propertyId }) {
     if (!propertyId) return null;
 
     return (
-        <div className="bg-white border border-[#e2e8f8] rounded-xl p-6 sm:p-8 space-y-6 shadow-xs">
+        <div className="bg-[#1c1b1b] border border-[#353535] rounded-none p-6 sm:p-10 space-y-8 shadow-2xl text-[#e5e2e1]">
             
             {/* Header */}
             <div>
-                <span className="text-[10px] font-bold text-[#7d8497] uppercase tracking-widest block">
+                <span className="text-[10px] font-bold text-[#8e9192] uppercase tracking-[0.2em] block">
                     COMMUNITY FEEDBACK
                 </span>
-                <h3 className="text-base font-bold uppercase text-[#151c27] tracking-wide">
+                <h3 className="text-lg font-serif font-bold uppercase text-[#e5e2e1] tracking-tight mt-1">
                     Property Reviews & Ratings ({reviews.length})
                 </h3>
             </div>
 
             {/* Status Alert Message */}
             {statusMessage && (
-                <div className={`p-3 text-xs font-bold rounded-md uppercase tracking-wider ${
-                    statusMessage.type === "success" ? "bg-emerald-50 text-emerald-700 border border-emerald-200" :
-                    statusMessage.type === "error" ? "bg-red-50 text-red-700 border border-red-200" :
-                    "bg-blue-50 text-blue-700 border border-blue-200"
+                <div className={`p-3.5 text-xs font-bold rounded-none uppercase tracking-wider ${
+                    statusMessage.type === "success" ? "bg-[#083823]/50 text-[#5ddda1] border border-[#5ddda1]" :
+                    statusMessage.type === "error" ? "bg-[#1c1b1b] text-[#ffb4ab] border border-[#444748]" :
+                    "bg-[#0e0e0e] text-[#5ddda1] border border-[#353535]"
                 }`}>
                     {statusMessage.text}
                 </div>
             )}
 
             {/* Post Review Form */}
-            <form onSubmit={handlePostReview} className="space-y-4 bg-[#f9f9ff] p-4 rounded-lg border border-[#e2e8f8]">
+            <form onSubmit={handlePostReview} className="space-y-4 bg-[#0e0e0e] p-5 rounded-none border border-[#353535]">
                 <div className="flex items-center space-x-3">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#7d8497]">
+                    <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#5ddda1]">
                         Rating:
                     </span>
                     <select 
                         value={rating} 
                         onChange={(e) => setRating(e.target.value)}
-                        className="bg-white border border-[#e2e8f8] p-1.5 rounded text-xs font-bold text-[#151c27] focus:outline-none cursor-pointer"
+                        className="bg-[#1c1b1b] border border-[#444748] p-2 rounded-none text-xs font-bold text-[#e5e2e1] focus:outline-none focus:border-[#5ddda1] cursor-pointer"
                     >
                         <option value={5}>⭐⭐⭐⭐⭐ (5/5)</option>
                         <option value={4}>⭐⭐⭐⭐ (4/5)</option>
@@ -173,13 +173,13 @@ export default function PropertyComments({ propertyId }) {
                     placeholder="Write your review or feedback about this property..." 
                     value={reviewText}
                     onChange={(e) => setReviewText(e.target.value)}
-                    className="w-full bg-white border border-[#e2e8f8] p-3 rounded-md text-xs focus:outline-none focus:border-[#151c27] text-[#151c27]"
+                    className="w-full bg-[#1c1b1b] border border-[#444748] p-3.5 rounded-none text-xs focus:outline-none focus:border-[#5ddda1] text-[#e5e2e1] placeholder:text-[#8e9192]"
                 />
                 
                 <div className="flex justify-end">
                     <button 
                         type="submit" 
-                        className="px-4 py-2 bg-[#151c27] text-white text-xs font-bold uppercase tracking-wider rounded-md hover:bg-black cursor-pointer transition-all"
+                        className="px-6 py-3 bg-[#5ddda1] text-[#003823] text-xs font-bold uppercase tracking-[0.15em] rounded-none hover:bg-[#08a56e] cursor-pointer transition-all shadow-lg"
                     >
                         Publish Review
                     </button>
@@ -187,13 +187,13 @@ export default function PropertyComments({ propertyId }) {
             </form>
 
             {/* Reviews Stream */}
-            <div className="space-y-6 pt-4 border-t border-[#e2e8f8]">
+            <div className="space-y-6 pt-4 border-t border-[#353535]">
                 {loading ? (
-                    <div className="text-center py-6 text-xs text-gray-400 font-bold uppercase tracking-wider font-mono">
+                    <div className="text-center py-6 text-xs text-[#8e9192] font-bold uppercase tracking-widest font-mono">
                         Loading Reviews...
                     </div>
                 ) : reviews.length === 0 ? (
-                    <div className="text-center py-6 text-xs text-gray-400 font-bold uppercase tracking-wider">
+                    <div className="text-center py-6 text-xs text-[#8e9192] font-bold uppercase tracking-widest">
                         No reviews posted yet for this property.
                     </div>
                 ) : (
@@ -202,23 +202,22 @@ export default function PropertyComments({ propertyId }) {
                         const reviewUserId = rev.user?._id || rev.user?.id || rev.user;
                         const currentUserId = currentUser?._id || currentUser?.id;
                         
-                        // Check if current user owns this review
                         const isOwner = Boolean(currentUserId && reviewUserId && String(currentUserId) === String(reviewUserId));
-                        const hostReply = rev.reply; // 🛡️ Host reply string from database
+                        const hostReply = rev.reply;
 
                         return (
-                            <div key={reviewId} className="space-y-3 border-b border-[#e2e8f8] pb-6 last:border-b-0">
-                                <div className="flex items-start space-x-3">
+                            <div key={reviewId} className="space-y-3 border-b border-[#353535] pb-6 last:border-b-0">
+                                <div className="flex items-start space-x-4">
                                     
                                     {/* User Avatar */}
                                     {rev.user?.avatar ? (
                                         <img 
                                             src={rev.user.avatar} 
                                             alt="avatar" 
-                                            className="w-9 h-9 rounded-full object-cover border border-[#e2e8f8] shrink-0" 
+                                            className="w-10 h-10 rounded-none object-cover border border-[#444748] shrink-0" 
                                         />
                                     ) : (
-                                        <div className="w-9 h-9 rounded-full bg-[#151c27] text-white font-bold text-xs flex items-center justify-center uppercase shrink-0">
+                                        <div className="w-10 h-10 rounded-none bg-[#0e0e0e] text-[#5ddda1] border border-[#444748] font-bold text-xs flex items-center justify-center uppercase shrink-0">
                                             {(rev.user?.fullname || rev.user?.username || "U").slice(0, 2)}
                                         </div>
                                     )}
@@ -226,26 +225,26 @@ export default function PropertyComments({ propertyId }) {
                                     {/* Review Content Area */}
                                     <div className="flex-1 space-y-2">
                                         <div className="flex items-center justify-between">
-                                            <div className="flex items-center space-x-2">
-                                                <span className="text-xs font-bold text-[#151c27]">
+                                            <div className="flex items-center space-x-3">
+                                                <span className="text-xs font-bold text-[#e5e2e1]">
                                                     {rev.user?.fullname || rev.user?.username || "Verified Tenant"}
                                                 </span>
-                                                <span className="text-[10px] text-amber-500 font-bold">
+                                                <span className="text-[10px] text-[#5ddda1] font-bold">
                                                     {"★".repeat(editingReviewId === reviewId ? editRating : (rev.rating || 5))}
                                                 </span>
                                             </div>
-                                            <span className="text-[9px] text-gray-400 font-mono">
+                                            <span className="text-[9px] text-[#8e9192] font-mono">
                                                 {rev.createdAt ? new Date(rev.createdAt).toLocaleDateString() : ""}
                                             </span>
                                         </div>
 
                                         {/* Inline Editing Form */}
                                         {editingReviewId === reviewId ? (
-                                            <div className="space-y-3 bg-[#f9f9ff] p-3 rounded-md border border-[#e2e8f8]">
+                                            <div className="space-y-3 bg-[#0e0e0e] p-4 rounded-none border border-[#353535]">
                                                 <select 
                                                     value={editRating} 
                                                     onChange={(e) => setEditRating(Number(e.target.value))}
-                                                    className="bg-white border border-[#e2e8f8] p-1 rounded text-xs font-bold text-[#151c27]"
+                                                    className="bg-[#1c1b1b] border border-[#444748] p-2 rounded-none text-xs font-bold text-[#e5e2e1]"
                                                 >
                                                     <option value={5}>⭐⭐⭐⭐⭐ (5/5)</option>
                                                     <option value={4}>⭐⭐⭐⭐ (4/5)</option>
@@ -257,56 +256,56 @@ export default function PropertyComments({ propertyId }) {
                                                     rows="2"
                                                     value={editCommentText}
                                                     onChange={(e) => setEditCommentText(e.target.value)}
-                                                    className="w-full bg-white border border-[#e2e8f8] p-2 rounded text-xs text-[#151c27] focus:outline-none"
+                                                    className="w-full bg-[#1c1b1b] border border-[#444748] p-2.5 rounded-none text-xs text-[#e5e2e1] focus:outline-none"
                                                 />
-                                                <div className="flex items-center space-x-2">
+                                                <div className="flex items-center space-x-3">
                                                     <button 
                                                         onClick={() => handleUpdateReview(reviewId)}
-                                                        className="px-3 py-1 bg-emerald-600 text-white text-[10px] font-bold uppercase rounded cursor-pointer hover:bg-emerald-700"
+                                                        className="px-4 py-2 bg-[#5ddda1] text-[#003823] text-[10px] font-bold uppercase tracking-wider rounded-none cursor-pointer hover:bg-[#08a56e]"
                                                     >
                                                         Save Changes
                                                     </button>
                                                     <button 
                                                         onClick={() => setEditingReviewId(null)}
-                                                        className="px-3 py-1 bg-gray-200 text-gray-700 text-[10px] font-bold uppercase rounded cursor-pointer hover:bg-gray-300"
+                                                        className="px-4 py-2 bg-[#1c1b1b] text-[#c4c7c7] border border-[#444748] text-[10px] font-bold uppercase tracking-wider rounded-none cursor-pointer hover:bg-[#353535]"
                                                     >
                                                         Cancel
                                                     </button>
                                                 </div>
                                             </div>
                                         ) : (
-                                            <p className="text-xs text-[#45464c] leading-relaxed">
+                                            <p className="text-xs text-[#c4c7c7] leading-relaxed font-sans">
                                                 {rev.comment || rev.content || rev.text}
                                             </p>
                                         )}
 
-                                        {/* 🛡️ HOST REPLY BADGE & RESPONSE BOX */}
+                                        {/* Host Reply Box */}
                                         {hostReply && (
-                                            <div className="mt-3 bg-[#f9f9ff] border border-blue-100 p-3.5 rounded-xl space-y-1.5 shadow-2xs">
+                                            <div className="mt-3 bg-[#0e0e0e] border border-[#353535] p-4 rounded-none space-y-1.5">
                                                 <div className="flex items-center gap-2">
-                                                    <span className="bg-[#151c27] text-white text-[9px] font-black px-2 py-0.5 rounded uppercase tracking-wider">
+                                                    <span className="bg-[#5ddda1] text-[#003823] text-[9px] font-bold px-2 py-0.5 rounded-none uppercase tracking-widest">
                                                         HOST
                                                     </span>
-                                                    <span className="text-[10px] font-bold text-[#7d8497] uppercase">Property Host Response</span>
+                                                    <span className="text-[10px] font-bold text-[#8e9192] uppercase tracking-wider">Property Host Response</span>
                                                 </div>
-                                                <p className="text-xs text-[#151c27] leading-relaxed">
+                                                <p className="text-xs text-[#e5e2e1] leading-relaxed font-sans">
                                                     {hostReply}
                                                 </p>
                                             </div>
                                         )}
 
-                                        {/* Owner Action Buttons (Edit / Delete) */}
+                                        {/* Owner Action Buttons */}
                                         {isOwner && editingReviewId !== reviewId && (
-                                            <div className="flex items-center space-x-3 pt-1">
+                                            <div className="flex items-center space-x-4 pt-1">
                                                 <button 
                                                     onClick={() => startEditing(rev)}
-                                                    className="text-[10px] font-bold text-blue-600 hover:underline uppercase tracking-wider cursor-pointer"
+                                                    className="text-[10px] font-bold text-[#5ddda1] hover:underline uppercase tracking-wider cursor-pointer"
                                                 >
                                                     Edit
                                                 </button>
                                                 <button 
                                                     onClick={() => handleDeleteReview(reviewId)}
-                                                    className="text-[10px] font-bold text-red-600 hover:underline uppercase tracking-wider cursor-pointer"
+                                                    className="text-[10px] font-bold text-[#ffb4ab] hover:underline uppercase tracking-wider cursor-pointer"
                                                 >
                                                     Delete
                                                 </button>
