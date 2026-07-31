@@ -19,8 +19,8 @@ export default function OwnerPropertiesList() {
     const [description, setDescription] = useState("");
     
     // Images management states
-    const [currentImages, setCurrentImages] = useState([]); // URLs kept
-    const [newImageFiles, setNewImageFiles] = useState([]); // New files to upload
+    const [currentImages, setCurrentImages] = useState([]); // Existing URLs kept
+    const [newImageFiles, setNewImageFiles] = useState([]); // New File objects to upload
     const [newImagePreviews, setNewImagePreviews] = useState([]);
 
     // Amenities management states
@@ -52,7 +52,13 @@ export default function OwnerPropertiesList() {
         setPrice(property.pricePerNight || property.price || "");
         setLocation(property.location || "");
         setDescription(property.description || "");
-        setCurrentImages(property.images || property.image ? [property.image, ...(property.images || [])].filter(Boolean) : []);
+        
+        // Normalize existing images from property object safely
+        const rawImages = property.images || [];
+        const singleImage = property.image ? [property.image] : [];
+        const combinedExisting = Array.from(new Set([...singleImage, ...rawImages])).filter(Boolean);
+        
+        setCurrentImages(combinedExisting);
         setNewImageFiles([]);
         setNewImagePreviews([]);
         setSelectedAmenities(property.amenities || []);
@@ -63,13 +69,22 @@ export default function OwnerPropertiesList() {
         setCurrentImages(currentImages.filter((_, idx) => idx !== indexToRemove));
     };
 
+    // 📸 FIXED: Robust accumulative new image selection handler for editing
     const handleNewImagesChange = (e) => {
         const files = Array.from(e.target.files);
         if (files.length > 0) {
-            const selectedFiles = files.slice(0, 10);
-            setNewImageFiles(selectedFiles);
-            setNewImagePreviews(selectedFiles.map((file) => URL.createObjectURL(file)));
+            // Combine previously staged files with newly selected ones, capping total combined uploads at 10
+            const combinedFiles = [...newImageFiles, ...files].slice(0, 10);
+            setNewImageFiles(combinedFiles);
+            setNewImagePreviews(combinedFiles.map((file) => URL.createObjectURL(file)));
         }
+    };
+
+    const handleRemoveNewPreview = (indexToRemove) => {
+        const updatedFiles = newImageFiles.filter((_, idx) => idx !== indexToRemove);
+        const updatedPreviews = newImagePreviews.filter((_, idx) => idx !== indexToRemove);
+        setNewImageFiles(updatedFiles);
+        setNewImagePreviews(updatedPreviews);
     };
 
     const toggleAmenity = (amenity) => {
@@ -82,6 +97,8 @@ export default function OwnerPropertiesList() {
 
     const handleUpdateSubmit = async (e) => {
         e.preventDefault();
+        if (!editingProperty) return;
+        
         const pId = editingProperty._id || editingProperty.id;
 
         const customList = customAmenityInput
@@ -97,7 +114,7 @@ export default function OwnerPropertiesList() {
         formData.append("existingImages", JSON.stringify(currentImages));
         formData.append("amenities", combinedAmenities.join(", "));
 
-        // Append new files if selected
+        // 📸 Append each staged file under the exact key "images" expected by backend upload middleware
         if (newImageFiles && newImageFiles.length > 0) {
             newImageFiles.forEach((file) => {
                 formData.append("images", file);
@@ -107,6 +124,7 @@ export default function OwnerPropertiesList() {
         const result = await dispatch(updatePropertyDetails({ propertyId: pId, formData }));
         if (updatePropertyDetails.fulfilled.match(result)) {
             setEditingProperty(null);
+            // ⚡ Instantly re-fetch inventory to synchronize newly uploaded image paths from DB
             dispatch(fetchOwnerProperties());
         }
     };
@@ -269,7 +287,7 @@ export default function OwnerPropertiesList() {
                             {/* 🖼️ Manage Images Section */}
                             <div className="space-y-3.5 border-t border-[#353535] pt-5">
                                 <label className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#5ddda1] block">
-                                    Manage Images <span className="text-[#8e9192] font-normal lowercase">(Click '✕' to stage for removal)</span>
+                                    Manage Existing Images <span className="text-[#8e9192] font-normal lowercase">(Click '✕' to stage for removal)</span>
                                 </label>
                                 
                                 {/* Existing Images Grid */}
@@ -289,17 +307,35 @@ export default function OwnerPropertiesList() {
                                     ))}
                                 </div>
 
-                                <label className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#5ddda1] block pt-2">Upload New Images</label>
-                                <input type="file" accept="image/*" multiple onChange={handleNewImagesChange} className="w-full text-xs text-[#c4c7c7] file:mr-4 file:py-2.5 file:px-4 file:rounded-none file:border-0 file:text-[9px] file:font-bold file:uppercase file:bg-[#5ddda1] file:text-[#003823] file:cursor-pointer hover:file:bg-[#08a56e] bg-[#0e0e0e] border border-[#444748]" />
+                                <label className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#5ddda1] block pt-3">Upload New Images</label>
+                                <input 
+                                    type="file" 
+                                    accept="image/*" 
+                                    multiple 
+                                    onChange={handleNewImagesChange} 
+                                    className="w-full text-xs text-[#c4c7c7] file:mr-4 file:py-2.5 file:px-4 file:rounded-none file:border-0 file:text-[9px] file:font-bold file:uppercase file:bg-[#5ddda1] file:text-[#003823] file:cursor-pointer hover:file:bg-[#08a56e] bg-[#0e0e0e] border border-[#444748]" 
+                                />
                                 
+                                {/* Newly Selected Image Previews Grid */}
                                 {newImagePreviews.length > 0 && (
-                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
-                                        {newImagePreviews.map((src, idx) => (
-                                            <div key={idx} className="relative h-24 rounded-none border border-[#444748] overflow-hidden bg-[#0e0e0e]">
-                                                <img src={src} alt={`New Preview ${idx}`} className="w-full h-full object-cover filter contrast-110" />
-                                                <span className="absolute bottom-1 right-1 bg-[#5ddda1] text-[#003823] text-[8px] px-1.5 py-0.5 font-bold uppercase">NEW</span>
-                                            </div>
-                                        ))}
+                                    <div className="space-y-2 pt-2">
+                                        <span className="text-[9px] font-bold uppercase tracking-[0.15em] text-[#8e9192] block">Staged New Uploads:</span>
+                                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                            {newImagePreviews.map((src, idx) => (
+                                                <div key={idx} className="relative h-24 rounded-none border border-[#5ddda1] overflow-hidden bg-[#0e0e0e]">
+                                                    <img src={src} alt={`New Preview ${idx}`} className="w-full h-full object-cover filter contrast-110" />
+                                                    <span className="absolute bottom-1 left-1 bg-[#5ddda1] text-[#003823] text-[8px] px-1.5 py-0.5 font-bold uppercase">NEW</span>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleRemoveNewPreview(idx)}
+                                                        className="absolute top-1 right-1 bg-[#ffb4ab] text-[#380007] rounded-none w-6 h-6 flex items-center justify-center text-[10px] font-bold shadow hover:bg-white cursor-pointer transition-colors"
+                                                        title="Remove new preview"
+                                                    >
+                                                        ✕
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
                                 )}
                             </div>

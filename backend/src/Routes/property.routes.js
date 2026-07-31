@@ -63,7 +63,12 @@ router.route("/store").post(
 router.route("/my-inventory").get(verifyJwt, authorizeRoles("owner"), getMyProperties);
 
 // C. Update Property Listing Details
-router.route("/update/:propertyId").put(verifyJwt, authorizeRoles("owner"), updateProperty);
+router.route("/update/:propertyId").put(
+    verifyJwt, 
+    authorizeRoles("owner"), 
+    uploadfile.array("images", 10), 
+    updateProperty
+);
 
 // D. Permanently Remove Property Listing from DB
 router.route("/delete/:propertyId").delete(verifyJwt, authorizeRoles("owner"), deleteProperty);

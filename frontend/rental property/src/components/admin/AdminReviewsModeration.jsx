@@ -35,17 +35,38 @@ export default function AdminReviewsModeration() {
     };
 
     return (
-        <div className="space-y-6">
-            <div className="bg-white p-8 rounded-xl border border-[#e2e8f8] shadow-xs space-y-2">
-                <span className="text-[9px] font-bold text-[#7d8497] uppercase tracking-widest">REVIEW MODERATION BOARD</span>
-                <h2 className="text-2xl font-bold uppercase text-[#151c27] tracking-tight">Manage System Reviews ({reviews.length})</h2>
-                <p className="text-xs text-gray-500">Inspect and purge fraudulent or toxic reviews across all platform listings.</p>
+        <div className="w-full max-w-7xl mx-auto space-y-8 text-[#e5e2e1] font-sans antialiased p-1 sm:p-2 lg:p-4">
+            
+            {/* Hero Banner with Themed Visual & Dark Vignette Filter */}
+            <div className="relative w-full h-64 sm:h-80 bg-[#0e0e0e] border border-[#353535] rounded-none overflow-hidden shadow-2xl flex flex-col justify-end p-6 sm:p-10">
+                <div 
+                    className="absolute inset-0 bg-cover bg-center" 
+                    style={{ backgroundImage: `url('https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1600&q=90')` }}
+                ></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-[#080808] via-[#080808]/70 to-[#080808]/30"></div>
+
+                <div className="relative z-10 space-y-2 max-w-2xl">
+                    <span className="text-[9px] sm:text-[10px] font-bold text-[#5ddda1] uppercase tracking-[0.3em]">
+                        REVIEW MODERATION BOARD
+                    </span>
+                    <h2 className="text-xl sm:text-3xl font-serif font-bold uppercase text-[#e5e2e1] tracking-tight">
+                        Manage System Reviews ({reviews.length})
+                    </h2>
+                    <p className="text-xs sm:text-sm text-[#c4c7c7] font-sans leading-relaxed">
+                        Inspect and purge fraudulent or toxic reviews across all platform listings to maintain high community standards.
+                    </p>
+                </div>
             </div>
 
             {loading ? (
-                <div className="p-12 text-center text-xs font-bold text-gray-400 uppercase">Loading reviews feed...</div>
+                <div className="p-16 flex flex-col items-center justify-center space-y-3 bg-[#1c1b1b] border border-[#353535]">
+                    <div className="w-8 h-8 border-2 border-[#5ddda1] border-t-transparent rounded-none animate-spin"></div>
+                    <div className="text-[10px] font-bold tracking-[0.25em] text-[#8e9192] uppercase font-mono">
+                        Loading Reviews Feed...
+                    </div>
+                </div>
             ) : reviews.length === 0 ? (
-                <div className="bg-white p-12 border border-dashed border-[#e2e8f8] text-center text-xs font-bold text-gray-400 uppercase rounded-xl tracking-wider">
+                <div className="bg-[#1c1b1b] p-12 border border-dashed border-[#444748] text-center text-xs font-bold text-[#8e9192] uppercase rounded-none tracking-widest shadow-2xl">
                     No reviews registered in the system database yet.
                 </div>
             ) : (
@@ -56,27 +77,33 @@ export default function AdminReviewsModeration() {
                         const property = rev.property || {};
 
                         return (
-                            <div key={rId} className="bg-white border border-[#e2e8f8] p-5 rounded-xl space-y-3 shadow-xs flex items-center justify-between">
-                                <div className="space-y-1.5 flex-1 pr-4">
-                                    <div className="flex items-center gap-3">
-                                        {user.avatar ? (
-                                            <img src={user.avatar} alt="" className="w-8 h-8 rounded-full object-cover border" />
-                                        ) : (
-                                            <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-800 font-bold flex items-center justify-center text-xs">
-                                                {(user.fullname || "U").charAt(0)}
+                            <div 
+                                key={rId} 
+                                className="bg-[#1c1b1b] border border-[#353535] hover:border-[#5ddda1] p-5 sm:p-6 rounded-none shadow-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 transition-all duration-300"
+                            >
+                                <div className="space-y-3 flex-1 pr-2">
+                                    <div className="flex flex-wrap items-center justify-between gap-2">
+                                        <div className="flex items-center gap-3">
+                                            {user.avatar ? (
+                                                <img src={user.avatar} alt="" className="w-9 h-9 rounded-none object-cover border border-[#444748]" />
+                                            ) : (
+                                                <div className="w-9 h-9 rounded-none bg-[#0e0e0e] text-[#5ddda1] border border-[#444748] font-bold flex items-center justify-center text-xs uppercase">
+                                                    {(user.fullname || "U").charAt(0)}
+                                                </div>
+                                            )}
+                                            <div>
+                                                <h5 className="text-xs font-serif font-bold uppercase tracking-wide text-[#e5e2e1]">{user.fullname || user.username || "Tenant"}</h5>
+                                                <span className="text-[9px] text-[#8e9192] font-mono">Property Unit: <strong className="text-[#e5e2e1] uppercase">{property.title || "Listing"}</strong></span>
                                             </div>
-                                        )}
-                                        <div>
-                                            <h5 className="text-xs font-bold text-[#151c27]">{user.fullname || user.username || "Tenant"}</h5>
-                                            <span className="text-[9px] text-gray-400">Property Unit: <strong className="text-[#151c27] uppercase">{property.title || "Listing"}</strong></span>
                                         </div>
-                                        <span className="text-xs font-black text-amber-500 ml-auto">★ {rev.rating} / 5</span>
+                                        <span className="text-xs font-mono font-black text-[#5ddda1] bg-[#083823] px-2 py-0.5 border border-[#5ddda1]">★ {rev.rating} / 5</span>
                                     </div>
-                                    <p className="text-xs text-[#45464c] pl-11">"{rev.comment}"</p>
+                                    <p className="text-xs text-[#c4c7c7] font-sans pl-12 leading-relaxed">"{rev.comment}"</p>
                                 </div>
+
                                 <button 
                                     onClick={() => handlePurgeReview(rId)}
-                                    className="px-3.5 py-2 bg-red-50 text-red-600 border border-red-200 text-[10px] font-bold uppercase rounded-lg hover:bg-red-600 hover:text-white cursor-pointer transition-all shrink-0"
+                                    className="w-full sm:w-auto px-5 py-2.5 bg-[#1c1b1b] hover:bg-[#ffb4ab] text-[#ffb4ab] hover:text-[#380007] border border-[#444748] hover:border-[#ffb4ab] text-[10px] font-bold uppercase tracking-widest rounded-none cursor-pointer shadow-md transition-all shrink-0"
                                 >
                                     Purge Review
                                 </button>

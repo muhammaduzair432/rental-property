@@ -13,7 +13,7 @@ import { Log } from "../Models/log.model.js";
 //    👉 FLOWCHART STEPS 1 & 2: Save as unapproved + Notify Admin
 // ==========================================
 export const createProperty = asyncHandler(async (req, res) => {
-    const { title, description, price, location, amenities } = req.body;
+    const { title, description, price, location, amenities, type } = req.body;
 
     if (!title || !description || !price || !location) {
         throw new ApiError(400, "Title, description, price, and location are required fields");
@@ -26,17 +26,22 @@ export const createProperty = asyncHandler(async (req, res) => {
     const imageFiles = req.files; 
     let cloudinaryImageUrls = [];
 
+    // ⚡ FIX: Upload images sequentially using a for...of loop to prevent ECONNRESET and 502 Bad Gateway errors
     if (imageFiles && imageFiles.length > 0) {
-        const uploadPromises = imageFiles.map((file) => uploadOnCloudinary(file.path));
-        const uploadedResults = await Promise.all(uploadPromises);
-
-        cloudinaryImageUrls = uploadedResults
-            .filter((result) => result !== null)
-            .map((result) => {
-                if (typeof result === "string") return result;
-                return result?.secure_url || result?.url || "";
-            })
-            .filter((url) => url !== "");
+        for (const file of imageFiles) {
+            try {
+                const result = await uploadOnCloudinary(file.path);
+                if (result) {
+                    const url = typeof result === "string" ? result : (result?.secure_url || result?.url || "");
+                    if (url) {
+                        cloudinaryImageUrls.push(url);
+                    }
+                }
+            } catch (uploadErr) {
+                console.error(`Failed to upload file ${file.originalname}:`, uploadErr.message);
+                // Continue loop so one bad image doesn't crash the whole property creation
+            }
+        }
     }
 
     let processedAmenities = [];
@@ -49,19 +54,22 @@ export const createProperty = asyncHandler(async (req, res) => {
     const newProperty = await Property.create({
         title,
         description,
+        type: type || "house",
         price: Number(price),
         location,
         amenities: processedAmenities,
         images: cloudinaryImageUrls,
+        image: cloudinaryImageUrls[0] || "", // Primary cover fallback
         owner: req.user._id,
         isApproved: false
     });
+
     // 🔥 FLOWCHART AUDIT LOG: Track property creation events
-await Log.create({
-    actionType: "PROPERTY_CREATED",
-    description: `Host [${req.user.username}] staged a new property listing: "${newProperty.title}" awaiting verification review.`,
-    performedBy: req.user._id
-});
+    await Log.create({
+        actionType: "PROPERTY_CREATED",
+        description: `Host [${req.user.username}] staged a new property listing: "${newProperty.title}" awaiting verification review.`,
+        performedBy: req.user._id
+    });
 
     await Notification.create({
         ownerId: req.user._id,
@@ -200,6 +208,7 @@ export const updateProperty = asyncHandler(async (req, res) => {
     // 🛡️ Safe guard: fallback to {} if req.body is undefined
     const body = req.body || {};
     const { title, description, price, location, amenities, existingImages } = body;
+    
 
     const property = await Property.findOne({ _id: propertyId, owner: req.user._id });
     if (!property) {

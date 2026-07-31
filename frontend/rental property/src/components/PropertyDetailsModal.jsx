@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchPropertyById } from "../store/propertySlice.js";
+import { fetchPropertyById, clearSelectedProperty } from "../store/propertySlice.js";
 import { createBooking, clearBookingState } from "../store/bookingSlice.js"; 
 import PropertyComments from "../components/PropertyComments.jsx";
 
@@ -29,9 +29,10 @@ export default function PropertyDetailsPage() {
     const [checkOut, setCheckOut] = useState("");
     const [localError, setLocalError] = useState(null);
 
-    // Fetch property details on mount
+    // ⚡ Force fresh fetch on mount & clear stale cache to guarantee updated images render
     useEffect(() => {
         if (propertyId) {
+            dispatch(clearSelectedProperty());
             dispatch(fetchPropertyById(propertyId));
         }
         return () => {
@@ -125,18 +126,20 @@ export default function PropertyDetailsPage() {
         );
     }
 
-    // Safely prepare image list
-    const imagesList = selectedProperty.images?.length > 0 
-        ? selectedProperty.images 
-        : selectedProperty.image 
-            ? [selectedProperty.image] 
-            : [];
+    // 📸 Robust Image Normalizer: Supports arrays, comma strings, and single image fallbacks
+    const rawImages = selectedProperty.images || [];
+    const parsedImages = typeof rawImages === "string" 
+        ? rawImages.split(",").map(i => i.trim()).filter(Boolean)
+        : Array.isArray(rawImages) ? rawImages : [];
+    
+    const singleImageFallback = selectedProperty.image ? [selectedProperty.image] : [];
+    const imagesList = Array.from(new Set([...parsedImages, ...singleImageFallback])).filter(Boolean);
 
     // Extract amenities
     const amenitiesList = Array.isArray(selectedProperty.amenities)
         ? selectedProperty.amenities
         : typeof selectedProperty.amenities === "string"
-            ? selectedProperty.amenities.split(",").map((a) => a.trim())
+            ? selectedProperty.amenities.split(",").map((a) => a.trim()).filter(Boolean)
             : ["WiFi", "Air Conditioning", "Parking", "Kitchen", "Security"];
 
     return (
@@ -165,7 +168,7 @@ export default function PropertyDetailsPage() {
                     <div className="w-full h-96 sm:h-[520px] bg-[#0e0e0e] rounded-none overflow-hidden relative border border-[#444748]">
                         {imagesList.length > 0 ? (
                             <img 
-                                src={imagesList[activeImageIndex]} 
+                                src={imagesList[activeImageIndex] || imagesList[0]} 
                                 alt={selectedProperty.title} 
                                 className="w-full h-full object-cover filter contrast-110 transition-all duration-700"
                             />

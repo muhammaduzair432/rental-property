@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { createProperty, clearPropertyError } from "../store/propertySlice.js";
+import usePasteCleaner from "../hooks/usePasteCleaner";
 
 export default function AddPropertyForm() {
     const dispatch = useDispatch();
+    usePasteCleaner();
     const { loading, error, successMessage } = useSelector((state) => state.properties || {});
 
     // Form Fields
@@ -31,16 +33,24 @@ export default function AddPropertyForm() {
         }
     }, [successMessage, dispatch]);
 
-    // Handle multiple image selection (max 10)
+    // 📸 Handle multiple image selection (Accumulative up to max 10 files)
     const handleImageChange = (e) => {
         const files = Array.from(e.target.files);
         if (files.length > 0) {
-            const selectedFiles = files.slice(0, 10); // Limit to 10 files
-            setImageFiles(selectedFiles);
+            const combinedFiles = [...imageFiles, ...files].slice(0, 10);
+            setImageFiles(combinedFiles);
 
-            const previews = selectedFiles.map((file) => URL.createObjectURL(file));
+            const previews = combinedFiles.map((file) => URL.createObjectURL(file));
             setImagePreviews(previews);
         }
+    };
+
+    // Remove single preview image item
+    const handleRemoveImage = (indexToRemove) => {
+        const updatedFiles = imageFiles.filter((_, idx) => idx !== indexToRemove);
+        const updatedPreviews = imagePreviews.filter((_, idx) => idx !== indexToRemove);
+        setImageFiles(updatedFiles);
+        setImagePreviews(updatedPreviews);
     };
 
     // Toggle Checkbox Amenities
@@ -52,8 +62,12 @@ export default function AddPropertyForm() {
         }
     };
 
+    // ⚡ Validation Check: Disable publish button until required fields & at least 1 image are present
+    const isFormValid = title.trim() && pricePerNight && location.trim() && description.trim() && imageFiles.length > 0;
+
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (!isFormValid || loading) return;
 
         // Combine checked amenities and custom typed ones
         const customList = customAmenityInput
@@ -65,11 +79,11 @@ export default function AddPropertyForm() {
         formData.append("title", title);
         formData.append("description", description);
         formData.append("type", type);
-        formData.append("price", pricePerNight); // 👈 Matches backend controller requirement
+        formData.append("price", pricePerNight); 
         formData.append("location", location);
         formData.append("amenities", combinedAmenities.join(", "));
 
-        // Append each image file under the key "images" to match uploadfile.array("images", 10)
+        // Append each image file under the exact key "images" expected by multer route middleware
         imageFiles.forEach((file) => {
             formData.append("images", file);
         });
@@ -89,8 +103,15 @@ export default function AddPropertyForm() {
     };
 
     return (
-        <div className="w-full max-w-5xl mx-auto bg-[#1c1b1b] p-6 sm:p-10 rounded-none border border-[#353535] shadow-2xl space-y-8 text-[#e5e2e1] font-sans antialiased">
+        <div className="w-full max-w-5xl mx-auto bg-[#1c1b1b] p-6 sm:p-10 rounded-none border border-[#353535] shadow-2xl space-y-8 text-[#e5e2e1] font-sans antialiased relative overflow-hidden">
             
+            {/* ⚡ THEMED LOADING PROGRESS BAR ANIMATION */}
+            {loading && (
+                <div className="absolute top-0 left-0 w-full h-1.5 bg-[#0e0e0e] overflow-hidden z-50">
+                    <div className="w-full h-full bg-[#5ddda1] animate-[pulse_1s_infinite] shadow-[0_0_12px_#5ddda1]"></div>
+                </div>
+            )}
+
             {/* Header Section */}
             <div className="border-b border-[#353535] pb-5 space-y-1">
                 <span className="text-[9px] sm:text-[10px] font-bold text-[#5ddda1] uppercase tracking-[0.25em]">HOST INVENTORY</span>
@@ -113,7 +134,7 @@ export default function AddPropertyForm() {
                 
                 {/* Property Title */}
                 <div className="space-y-1.5">
-                    <label className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#5ddda1] block">Property Title</label>
+                    <label className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#5ddda1] block">Property Title *</label>
                     <input
                         type="text"
                         value={title}
@@ -139,7 +160,7 @@ export default function AddPropertyForm() {
                         </select>
                     </div>
                     <div className="space-y-1.5">
-                        <label className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#5ddda1] block">Price Per Night ($)</label>
+                        <label className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#5ddda1] block">Price Per Night ($) *</label>
                         <input
                             type="number"
                             min="0"
@@ -154,7 +175,7 @@ export default function AddPropertyForm() {
 
                 {/* Location */}
                 <div className="space-y-1.5">
-                    <label className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#5ddda1] block">Location Address</label>
+                    <label className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#5ddda1] block">Location Address *</label>
                     <input
                         type="text"
                         value={location}
@@ -167,7 +188,7 @@ export default function AddPropertyForm() {
 
                 {/* Description */}
                 <div className="space-y-1.5">
-                    <label className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#5ddda1] block">Description</label>
+                    <label className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#5ddda1] block">Description *</label>
                     <textarea
                         rows="4"
                         value={description}
@@ -224,14 +245,14 @@ export default function AddPropertyForm() {
                 {/* 📸 MULTIPLE IMAGES UPLOAD FIELD (Up to 10 images) */}
                 <div className="space-y-3">
                     <label className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#5ddda1] block">
-                        Property Gallery Images <span className="text-[#8e9192] font-normal lowercase">(Max 10 files)</span>
+                        Property Gallery Images <span className="text-[#8e9192] font-normal lowercase">(At least 1 required, Max 10)</span>
                     </label>
                     <label className="border-2 border-dashed border-[#444748] hover:border-[#5ddda1] rounded-none p-8 flex flex-col items-center justify-center cursor-pointer bg-[#0e0e0e] transition-all group">
                         <span className="text-3xl mb-2 text-[#5ddda1]">📷</span>
                         <span className="text-xs font-bold uppercase tracking-widest text-[#e5e2e1] group-hover:text-[#5ddda1]">
                             Click to upload property images
                         </span>
-                        <span className="text-[9px] text-[#8e9192] mt-1 font-mono uppercase tracking-wider">Supports PNG, JPG, WEBP</span>
+                        <span className="text-[9px] text-[#8e9192] mt-1 font-mono uppercase tracking-wider">Supports PNG, JPG, WEBP (Multiple allowed)</span>
                         <input
                             type="file"
                             accept="image/*"
@@ -241,15 +262,23 @@ export default function AddPropertyForm() {
                         />
                     </label>
 
-                    {/* Instant Image Grid Previews */}
+                    {/* Instant Image Grid Previews with Removal */}
                     {imagePreviews.length > 0 && (
                         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 pt-2">
                             {imagePreviews.map((src, index) => (
                                 <div key={index} className="relative h-24 rounded-none border border-[#444748] overflow-hidden group bg-[#0e0e0e]">
                                     <img src={src} alt={`Preview ${index}`} className="w-full h-full object-cover filter contrast-110" />
-                                    <span className="absolute bottom-1 right-1 bg-[#080808]/90 text-[#5ddda1] text-[9px] font-mono font-bold px-1.5 py-0.5">
+                                    <span className="absolute bottom-1 left-1 bg-[#080808]/90 text-[#5ddda1] text-[9px] font-mono font-bold px-1.5 py-0.5">
                                         #{index + 1}
                                     </span>
+                                    <button
+                                        type="button"
+                                        onClick={() => handleRemoveImage(index)}
+                                        className="absolute top-1 right-1 bg-[#ffb4ab] text-[#380007] rounded-none w-6 h-6 flex items-center justify-center text-[10px] font-bold shadow hover:bg-white cursor-pointer transition-colors"
+                                        title="Remove image"
+                                    >
+                                        ✕
+                                    </button>
                                 </div>
                             ))}
                         </div>
@@ -258,11 +287,11 @@ export default function AddPropertyForm() {
 
                 <button
                     type="submit"
-                    disabled={loading}
-                    className="w-full py-4 bg-[#5ddda1] hover:bg-[#08a56e] text-[#003823] text-xs font-bold uppercase tracking-[0.2em] rounded-none transition-all cursor-pointer shadow-xl flex items-center justify-center gap-2.5 disabled:opacity-40 mt-4"
+                    disabled={!isFormValid || loading}
+                    className="w-full py-4 bg-[#5ddda1] hover:bg-[#08a56e] text-[#003823] text-xs font-bold uppercase tracking-[0.2em] rounded-none transition-all cursor-pointer shadow-xl flex items-center justify-center gap-2.5 disabled:opacity-40 disabled:cursor-not-allowed mt-4"
                 >
                     {loading && <div className="w-4 h-4 border-2 border-[#003823] border-t-transparent rounded-none animate-spin"></div>}
-                    {loading ? "Publishing Property..." : "Publish Listing to Marketplace ✨"}
+                    {loading ? "Publishing Property & Uploading Images..." : isFormValid ? "Publish Listing to Marketplace ✨" : "Fill Required Fields & Add Image to Publish"}
                 </button>
             </form>
         </div>
