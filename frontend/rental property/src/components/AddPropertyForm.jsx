@@ -6,7 +6,9 @@ import usePasteCleaner from "../hooks/usePasteCleaner";
 export default function AddPropertyForm() {
     const dispatch = useDispatch();
     usePasteCleaner();
-    const { loading, error, successMessage } = useSelector((state) => state.properties || {});
+    
+    // ⚡ FIXED: Read `loadingCreation` from Redux slice instead of non-existent `loading`
+    const { loadingCreation: loading, error, successMessage } = useSelector((state) => state.properties || {});
 
     // Form Fields
     const [title, setTitle] = useState("");
@@ -105,7 +107,7 @@ export default function AddPropertyForm() {
     return (
         <div className="w-full max-w-5xl mx-auto bg-[#1c1b1b] p-6 sm:p-10 rounded-none border border-[#353535] shadow-2xl space-y-8 text-[#e5e2e1] font-sans antialiased relative overflow-hidden">
             
-            {/* ⚡ THEMED LOADING PROGRESS BAR ANIMATION */}
+            {/* ⚡ THEMED LOADING PROGRESS BAR ANIMATION (Triggers when loadingCreation is true) */}
             {loading && (
                 <div className="absolute top-0 left-0 w-full h-1.5 bg-[#0e0e0e] overflow-hidden z-50">
                     <div className="w-full h-full bg-[#5ddda1] animate-[pulse_1s_infinite] shadow-[0_0_12px_#5ddda1]"></div>
@@ -141,7 +143,8 @@ export default function AddPropertyForm() {
                         onChange={(e) => setTitle(e.target.value)}
                         placeholder="e.g. Modern Sunset Beach Villa"
                         required
-                        className="w-full text-xs p-3.5 border border-[#444748] rounded-none font-sans bg-[#0e0e0e] text-[#e5e2e1] focus:outline-none focus:border-[#5ddda1] focus:ring-1 focus:ring-[#5ddda1] placeholder:text-[#8e9192]"
+                        disabled={loading}
+                        className="w-full text-xs p-3.5 border border-[#444748] rounded-none font-sans bg-[#0e0e0e] text-[#e5e2e1] focus:outline-none focus:border-[#5ddda1] focus:ring-1 focus:ring-[#5ddda1] placeholder:text-[#8e9192] disabled:opacity-50"
                     />
                 </div>
 
@@ -152,7 +155,8 @@ export default function AddPropertyForm() {
                         <select
                             value={type}
                             onChange={(e) => setType(e.target.value)}
-                            className="w-full text-xs p-3.5 border border-[#444748] rounded-none font-sans bg-[#0e0e0e] text-[#e5e2e1] focus:outline-none focus:border-[#5ddda1] cursor-pointer"
+                            disabled={loading}
+                            className="w-full text-xs p-3.5 border border-[#444748] rounded-none font-sans bg-[#0e0e0e] text-[#e5e2e1] focus:outline-none focus:border-[#5ddda1] cursor-pointer disabled:opacity-50"
                         >
                             <option value="house">House</option>
                             <option value="apartment">Apartment</option>
@@ -168,7 +172,8 @@ export default function AddPropertyForm() {
                             onChange={(e) => setPricePerNight(e.target.value)}
                             placeholder="450"
                             required
-                            className="w-full text-xs p-3.5 border border-[#444748] rounded-none font-sans bg-[#0e0e0e] text-[#e5e2e1] focus:outline-none focus:border-[#5ddda1] focus:ring-1 focus:ring-[#5ddda1] placeholder:text-[#8e9192]"
+                            disabled={loading}
+                            className="w-full text-xs p-3.5 border border-[#444748] rounded-none font-sans bg-[#0e0e0e] text-[#e5e2e1] focus:outline-none focus:border-[#5ddda1] focus:ring-1 focus:ring-[#5ddda1] placeholder:text-[#8e9192] disabled:opacity-50"
                         />
                     </div>
                 </div>
@@ -182,7 +187,8 @@ export default function AddPropertyForm() {
                         onChange={(e) => setLocation(e.target.value)}
                         placeholder="Malibu, California"
                         required
-                        className="w-full text-xs p-3.5 border border-[#444748] rounded-none font-sans bg-[#0e0e0e] text-[#e5e2e1] focus:outline-none focus:border-[#5ddda1] focus:ring-1 focus:ring-[#5ddda1] placeholder:text-[#8e9192]"
+                        disabled={loading}
+                        className="w-full text-xs p-3.5 border border-[#444748] rounded-none font-sans bg-[#0e0e0e] text-[#e5e2e1] focus:outline-none focus:border-[#5ddda1] focus:ring-1 focus:ring-[#5ddda1] placeholder:text-[#8e9192] disabled:opacity-50"
                     />
                 </div>
 
@@ -195,7 +201,8 @@ export default function AddPropertyForm() {
                         onChange={(e) => setDescription(e.target.value)}
                         placeholder="Describe features, architectural elements, amenities, and surroundings..."
                         required
-                        className="w-full text-xs p-3.5 border border-[#444748] rounded-none font-sans bg-[#0e0e0e] text-[#e5e2e1] focus:outline-none focus:border-[#5ddda1] focus:ring-1 focus:ring-[#5ddda1] placeholder:text-[#8e9192]"
+                        disabled={loading}
+                        className="w-full text-xs p-3.5 border border-[#444748] rounded-none font-sans bg-[#0e0e0e] text-[#e5e2e1] focus:outline-none focus:border-[#5ddda1] focus:ring-1 focus:ring-[#5ddda1] placeholder:text-[#8e9192] disabled:opacity-50"
                     />
                 </div>
 
@@ -213,8 +220,9 @@ export default function AddPropertyForm() {
                                 <button
                                     key={amenity}
                                     type="button"
+                                    disabled={loading}
                                     onClick={() => toggleAmenity(amenity)}
-                                    className={`px-3.5 py-2.5 rounded-none text-[10px] font-bold uppercase tracking-wider border transition-all text-left flex items-center justify-between cursor-pointer ${
+                                    className={`px-3.5 py-2.5 rounded-none text-[10px] font-bold uppercase tracking-wider border transition-all text-left flex items-center justify-between cursor-pointer disabled:opacity-50 ${
                                         isChecked 
                                             ? "bg-[#5ddda1] text-[#003823] border-[#5ddda1] shadow-md" 
                                             : "bg-[#1c1b1b] text-[#e5e2e1] border-[#444748] hover:border-[#5ddda1]"
@@ -235,9 +243,10 @@ export default function AddPropertyForm() {
                         <input
                             type="text"
                             value={customAmenityInput}
+                            disabled={loading}
                             onChange={(e) => setCustomAmenityInput(e.target.value)}
                             placeholder="e.g. Ocean View, Private Jacuzzi, BBQ Grill"
-                            className="w-full text-xs p-3 border border-[#444748] rounded-none bg-[#1c1b1b] font-sans text-[#e5e2e1] focus:outline-none focus:border-[#5ddda1] placeholder:text-[#8e9192]"
+                            className="w-full text-xs p-3 border border-[#444748] rounded-none bg-[#1c1b1b] font-sans text-[#e5e2e1] focus:outline-none focus:border-[#5ddda1] placeholder:text-[#8e9192] disabled:opacity-50"
                         />
                     </div>
                 </div>
@@ -247,7 +256,7 @@ export default function AddPropertyForm() {
                     <label className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#5ddda1] block">
                         Property Gallery Images <span className="text-[#8e9192] font-normal lowercase">(At least 1 required, Max 10)</span>
                     </label>
-                    <label className="border-2 border-dashed border-[#444748] hover:border-[#5ddda1] rounded-none p-8 flex flex-col items-center justify-center cursor-pointer bg-[#0e0e0e] transition-all group">
+                    <label className={`border-2 border-dashed border-[#444748] rounded-none p-8 flex flex-col items-center justify-center bg-[#0e0e0e] transition-all group ${loading ? "opacity-50 cursor-not-allowed" : "hover:border-[#5ddda1] cursor-pointer"}`}>
                         <span className="text-3xl mb-2 text-[#5ddda1]">📷</span>
                         <span className="text-xs font-bold uppercase tracking-widest text-[#e5e2e1] group-hover:text-[#5ddda1]">
                             Click to upload property images
@@ -257,6 +266,7 @@ export default function AddPropertyForm() {
                             type="file"
                             accept="image/*"
                             multiple
+                            disabled={loading}
                             onChange={handleImageChange}
                             className="hidden"
                         />
@@ -271,14 +281,16 @@ export default function AddPropertyForm() {
                                     <span className="absolute bottom-1 left-1 bg-[#080808]/90 text-[#5ddda1] text-[9px] font-mono font-bold px-1.5 py-0.5">
                                         #{index + 1}
                                     </span>
-                                    <button
-                                        type="button"
-                                        onClick={() => handleRemoveImage(index)}
-                                        className="absolute top-1 right-1 bg-[#ffb4ab] text-[#380007] rounded-none w-6 h-6 flex items-center justify-center text-[10px] font-bold shadow hover:bg-white cursor-pointer transition-colors"
-                                        title="Remove image"
-                                    >
-                                        ✕
-                                    </button>
+                                    {!loading && (
+                                        <button
+                                            type="button"
+                                            onClick={() => handleRemoveImage(index)}
+                                            className="absolute top-1 right-1 bg-[#ffb4ab] text-[#380007] rounded-none w-6 h-6 flex items-center justify-center text-[10px] font-bold shadow hover:bg-white cursor-pointer transition-colors"
+                                            title="Remove image"
+                                        >
+                                            ✕
+                                        </button>
+                                    )}
                                 </div>
                             ))}
                         </div>

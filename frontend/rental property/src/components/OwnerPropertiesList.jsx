@@ -8,7 +8,9 @@ const predefinedAmenities = ["WiFi", "Pool", "Air Conditioning", "Free Parking",
 export default function OwnerPropertiesList() {
     const dispatch = useDispatch();
     const navigate = useNavigate();
-    const { ownerProperties = [], loadingOwnerList, successMessage } = useSelector((state) => state.properties || {});
+    
+    // ⚡ FIXED: Read `loadingAction` to track update/delete loading states precisely
+    const { ownerProperties = [], loadingOwnerList, loadingAction, successMessage } = useSelector((state) => state.properties || {});
 
     const [editingProperty, setEditingProperty] = useState(null);
 
@@ -40,6 +42,7 @@ export default function OwnerPropertiesList() {
 
     const handleDelete = (e, id) => {
         e.stopPropagation();
+        if (loadingAction) return;
         if (window.confirm("Are you sure you want to permanently remove this property listing? This action cannot be undone.")) {
             dispatch(deletePropertyListing(id));
         }
@@ -66,14 +69,14 @@ export default function OwnerPropertiesList() {
     };
 
     const handleRemoveExistingImage = (indexToRemove) => {
+        if (loadingAction) return;
         setCurrentImages(currentImages.filter((_, idx) => idx !== indexToRemove));
     };
 
-    // 📸 FIXED: Robust accumulative new image selection handler for editing
+    // 📸 Robust accumulative new image selection handler for editing
     const handleNewImagesChange = (e) => {
         const files = Array.from(e.target.files);
         if (files.length > 0) {
-            // Combine previously staged files with newly selected ones, capping total combined uploads at 10
             const combinedFiles = [...newImageFiles, ...files].slice(0, 10);
             setNewImageFiles(combinedFiles);
             setNewImagePreviews(combinedFiles.map((file) => URL.createObjectURL(file)));
@@ -81,6 +84,7 @@ export default function OwnerPropertiesList() {
     };
 
     const handleRemoveNewPreview = (indexToRemove) => {
+        if (loadingAction) return;
         const updatedFiles = newImageFiles.filter((_, idx) => idx !== indexToRemove);
         const updatedPreviews = newImagePreviews.filter((_, idx) => idx !== indexToRemove);
         setNewImageFiles(updatedFiles);
@@ -88,6 +92,7 @@ export default function OwnerPropertiesList() {
     };
 
     const toggleAmenity = (amenity) => {
+        if (loadingAction) return;
         if (selectedAmenities.includes(amenity)) {
             setSelectedAmenities(selectedAmenities.filter(item => item !== amenity));
         } else {
@@ -97,7 +102,7 @@ export default function OwnerPropertiesList() {
 
     const handleUpdateSubmit = async (e) => {
         e.preventDefault();
-        if (!editingProperty) return;
+        if (!editingProperty || loadingAction) return;
         
         const pId = editingProperty._id || editingProperty.id;
 
@@ -241,8 +246,15 @@ export default function OwnerPropertiesList() {
             {/* ✏️ EDIT MODAL SECTION ✏️ */}
             {editingProperty && (
                 <div className="fixed inset-0 w-screen h-screen z-[99999] flex items-center justify-center bg-[#080808]/90 backdrop-blur-md p-4 overflow-y-auto">
-                    <form onSubmit={handleUpdateSubmit} className="bg-[#1c1b1b] border border-[#353535] w-full max-w-3xl rounded-none shadow-2xl overflow-hidden flex flex-col my-auto max-h-[95vh]">
+                    <form onSubmit={handleUpdateSubmit} className="bg-[#1c1b1b] border border-[#353535] w-full max-w-3xl rounded-none shadow-2xl overflow-hidden flex flex-col my-auto max-h-[95vh] relative">
                         
+                        {/* ⚡ THEMED LOADING PROGRESS BAR ANIMATION */}
+                        {loadingAction && (
+                            <div className="absolute top-0 left-0 w-full h-1.5 bg-[#0e0e0e] overflow-hidden z-50">
+                                <div className="w-full h-full bg-[#5ddda1] animate-[pulse_1s_infinite] shadow-[0_0_12px_#5ddda1]"></div>
+                            </div>
+                        )}
+
                         {/* Modal Header */}
                         <div className="bg-[#0e0e0e] border-b border-[#353535] px-6 py-5 flex items-center justify-between sticky top-0 z-10">
                             <h3 className="text-xs font-bold uppercase text-[#e5e2e1] tracking-widest">
@@ -250,8 +262,9 @@ export default function OwnerPropertiesList() {
                             </h3>
                             <button 
                                 type="button" 
+                                disabled={loadingAction}
                                 onClick={() => setEditingProperty(null)} 
-                                className="font-bold text-[#8e9192] hover:text-[#5ddda1] cursor-pointer px-2 py-1 text-sm transition-colors"
+                                className="font-bold text-[#8e9192] hover:text-[#5ddda1] cursor-pointer px-2 py-1 text-sm transition-colors disabled:opacity-50"
                             >
                                 ✕
                             </button>
@@ -264,23 +277,23 @@ export default function OwnerPropertiesList() {
                             <div className="space-y-4">
                                 <div className="space-y-1.5">
                                     <label className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#5ddda1] block">Title</label>
-                                    <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} required className="w-full text-xs p-3.5 border border-[#444748] rounded-none font-sans bg-[#0e0e0e] text-[#e5e2e1] focus:outline-none focus:border-[#5ddda1] focus:ring-1 focus:ring-[#5ddda1]" />
+                                    <input type="text" value={title} disabled={loadingAction} onChange={(e) => setTitle(e.target.value)} required className="w-full text-xs p-3.5 border border-[#444748] rounded-none font-sans bg-[#0e0e0e] text-[#e5e2e1] focus:outline-none focus:border-[#5ddda1] focus:ring-1 focus:ring-[#5ddda1] disabled:opacity-50" />
                                 </div>
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                     <div className="space-y-1.5">
                                         <label className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#5ddda1] block">Price Per Night ($)</label>
-                                        <input type="number" value={price} onChange={(e) => setPrice(e.target.value)} required className="w-full text-xs p-3.5 border border-[#444748] rounded-none font-sans bg-[#0e0e0e] text-[#e5e2e1] focus:outline-none focus:border-[#5ddda1] focus:ring-1 focus:ring-[#5ddda1]" />
+                                        <input type="number" value={price} disabled={loadingAction} onChange={(e) => setPrice(e.target.value)} required className="w-full text-xs p-3.5 border border-[#444748] rounded-none font-sans bg-[#0e0e0e] text-[#e5e2e1] focus:outline-none focus:border-[#5ddda1] focus:ring-1 focus:ring-[#5ddda1] disabled:opacity-50" />
                                     </div>
                                     <div className="space-y-1.5">
                                         <label className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#5ddda1] block">Location</label>
-                                        <input type="text" value={location} onChange={(e) => setLocation(e.target.value)} required className="w-full text-xs p-3.5 border border-[#444748] rounded-none font-sans bg-[#0e0e0e] text-[#e5e2e1] focus:outline-none focus:border-[#5ddda1] focus:ring-1 focus:ring-[#5ddda1]" />
+                                        <input type="text" value={location} disabled={loadingAction} onChange={(e) => setLocation(e.target.value)} required className="w-full text-xs p-3.5 border border-[#444748] rounded-none font-sans bg-[#0e0e0e] text-[#e5e2e1] focus:outline-none focus:border-[#5ddda1] focus:ring-1 focus:ring-[#5ddda1] disabled:opacity-50" />
                                     </div>
                                 </div>
 
                                 <div className="space-y-1.5">
                                     <label className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#5ddda1] block">Description</label>
-                                    <textarea rows="4" value={description} onChange={(e) => setDescription(e.target.value)} required className="w-full text-xs p-3.5 border border-[#444748] rounded-none font-sans bg-[#0e0e0e] text-[#e5e2e1] focus:outline-none focus:border-[#5ddda1] focus:ring-1 focus:ring-[#5ddda1] resize-none" />
+                                    <textarea rows="4" value={description} disabled={loadingAction} onChange={(e) => setDescription(e.target.value)} required className="w-full text-xs p-3.5 border border-[#444748] rounded-none font-sans bg-[#0e0e0e] text-[#e5e2e1] focus:outline-none focus:border-[#5ddda1] focus:ring-1 focus:ring-[#5ddda1] resize-none disabled:opacity-50" />
                                 </div>
                             </div>
 
@@ -295,14 +308,16 @@ export default function OwnerPropertiesList() {
                                     {currentImages.map((imgUrl, idx) => (
                                         <div key={idx} className="relative h-24 rounded-none border border-[#444748] overflow-hidden group bg-[#0e0e0e]">
                                             <img src={imgUrl} alt={`Existing ${idx}`} className="w-full h-full object-cover filter contrast-110" />
-                                            <button
-                                                type="button"
-                                                onClick={() => handleRemoveExistingImage(idx)}
-                                                className="absolute top-1 right-1 bg-[#ffb4ab] text-[#380007] rounded-none w-6 h-6 flex items-center justify-center text-[10px] font-bold shadow hover:bg-white cursor-pointer transition-colors"
-                                                title="Remove image"
-                                            >
-                                                ✕
-                                            </button>
+                                            {!loadingAction && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleRemoveExistingImage(idx)}
+                                                    className="absolute top-1 right-1 bg-[#ffb4ab] text-[#380007] rounded-none w-6 h-6 flex items-center justify-center text-[10px] font-bold shadow hover:bg-white cursor-pointer transition-colors"
+                                                    title="Remove image"
+                                                >
+                                                    ✕
+                                                </button>
+                                            )}
                                         </div>
                                     ))}
                                 </div>
@@ -312,8 +327,9 @@ export default function OwnerPropertiesList() {
                                     type="file" 
                                     accept="image/*" 
                                     multiple 
+                                    disabled={loadingAction}
                                     onChange={handleNewImagesChange} 
-                                    className="w-full text-xs text-[#c4c7c7] file:mr-4 file:py-2.5 file:px-4 file:rounded-none file:border-0 file:text-[9px] file:font-bold file:uppercase file:bg-[#5ddda1] file:text-[#003823] file:cursor-pointer hover:file:bg-[#08a56e] bg-[#0e0e0e] border border-[#444748]" 
+                                    className="w-full text-xs text-[#c4c7c7] file:mr-4 file:py-2.5 file:px-4 file:rounded-none file:border-0 file:text-[9px] file:font-bold file:uppercase file:bg-[#5ddda1] file:text-[#003823] file:cursor-pointer hover:file:bg-[#08a56e] bg-[#0e0e0e] border border-[#444748] disabled:opacity-50" 
                                 />
                                 
                                 {/* Newly Selected Image Previews Grid */}
@@ -325,14 +341,16 @@ export default function OwnerPropertiesList() {
                                                 <div key={idx} className="relative h-24 rounded-none border border-[#5ddda1] overflow-hidden bg-[#0e0e0e]">
                                                     <img src={src} alt={`New Preview ${idx}`} className="w-full h-full object-cover filter contrast-110" />
                                                     <span className="absolute bottom-1 left-1 bg-[#5ddda1] text-[#003823] text-[8px] px-1.5 py-0.5 font-bold uppercase">NEW</span>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleRemoveNewPreview(idx)}
-                                                        className="absolute top-1 right-1 bg-[#ffb4ab] text-[#380007] rounded-none w-6 h-6 flex items-center justify-center text-[10px] font-bold shadow hover:bg-white cursor-pointer transition-colors"
-                                                        title="Remove new preview"
-                                                    >
-                                                        ✕
-                                                    </button>
+                                                    {!loadingAction && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleRemoveNewPreview(idx)}
+                                                            className="absolute top-1 right-1 bg-[#ffb4ab] text-[#380007] rounded-none w-6 h-6 flex items-center justify-center text-[10px] font-bold shadow hover:bg-white cursor-pointer transition-colors"
+                                                            title="Remove new preview"
+                                                        >
+                                                            ✕
+                                                        </button>
+                                                    )}
                                                 </div>
                                             ))}
                                         </div>
@@ -350,8 +368,9 @@ export default function OwnerPropertiesList() {
                                             <button
                                                 key={amenity}
                                                 type="button"
+                                                disabled={loadingAction}
                                                 onClick={() => toggleAmenity(amenity)}
-                                                className={`px-3.5 py-2.5 rounded-none text-[10px] font-bold uppercase tracking-wider border transition-all text-left flex items-center justify-between cursor-pointer ${
+                                                className={`px-3.5 py-2.5 rounded-none text-[10px] font-bold uppercase tracking-wider border transition-all text-left flex items-center justify-between cursor-pointer disabled:opacity-50 ${
                                                     isChecked 
                                                         ? "bg-[#5ddda1] text-[#003823] border-[#5ddda1] shadow-md" 
                                                         : "bg-[#0e0e0e] text-[#e5e2e1] border-[#444748] hover:border-[#5ddda1]"
@@ -366,9 +385,10 @@ export default function OwnerPropertiesList() {
                                 <input
                                     type="text"
                                     value={customAmenityInput}
+                                    disabled={loadingAction}
                                     onChange={(e) => setCustomAmenityInput(e.target.value)}
                                     placeholder="Add custom amenities (comma separated)..."
-                                    className="w-full text-xs p-3.5 border border-[#444748] rounded-none bg-[#0e0e0e] font-sans text-[#e5e2e1] focus:outline-none focus:border-[#5ddda1]"
+                                    className="w-full text-xs p-3.5 border border-[#444748] rounded-none bg-[#0e0e0e] font-sans text-[#e5e2e1] focus:outline-none focus:border-[#5ddda1] disabled:opacity-50"
                                 />
                             </div>
                         </div>
@@ -377,16 +397,19 @@ export default function OwnerPropertiesList() {
                         <div className="bg-[#0e0e0e] border-t border-[#353535] px-6 py-4 flex justify-end gap-3 sticky bottom-0 z-10">
                             <button 
                                 type="button" 
+                                disabled={loadingAction}
                                 onClick={() => setEditingProperty(null)} 
-                                className="px-5 py-2.5 bg-[#1c1b1b] hover:bg-[#353535] text-[#c4c7c7] border border-[#444748] text-xs font-bold uppercase tracking-widest rounded-none cursor-pointer transition-all"
+                                className="px-5 py-2.5 bg-[#1c1b1b] hover:bg-[#353535] text-[#c4c7c7] border border-[#444748] text-xs font-bold uppercase tracking-widest rounded-none cursor-pointer transition-all disabled:opacity-50"
                             >
                                 Cancel
                             </button>
                             <button 
                                 type="submit" 
-                                className="px-6 py-2.5 bg-[#5ddda1] hover:bg-[#08a56e] text-[#003823] text-xs font-bold uppercase tracking-widest rounded-none cursor-pointer transition-all shadow-lg"
+                                disabled={loadingAction}
+                                className="px-6 py-2.5 bg-[#5ddda1] hover:bg-[#08a56e] text-[#003823] text-xs font-bold uppercase tracking-widest rounded-none cursor-pointer transition-all shadow-lg flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
                             >
-                                Save Updates
+                                {loadingAction && <div className="w-3.5 h-3.5 border-2 border-[#003823] border-t-transparent rounded-none animate-spin"></div>}
+                                {loadingAction ? "Saving Updates..." : "Save Updates"}
                             </button>
                         </div>
                     </form>

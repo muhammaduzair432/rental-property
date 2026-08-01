@@ -55,8 +55,10 @@ export const loginUser = createAsyncThunk("auth/loginUser", async (credentials, 
         localStorage.setItem("user", JSON.stringify(res.data.data.user));
         return res.data.data;
     } catch (error) {
-        const errorMessage = error.response?.data?.message || error.message;
-        return thunkApi.rejectWithValue(errorMessage);
+        // ⚡ ROBUST ERROR EXTRACTION: Safely grab backend message whether it's in response.data.message, response.data, or error.message
+        const backendMsg = error.response?.data?.message || error.response?.data || error.message;
+        const finalMessage = typeof backendMsg === "string" ? backendMsg : JSON.stringify(backendMsg);
+        return thunkApi.rejectWithValue(finalMessage);
     }
 });
 

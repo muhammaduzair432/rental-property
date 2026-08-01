@@ -28,6 +28,11 @@ export default function Auth() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const otpRefs = useRef([]);
 
+    // Clear UI error on state switch
+    useEffect(() => {
+        setUiError("");
+    }, [authState]);
+
     // 🕒 2-Minute Countdown Timer Loop effect
     useEffect(() => {
         if (authState !== "otp") return;
@@ -47,6 +52,34 @@ export default function Auth() {
         return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
     };
 
+    // ⚡ Precise Error Parser Mapped to Your Exact Backend Responses
+    const getLoginErrorMessage = (errorObj) => {
+        const errorText = typeof errorObj === "string" ? errorObj : errorObj?.payload || errorObj?.response?.data?.message || errorObj?.message || String(errorObj || "");
+        const errStr = errorText.toLowerCase();
+
+        // 1. Backend error: "user not found with this email" (Status 404)
+        if (errStr.includes("user not found with this email") || errStr.includes("not found")) {
+            return "User not found with this email.";
+        }
+
+        // 2. Backend error: "Invalid user credentials" (Status 401 - triggered when password fails)
+        if (errStr.includes("invalid user credentials") || errStr.includes("credentials")) {
+            return "Invalid password. Please check your password and try again.";
+        }
+
+        // 3. Backend error: Account not verified (Status 403)
+        if (errStr.includes("not verified")) {
+            return "Account not verified. Please verify your account before logging in.";
+        }
+
+        // 4. Backend error: All fields required (Status 400)
+        if (errStr.includes("all fields are required")) {
+            return "All fields are required.";
+        }
+
+        return errorText || "Invalid email or password.";
+    };
+
     // 1. Submit Login Handler
     const handleLoginSubmit = async (e) => {
         e.preventDefault();
@@ -59,8 +92,7 @@ export default function Auth() {
             navigate("/dashboard");
         } catch (error) {
             setIsSubmitting(false);
-            const errorText = typeof error === 'string' ? error : error?.message || "Invalid credentials. Please check parameters.";
-            setUiError(errorText);
+            setUiError(getLoginErrorMessage(error));
         }
     };
 
@@ -88,8 +120,8 @@ export default function Auth() {
                 setAuthState("otp");
             }, 150);
         } catch (error) {
-            const errorText = typeof error === 'string' ? error : error?.message || "Registration failed.";
-            setUiError(errorText);
+            const errText = typeof error === "string" ? error : error?.payload || error?.response?.data?.message || error?.message || "Registration failed.";
+            setUiError(errText);
             setIsSubmitting(false);
         }
     };
@@ -123,8 +155,8 @@ export default function Auth() {
             }, 3200);
 
         } catch (error) {
-            const errorText = typeof error === 'string' ? error : error?.message || "Invalid or expired code.";
-            setUiError(errorText);
+            const errText = typeof error === "string" ? error : error?.payload || error?.response?.data?.message || error?.message || "Invalid or expired code.";
+            setUiError(errText);
             setIsSubmitting(false);
         }
     };
@@ -140,8 +172,8 @@ export default function Auth() {
             setTimeLeft(120);
             setOtpArray(new Array(6).fill(""));
         } catch (error) {
-            const errorText = typeof error === 'string' ? error : error?.message || "Failed to resend authentication token.";
-            setUiError(errorText);
+            const errText = typeof error === "string" ? error : error?.payload || error?.response?.data?.message || error?.message || "Failed to resend token.";
+            setUiError(errText);
         } finally {
             setIsSubmitting(false);
         }
@@ -168,7 +200,15 @@ export default function Auth() {
     const isResendDisabled = combinedLoadingState || timeLeft > 0;
 
     return (
-        <div className="min-h-screen w-full bg-[#131313] text-[#e5e2e1] flex items-center justify-center p-4 sm:p-6 lg:p-10 font-sans antialiased selection:bg-[#5ddda1]/30 selection:text-black">
+        <div className="min-h-screen w-full bg-[#131313] text-[#e5e2e1] flex items-center justify-center p-4 sm:p-6 lg:p-10 font-sans antialiased selection:bg-[#5ddda1]/30 selection:text-black relative overflow-hidden">
+            
+            {/* ⚡ Themed Loading Progress Bar */}
+            {combinedLoadingState && (
+                <div className="absolute top-0 left-0 w-full h-1.5 bg-[#0e0e0e] overflow-hidden z-50">
+                    <div className="w-full h-full bg-[#5ddda1] animate-[pulse_1s_infinite] shadow-[0_0_12px_#5ddda1]"></div>
+                </div>
+            )}
+
             <div className="w-full max-w-5xl bg-[#1c1b1b] rounded-none border border-[#353535] shadow-[0_30px_70px_-15px_rgba(0,0,0,0.95)] overflow-hidden grid grid-cols-1 md:grid-cols-2 min-h-[660px]">
 
                 {/* LEFT BLOCK PANEL: INTERACTIVE CORE FORMS CONTAINER */}
@@ -177,7 +217,7 @@ export default function Auth() {
                     {authState !== "verified" && (
                         <div className="space-y-2 border-b border-[#353535] pb-5">
                             <span className="text-[10px] font-bold tracking-[0.3em] text-[#5ddda1] uppercase">
-                                 AUTHENTICATION
+                                AUTHENTICATION
                             </span>
                             <h1 className="text-2xl sm:text-3xl font-serif font-bold tracking-tight text-[#e5e2e1] uppercase">
                                 {authState === "login" && "Welcome Back"}
@@ -185,7 +225,7 @@ export default function Auth() {
                                 {authState === "otp" && "Verification Code"}
                             </h1>
                             <p className="text-xs text-[#c4c7c7] font-sans leading-relaxed">
-                                {authState === "login" && "Access curated properties and reserve them Today !"}
+                                {authState === "login" && "Access curated properties and reserve them Today!"}
                                 {authState === "register" && "Register your profile credentials for secure platform access."}
                                 {authState === "otp" && "Enter the 6-digit verification code dispatched to your email inbox."}
                             </p>
@@ -194,7 +234,7 @@ export default function Auth() {
 
                     {uiError && authState !== "verified" && (
                         <div className="p-4 bg-[#0e0e0e] border border-[#ffb4ab]/40 text-[#ffb4ab] text-xs rounded-none font-bold uppercase tracking-wider shadow-lg flex items-center gap-2">
-                            <span>⚠️</span> {uiError}
+                            <span>⚠️</span> <span>{uiError}</span>
                         </div>
                     )}
 
@@ -206,10 +246,11 @@ export default function Auth() {
                                 <input 
                                     type="email" 
                                     value={email} 
+                                    disabled={combinedLoadingState}
                                     onChange={(e) => setEmail(e.target.value)} 
                                     required 
                                     placeholder="name@gmail.com" 
-                                    className="w-full text-xs border border-[#444748] px-4 py-3 bg-[#0e0e0e] text-[#e5e2e1] rounded-none focus:outline-none focus:border-[#5ddda1] focus:ring-1 focus:ring-[#5ddda1] transition-all placeholder:text-[#8e9192]" 
+                                    className="w-full text-xs border border-[#444748] px-4 py-3 bg-[#0e0e0e] text-[#e5e2e1] rounded-none focus:outline-none focus:border-[#5ddda1] focus:ring-1 focus:ring-[#5ddda1] transition-all placeholder:text-[#8e9192] disabled:opacity-50" 
                                 />
                             </div>
                             <div className="space-y-1.5">
@@ -217,22 +258,24 @@ export default function Auth() {
                                 <input 
                                     type="password" 
                                     value={password} 
+                                    disabled={combinedLoadingState}
                                     onChange={(e) => setPassword(e.target.value)} 
                                     required 
                                     placeholder="password" 
-                                    className="w-full text-xs border border-[#444748] px-4 py-3 bg-[#0e0e0e] text-[#e5e2e1] rounded-none focus:outline-none focus:border-[#5ddda1] focus:ring-1 focus:ring-[#5ddda1] transition-all placeholder:text-[#8e9192]" 
+                                    className="w-full text-xs border border-[#444748] px-4 py-3 bg-[#0e0e0e] text-[#e5e2e1] rounded-none focus:outline-none focus:border-[#5ddda1] focus:ring-1 focus:ring-[#5ddda1] transition-all placeholder:text-[#8e9192] disabled:opacity-50" 
                                 />
                             </div>
                             <button 
                                 type="submit" 
                                 disabled={combinedLoadingState} 
-                                className="w-full py-3.5 bg-[#5ddda1] text-[#003823] rounded-none font-bold text-xs tracking-[0.2em] uppercase hover:bg-[#08a56e] transition-all shadow-xl cursor-pointer disabled:opacity-40"
+                                className="w-full py-3.5 bg-[#5ddda1] text-[#003823] rounded-none font-bold text-xs tracking-[0.2em] uppercase hover:bg-[#08a56e] transition-all shadow-xl cursor-pointer disabled:opacity-40 flex items-center justify-center gap-2.5"
                             >
-                                {combinedLoadingState ? "Authenticating..." : "Login In"}
+                                {combinedLoadingState && <div className="w-4 h-4 border-2 border-[#003823] border-t-transparent rounded-none animate-spin"></div>}
+                                {combinedLoadingState ? "Authenticating..." : "Login"}
                             </button>
                             <div className="text-center pt-3 border-t border-[#353535]">
                                 <span className="text-xs text-[#c4c7c7]">New to the platform? </span>
-                                <button type="button" onClick={() => setAuthState("register")} className="text-xs font-bold underline text-[#5ddda1] hover:text-white cursor-pointer transition-colors ml-1">Create Account</button>
+                                <button type="button" disabled={combinedLoadingState} onClick={() => setAuthState("register")} className="text-xs font-bold underline text-[#5ddda1] hover:text-white cursor-pointer transition-colors ml-1">Create Account</button>
                             </div>
                         </form>
                     )}
@@ -243,31 +286,32 @@ export default function Auth() {
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div className="space-y-1">
                                     <label className="block text-[9px] font-bold uppercase tracking-[0.2em] text-[#5ddda1]">Username</label>
-                                    <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} required placeholder="username" className="w-full text-xs border border-[#444748] px-3.5 py-2.5 bg-[#0e0e0e] text-[#e5e2e1] rounded-none focus:outline-none focus:border-[#5ddda1] focus:ring-1 focus:ring-[#5ddda1] placeholder:text-[#8e9192]" />
+                                    <input type="text" value={username} disabled={combinedLoadingState} onChange={(e) => setUsername(e.target.value)} required placeholder="username" className="w-full text-xs border border-[#444748] px-3.5 py-2.5 bg-[#0e0e0e] text-[#e5e2e1] rounded-none focus:outline-none focus:border-[#5ddda1] focus:ring-1 focus:ring-[#5ddda1] placeholder:text-[#8e9192] disabled:opacity-50" />
                                 </div>
                                 <div className="space-y-1">
                                     <label className="block text-[9px] font-bold uppercase tracking-[0.2em] text-[#5ddda1]">Full Name</label>
-                                    <input type="text" value={fullname} onChange={(e) => setFullname(e.target.value)} required placeholder="full name" className="w-full text-xs border border-[#444748] px-3.5 py-2.5 bg-[#0e0e0e] text-[#e5e2e1] rounded-none focus:outline-none focus:border-[#5ddda1] focus:ring-1 focus:ring-[#5ddda1] placeholder:text-[#8e9192]" />
+                                    <input type="text" value={fullname} disabled={combinedLoadingState} onChange={(e) => setFullname(e.target.value)} required placeholder="full name" className="w-full text-xs border border-[#444748] px-3.5 py-2.5 bg-[#0e0e0e] text-[#e5e2e1] rounded-none focus:outline-none focus:border-[#5ddda1] focus:ring-1 focus:ring-[#5ddda1] placeholder:text-[#8e9192] disabled:opacity-50" />
                                 </div>
                             </div>
                             <div className="space-y-1">
                                 <label className="block text-[9px] font-bold uppercase tracking-[0.2em] text-[#5ddda1]">Email Address</label>
-                                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="name@domain.com" className="w-full text-xs border border-[#444748] px-3.5 py-2.5 bg-[#0e0e0e] text-[#e5e2e1] rounded-none focus:outline-none focus:border-[#5ddda1] focus:ring-1 focus:ring-[#5ddda1] placeholder:text-[#8e9192]" />
+                                <input type="email" value={email} disabled={combinedLoadingState} onChange={(e) => setEmail(e.target.value)} required placeholder="name@domain.com" className="w-full text-xs border border-[#444748] px-3.5 py-2.5 bg-[#0e0e0e] text-[#e5e2e1] rounded-none focus:outline-none focus:border-[#5ddda1] focus:ring-1 focus:ring-[#5ddda1] placeholder:text-[#8e9192] disabled:opacity-50" />
                             </div>
                             <div className="space-y-1">
-                                <label className="block text-[9px] font-bold uppercase tracking-[0.2em] text-[#5ddda1]">Password </label>
-                                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required placeholder="••••••••••••" className="w-full text-xs border border-[#444748] px-3.5 py-2.5 bg-[#0e0e0e] text-[#e5e2e1] rounded-none focus:outline-none focus:border-[#5ddda1] focus:ring-1 focus:ring-[#5ddda1] placeholder:text-[#8e9192]" />
+                                <label className="block text-[9px] font-bold uppercase tracking-[0.2em] text-[#5ddda1]">Password</label>
+                                <input type="password" value={password} disabled={combinedLoadingState} onChange={(e) => setPassword(e.target.value)} required placeholder="••••••••••••" className="w-full text-xs border border-[#444748] px-3.5 py-2.5 bg-[#0e0e0e] text-[#e5e2e1] rounded-none focus:outline-none focus:border-[#5ddda1] focus:ring-1 focus:ring-[#5ddda1] placeholder:text-[#8e9192] disabled:opacity-50" />
                             </div>
                             <div className="space-y-1">
                                 <label className="block text-[9px] font-bold uppercase tracking-[0.2em] text-[#5ddda1]">Profile Avatar Asset</label>
-                                <input type="file" onChange={(e) => setAvatar(e.target.files[0])} accept="image/*" className="w-full text-xs text-[#c4c7c7] file:mr-4 file:py-2.5 file:px-4 file:rounded-none file:border-0 file:text-[9px] file:font-bold file:uppercase file:bg-[#5ddda1] file:text-[#003823] file:cursor-pointer hover:file:bg-[#08a56e] bg-[#0e0e0e] border border-[#444748]" />
+                                <input type="file" disabled={combinedLoadingState} onChange={(e) => setAvatar(e.target.files[0])} accept="image/*" className="w-full text-xs text-[#c4c7c7] file:mr-4 file:py-2.5 file:px-4 file:rounded-none file:border-0 file:text-[9px] file:font-bold file:uppercase file:bg-[#5ddda1] file:text-[#003823] file:cursor-pointer hover:file:bg-[#08a56e] bg-[#0e0e0e] border border-[#444748] disabled:opacity-50" />
                             </div>
-                            <button type="submit" disabled={combinedLoadingState} className="w-full py-3.5 bg-[#5ddda1] text-[#003823] rounded-none font-bold text-xs tracking-[0.2em] uppercase hover:bg-[#08a56e] transition-all shadow-xl cursor-pointer disabled:opacity-40 mt-2">
+                            <button type="submit" disabled={combinedLoadingState} className="w-full py-3.5 bg-[#5ddda1] text-[#003823] rounded-none font-bold text-xs tracking-[0.2em] uppercase hover:bg-[#08a56e] transition-all shadow-xl cursor-pointer disabled:opacity-40 flex items-center justify-center gap-2.5 mt-2">
+                                {combinedLoadingState && <div className="w-4 h-4 border-2 border-[#003823] border-t-transparent rounded-none animate-spin"></div>}
                                 {combinedLoadingState ? "Creating Account..." : "Register Now"}
                             </button>
                             <div className="text-center pt-3 border-t border-[#353535]">
                                 <span className="text-xs text-[#c4c7c7]">Already registered? </span>
-                                <button type="button" onClick={() => setAuthState("login")} className="text-xs font-bold underline text-[#5ddda1] hover:text-white cursor-pointer transition-colors ml-1">Sign In</button>
+                                <button type="button" disabled={combinedLoadingState} onClick={() => setAuthState("login")} className="text-xs font-bold underline text-[#5ddda1] hover:text-white cursor-pointer transition-colors ml-1">Sign In</button>
                             </div>
                         </form>
                     )}
@@ -285,7 +329,7 @@ export default function Auth() {
                                         ref={(el) => (otpRefs.current[i] = el)}
                                         onChange={(e) => handleOtpChange(e.target.value, i)}
                                         onKeyDown={(e) => handleOtpKeyDown(e, i)}
-                                        className="w-11 h-14 sm:w-12 sm:h-16 text-center text-xl font-mono font-bold border border-[#444748] bg-[#0e0e0e] text-[#5ddda1] rounded-none focus:outline-none focus:border-[#5ddda1] focus:ring-1 focus:ring-[#5ddda1] transition-all"
+                                        className="w-11 h-14 sm:w-12 sm:h-16 text-center text-xl font-mono font-bold border border-[#444748] bg-[#0e0e0e] text-[#5ddda1] rounded-none focus:outline-none focus:border-[#5ddda1] focus:ring-1 focus:ring-[#5ddda1] transition-all disabled:opacity-50"
                                         disabled={combinedLoadingState || timeLeft === 0}
                                     />
                                 ))}
@@ -316,8 +360,9 @@ export default function Auth() {
                                 type="button" 
                                 onClick={handleOtpSubmit}
                                 disabled={combinedLoadingState || timeLeft === 0} 
-                                className={`w-full py-3.5 bg-[#5ddda1] text-[#003823] rounded-none font-bold text-xs tracking-[0.2em] uppercase hover:bg-[#08a56e] transition-all shadow-xl flex items-center justify-center min-h-[46px] ${timeLeft === 0 ? "opacity-40 cursor-not-allowed bg-gray-600" : "cursor-pointer"}`}
+                                className={`w-full py-3.5 bg-[#5ddda1] text-[#003823] rounded-none font-bold text-xs tracking-[0.2em] uppercase hover:bg-[#08a56e] transition-all shadow-xl flex items-center justify-center gap-2.5 min-h-[46px] ${timeLeft === 0 ? "opacity-40 cursor-not-allowed bg-gray-600" : "cursor-pointer"}`}
                             >
+                                {combinedLoadingState && <div className="w-4 h-4 border-2 border-[#003823] border-t-transparent rounded-none animate-spin"></div>}
                                 {combinedLoadingState ? "Validating Code..." : "Verify Code"}
                             </button>
                         </div>
@@ -345,11 +390,9 @@ export default function Auth() {
                     )}
                 </div>
 
-                {/* RIGHT BLOCK PANEL: CRYSTAL CLEAR IMAGE WITH PROFESSIONAL DARK LIGHT FILTER */}
+                {/* RIGHT BLOCK PANEL: RESTORED HIGH-DEF ARCHITECTURAL FEED IMAGE */}
                 <div className="hidden md:block relative bg-[#0e0e0e] overflow-hidden">
-                    {/* Clear high-definition image */}
                     <div className="absolute inset-0 bg-cover bg-center transform hover:scale-105 transition-transform duration-1000" style={{ backgroundImage: `url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1400&q=90')` }}></div>
-                    {/* Professional dark light gradient overlay filter (Text placed safely above) */}
                     <div className="absolute inset-0 bg-gradient-to-t from-[#080808] via-[#080808]/50 to-transparent"></div>
                     <div className="absolute bottom-10 left-10 right-10 text-[#e5e2e1] z-10 space-y-3">
                         <span className="text-[9px] font-bold tracking-[0.3em] text-[#5ddda1] uppercase">Curated Excellence</span>
