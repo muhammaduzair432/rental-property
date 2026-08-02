@@ -10,7 +10,8 @@ import {
     getSystemSummaryReports,    // 🔥 Injected for Bookings & Ops
     administrativeReviewPurge,  // 🔥 Injected for Bookings & Ops
     getSystemAuditLogs ,
-    getAllSystemReviews,        // 🔥 Injected for User Management
+    getAllSystemReviews,   
+    getTargetUserDetails    // 🔥 Injected for User Management
 } from "../Controllers/admin.controller.js";
 import { verifyJwt, authorizeRoles } from "../Middlewares/auth.middleware.js";
 
@@ -32,5 +33,6 @@ router.route("/operations/reports").get(getSystemSummaryReports);
 router.route("/reviews/delete/:reviewId").delete(administrativeReviewPurge);
 router.route("/operations/system-logs").get(getSystemAuditLogs);
 router.route("/reviews/all").get(getAllSystemReviews);
+router.route("/users/:userId").get(verifyJwt, authorizeRoles("admin"), getTargetUserDetails);
 
 export default router;

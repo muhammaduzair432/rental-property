@@ -56,6 +56,15 @@ export const purgeUserAccount = createAsyncThunk("admin/purgeUserAccount", async
         return thunkApi.rejectWithValue(error.response?.data?.message || error.message);
     }
 });
+// Add this new async thunk under section 2 or 3
+export const fetchTargetUserDetails = createAsyncThunk("admin/fetchTargetUserDetails", async (userId, thunkApi) => {
+    try {
+        const res = await api.get(`admin/users/${userId}`);
+        return res.data?.data || res.data || {};
+    } catch (error) {
+        return thunkApi.rejectWithValue(error.response?.data?.message || error.message);
+    }
+});
 
 // 3. Reports & Global Bookings
 export const fetchGlobalBookings = createAsyncThunk("admin/fetchGlobalBookings", async (_, thunkApi) => {
@@ -145,7 +154,10 @@ const adminSlice = createSlice({
                 state.successMessage = "Review removed by administrator moderation.";
             })
             // System Logs
-            .addCase(fetchSystemLogs.fulfilled, (state, action) => { state.systemLogs = action.payload; });
+            .addCase(fetchSystemLogs.fulfilled, (state, action) => { state.systemLogs = action.payload; })
+            .addCase(fetchTargetUserDetails.fulfilled, (state, action) => {
+    state.selectedUserDossier = action.payload;
+})
     }
 });
 

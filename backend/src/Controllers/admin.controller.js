@@ -297,3 +297,50 @@ export const getSystemAuditLogs = asyncHandler(async (req, res) => {
         data: logs
     });
 });
+
+
+export const getTargetUserDetails = asyncHandler(async (req, res) => {
+    const { userId } = req.params;
+
+    const user = await User.findById(userId).select("-password -refreshToken");
+    if (!user) {
+        throw new ApiError(404, "Target user record not found.");
+    }
+
+    // Fetch bookings associated with this user (either as tenant or properties owned)
+    let bookings = [];
+    let properties = [];
+    let grossEarnings = 0;
+
+    if (user.role === "owner") {
+        properties = await Property.find({ owner: userId });
+        const propertyIds = properties.map(p => p._id);
+        
+        // Find all bookings for this owner's properties
+        bookings = await Booking.find({ property: { $in: propertyIds } })
+            .populate("property", "title price location")
+            .populate("user", "fullname username email");
+
+        // Calculate total gross earnings from confirmed bookings
+        grossEarnings = bookings
+            .filter(b => b.status === "confirmed")
+            .reduce((acc, curr) => acc + (curr.totalPrice || 0), 0);
+    } else {
+        // Find bookings made by this standard user/tenant
+        bookings = await Booking.find({ user: userId })
+            .populate("property", "title price location")
+            .populate("user", "fullname username email");
+    }
+
+    return res.status(200).json({
+        success: true,
+        data: {
+            user,
+            bookings,
+            properties,
+            earningsSummary: {
+                grossEarnings
+            }
+        }
+    });
+});

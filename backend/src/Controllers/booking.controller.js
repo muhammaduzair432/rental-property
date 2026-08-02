@@ -64,6 +64,13 @@ export const createBooking = asyncHandler(async (req, res) => {
             status: "pending"
         });
 
+        // 🔥 AUDIT LOG: Track booking request creation
+        await Log.create({
+            actionType: "BOOKING_REQUEST",
+            description: `Tenant [${req.user.username}] created a new booking request ID [${booking._id}] for property "${propertyData.title}".`,
+            performedBy: req.user._id
+        });
+
         // Save Notification straight to MongoDB and capture variable
         const dbNotification = await Notification.create({
             ownerId: propertyData.owner,
@@ -139,11 +146,18 @@ export const cancelBooking = asyncHandler(async (req, res) => {
         throw new ApiError(404, "Booking record not found or already deleted.");
     }
 
+    // 🔥 AUDIT LOG: Track booking cancellation/deletion
+    await Log.create({
+        actionType: "BOOKING_CANCELLATION",
+        description: `User [${req.user.username}] cancelled/deleted booking record ID [${bookingId}].`,
+        performedBy: req.user._id
+    });
+
     return res.status(200).json({
         success: true,
         message: "Booking deleted successfully from database."
     });
-})
+});
 
 // ==========================================
 // 4. FLOWCHART STEP 3: OWNER DASHBOARD OVERVIEW (GET /api/v2/bookings/owner/dashboard)

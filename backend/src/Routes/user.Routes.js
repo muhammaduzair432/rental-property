@@ -10,6 +10,7 @@ import { getMyNotifications } from "../Controllers/user.controller.js";
 
 
 
+
 const router = Router();
 router.route("/registerUser").post(uploadfile.single("avatar"), registerUser);
 router.route("/verifyOTP").post(verifyOTP);
@@ -42,5 +43,6 @@ router.route("/admin/promote").put(
     promoteToAdmin
 );
 router.route("/notifications").get(verifyJwt, getMyNotifications);
+
 
 export default router;

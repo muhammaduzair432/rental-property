@@ -5,22 +5,32 @@ import path from "path";
 
 const app = express();
 
+// Parse allowed origins from .env
+const allowedOrigins = process.env.CORS_ORIGIN
+  ?.split(",")
+  .map((origin) => origin.trim()) || ["http://localhost:5173"];
+
 // 1. React Frontend CORS Configuration
 app.use(
   cors({
-    // Replace with your exact React frontend URL (e.g., http://localhost:5173 for Vite or 3000 for CRA)
-    // Best practice: use an environment variable so it adapts to production easily
-    origin: process.env.CORS_ORIGIN || "http://localhost:5173", 
-    
+    origin: (origin, callback) => {
+      // Allow requests with no origin (Postman, mobile apps, server-to-server)
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error("Not allowed by CORS"));
+    },
+
     // 2. THIS IS CRITICAL: Allows cookies to be sent back and forth
-    credentials: true, 
+    credentials: true,
   })
 );
 
 // Standard Middlewares
 app.use(express.json());
-app.use(express.urlencoded({ extended: true })); // Added 'extended: true' to fix Express warnings
-app.use(express.static("public")); // Changed "path" to "public" as a standard folder name
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static("public"));
 app.use(cookieParser());
 
 export { app };
