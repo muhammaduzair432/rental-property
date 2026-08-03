@@ -6,7 +6,7 @@ import {
     fetchUserFavorites, 
     clearToastMessage 
 } from "../store/favoriteSlice.js"; 
-import { switchPortalRole } from "../store/authSlice.js"; // 👈 Added for partner role elevation
+import { switchPortalRole } from "../store/authSlice.js"; 
 import PropertyDetailsModal from "./PropertyDetailsModal.jsx";
 import { useNavigate } from "react-router-dom";
 import { BadgeCheck, Globe, ConciergeBell } from "lucide-react";
@@ -32,6 +32,25 @@ const features = [
   },
 ];
 
+// 🌟 Pure Static Editorial Mood Categories
+const editorialCollections = [
+  {
+    title: "Brutalist Monoliths",
+    subtitle: "Raw Concrete & Geometric Grandeur",
+    image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=800"
+  },
+  {
+    title: "Alpine Sanctuaries",
+    subtitle: "Timber, Glass & Panoramic Peaks",
+    image: "https://images.unsplash.com/photo-1518780664697-55e3ad937233?auto=format&fit=crop&q=80&w=800"
+  },
+  {
+    title: "Coastal Reserves",
+    subtitle: "Cliffside Horizons & Private Docks",
+    image: "https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&q=80&w=800"
+  }
+];
+
 export default function UserDashboard({ 
     searchQuery = "", 
     setSearchQuery = () => {},
@@ -48,7 +67,7 @@ export default function UserDashboard({
     const [selectedPropertyId, setSelectedPropertyId] = useState(null);
     const [sliderMax, setSliderMax] = useState(50000);
     const [isPriceFilterOpen, setIsPriceFilterOpen] = useState(false);
-    const [isSwitchingPartner, setIsSwitchingPartner] = useState(false); // 👈 Local state for partner button transition
+    const [isSwitchingPartner, setIsSwitchingPartner] = useState(false);
 
     // 📄 Pagination State (Exactly 3 cards per page)
     const [currentPage, setCurrentPage] = useState(1);
@@ -301,6 +320,21 @@ export default function UserDashboard({
                 </div>
             </section>
 
+            {/* 🌟 PRESS & RECOGNITION BANNER (Static) */}
+            <section className="border-b border-[#353535] bg-[#0e0e0e] py-8">
+                <div className="max-w-7xl mx-auto px-4 md:px-8">
+                    <p className="text-center text-[9px] font-bold uppercase tracking-[0.3em] text-[#8e9192] mb-6">
+                        Recognized For Excellence By
+                    </p>
+                    <div className="flex flex-wrap justify-center items-center gap-12 md:gap-24 opacity-50 grayscale hover:grayscale-0 transition-all duration-500">
+                        <span className="font-serif text-xl tracking-widest text-[#e5e2e1]">ARCHITECTURAL DIGEST</span>
+                        <span className="font-serif text-xl tracking-widest text-[#e5e2e1]">ROBB REPORT</span>
+                        <span className="font-serif text-xl tracking-widest text-[#e5e2e1]">VOGUE LIVING</span>
+                        <span className="font-serif text-xl tracking-widest text-[#e5e2e1]">FORBES GLOBAL</span>
+                    </div>
+                </div>
+            </section>
+
             {/* 🌟 FEATURES SECTION */}
             <section className="bg-[#131313] py-16 px-4 md:px-8">
                 <div className="mx-auto grid max-w-7xl grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
@@ -333,8 +367,52 @@ export default function UserDashboard({
                 </div>
             </section>
 
+            {/* 🌟 GLOBAL FOOTPRINT STATISTICS BAR (Pure Static Display) */}
+            <section className="max-w-7xl mx-auto px-4 md:px-8">
+                <div className="bg-[#1c1b1b] border border-[#353535] grid grid-cols-2 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-[#353535] py-8 text-center shadow-2xl">
+                    <div className="p-4 space-y-1">
+                        <span className="block font-serif text-3xl font-bold text-[#5ddda1]">45+</span>
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-[#8e9192]">Countries Mapped</span>
+                    </div>
+                    <div className="p-4 space-y-1">
+                        <span className="block font-serif text-3xl font-bold text-[#5ddda1]">$1.2B+</span>
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-[#8e9192]">Archived Volume</span>
+                    </div>
+                    <div className="p-4 space-y-1">
+                        <span className="block font-serif text-3xl font-bold text-[#5ddda1]">200-Pt</span>
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-[#8e9192]">Inspection Standard</span>
+                    </div>
+                    <div className="p-4 space-y-1">
+                        <span className="block font-serif text-3xl font-bold text-[#5ddda1]">100%</span>
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-[#8e9192]">Privacy Compliance</span>
+                    </div>
+                </div>
+            </section>
+
+            {/* 🌟 EDITORIAL MOOD CATEGORIES (Pure Static Grid) */}
+            <section className="max-w-7xl mx-auto px-4 md:px-8 py-8 space-y-8">
+                <div className="border-b border-[#353535] pb-4">
+                    <span className="text-[10px] font-bold text-[#c4c7c7] uppercase tracking-[0.2em]">CURATED INSPIRATION</span>
+                    <h2 className="text-2xl font-serif font-bold uppercase tracking-tight text-[#e5e2e1] mt-1">
+                        Architectural Collections
+                    </h2>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    {editorialCollections.map((col, idx) => (
+                        <div key={idx} className="relative h-72 overflow-hidden border border-[#353535] group">
+                            <img src={col.image} alt={col.title} className="w-full h-full object-cover filter grayscale contrast-115 transition-transform duration-700 group-hover:scale-110" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-[#0e0e0e] via-[#0e0e0e]/40 to-transparent"></div>
+                            <div className="absolute bottom-6 left-6 right-6 space-y-1">
+                                <span className="text-[9px] font-bold uppercase tracking-[0.25em] text-[#5ddda1]">{col.subtitle}</span>
+                                <h3 className="font-serif text-xl font-bold text-[#e5e2e1] uppercase">{col.title}</h3>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </section>
+
             {/* CATALOG HEADER BAR */}
-            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 border-b border-[#353535] pb-4 px-2 pt-4">
+            <div className="max-w-7xl mx-auto px-4 md:px-8 flex flex-col sm:flex-row sm:items-end justify-between gap-2 border-b border-[#353535] pb-4 pt-4">
                 <div>
                     <span className="text-[10px] font-bold text-[#c4c7c7] uppercase tracking-[0.2em]">CURATED PORTFOLIO</span>
                     <h2 className="text-2xl font-serif font-bold uppercase tracking-tight text-[#e5e2e1] mt-1">
@@ -344,106 +422,108 @@ export default function UserDashboard({
             </div>
 
             {/* BEAUTIFULLY STYLISHED PROPERTY GRID (Strictly 3 Cards Per Page) */}
-            {currentProperties.length === 0 ? (
-                <div className="bg-[#1c1b1b] p-16 border border-dashed border-[#444748] text-center text-xs font-bold text-[#c4c7c7] uppercase rounded-none tracking-widest">
-                    No verified properties matched your active searching parameters.
-                </div>
-            ) : (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    {currentProperties.map((item) => {
-                        const propId = item._id || item.id;
-                        const isFavorite = favoriteIds.map(String).includes(String(propId));
-                        const isHeartLoading = String(actionLoadingId) === String(propId);
+            <div className="max-w-7xl mx-auto px-4 md:px-8">
+                {currentProperties.length === 0 ? (
+                    <div className="bg-[#1c1b1b] p-16 border border-dashed border-[#444748] text-center text-xs font-bold text-[#c4c7c7] uppercase rounded-none tracking-widest">
+                        No verified properties matched your active searching parameters.
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        {currentProperties.map((item) => {
+                            const propId = item._id || item.id;
+                            const isFavorite = favoriteIds.map(String).includes(String(propId));
+                            const isHeartLoading = String(actionLoadingId) === String(propId);
 
-                        return (
-                            <div 
-                                key={propId} 
-                                className="bg-[#1c1b1b] border border-[#353535] rounded-none overflow-hidden shadow-2xl flex flex-col justify-between hover:border-[#5ddda1] transition-all duration-500 group"
-                            >
-                                {/* Image Container with Cinematic Overlay */}
-                                <div className="aspect-[4/5] relative overflow-hidden bg-[#0e0e0e] border-b border-[#353535]">
-                                    {item.image || item.images?.[0] ? (
-                                        <img 
-                                            src={item.image || item.images?.[0]} 
-                                            alt={item.title} 
-                                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 filter contrast-110" 
-                                        />
-                                    ) : (
-                                        <div className="w-full h-full flex items-center justify-center text-[10px] font-bold tracking-widest text-[#8e9192] uppercase">
-                                            No Image Record
+                            return (
+                                <div 
+                                    key={propId} 
+                                    className="bg-[#1c1b1b] border border-[#353535] rounded-none overflow-hidden shadow-2xl flex flex-col justify-between hover:border-[#5ddda1] transition-all duration-500 group"
+                                >
+                                    {/* Image Container with Cinematic Overlay */}
+                                    <div className="aspect-[4/5] relative overflow-hidden bg-[#0e0e0e] border-b border-[#353535]">
+                                        {item.image || item.images?.[0] ? (
+                                            <img 
+                                                src={item.image || item.images?.[0]} 
+                                                alt={item.title} 
+                                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 filter contrast-110" 
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center text-[10px] font-bold tracking-widest text-[#8e9192] uppercase">
+                                                No Image Record
+                                            </div>
+                                        )}
+
+                                        {/* Dark Gradient Overlay for Professional Contrast */}
+                                        <div className="absolute inset-0 bg-gradient-to-t from-[#0e0e0e] via-transparent to-transparent opacity-80 pointer-events-none"></div>
+
+                                        {/* Price Badge */}
+                                        <div className="absolute top-6 left-6 bg-[#080808]/90 backdrop-blur-md text-[#5ddda1] border border-[#444748] px-4 py-2 text-[10px] font-bold uppercase tracking-widest rounded-none shadow-lg">
+                                            ${item.pricePerNight || item.price || "0"} / night
                                         </div>
-                                    )}
 
-                                    {/* Dark Gradient Overlay for Professional Contrast */}
-                                    <div className="absolute inset-0 bg-gradient-to-t from-[#0e0e0e] via-transparent to-transparent opacity-80 pointer-events-none"></div>
-
-                                    {/* Price Badge */}
-                                    <div className="absolute top-6 left-6 bg-[#080808]/90 backdrop-blur-md text-[#5ddda1] border border-[#444748] px-4 py-2 text-[10px] font-bold uppercase tracking-widest rounded-none shadow-lg">
-                                        ${item.pricePerNight || item.price || "0"} / night
-                                    </div>
-
-                                    {/* ❤️ TOGGLE HEART BUTTON */}
-                                    <button
-                                        onClick={(e) => handleFavoriteClick(e, propId)}
-                                        disabled={isHeartLoading}
-                                        title={isFavorite ? "Remove from Favorites" : "Add to Favorites"}
-                                        className="absolute top-6 right-6 p-2.5 rounded-none bg-[#080808]/85 hover:bg-[#080808] backdrop-blur-md border border-[#444748] shadow-xl transition-all duration-300 hover:scale-110 active:scale-95 cursor-pointer z-10"
-                                    >
-                                        <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            viewBox="0 0 24 24"
-                                            className={`w-5 h-5 transition-all duration-300 ${
-                                                isHeartLoading
-                                                    ? "animate-pulse fill-gray-500 text-gray-500"
-                                                    : isFavorite
-                                                    ? "fill-[#5ddda1] text-[#5ddda1] scale-110"
-                                                    : "fill-none text-[#c4c7c7] hover:text-[#5ddda1]"
-                                            }`}
-                                            stroke="currentColor"
-                                            strokeWidth="2"
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
+                                        {/* ❤️ TOGGLE HEART BUTTON */}
+                                        <button
+                                            onClick={(e) => handleFavoriteClick(e, propId)}
+                                            disabled={isHeartLoading}
+                                            title={isFavorite ? "Remove from Favorites" : "Add to Favorites"}
+                                            className="absolute top-6 right-6 p-2.5 rounded-none bg-[#080808]/85 hover:bg-[#080808] backdrop-blur-md border border-[#444748] shadow-xl transition-all duration-300 hover:scale-110 active:scale-95 cursor-pointer z-10"
                                         >
-                                            <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
-                                        </svg>
-                                    </button>
-                                </div>
-
-                                {/* Content Details */}
-                                <div className="p-8 flex-1 flex flex-col justify-between space-y-6">
-                                    <div className="space-y-3">
-                                        <div className="flex justify-between items-center text-[9px] font-bold uppercase text-[#8e9192] tracking-[0.2em]">
-                                            <span>{item.type || "Estate"}</span>
-                                            <span className="text-[#5ddda1] flex items-center gap-1.5">
-                                                <span className="w-1.5 h-1.5 bg-[#5ddda1] rounded-full inline-block"></span> 
-                                                Verified Asset
-                                            </span>
-                                        </div>
-                                        <h4 className="font-serif text-xl font-semibold text-[#e5e2e1] tracking-tight line-clamp-1">
-                                            {item.title || "Architectural Masterpiece"}
-                                        </h4>
-                                        <p className="text-xs text-[#c4c7c7] line-clamp-2 leading-relaxed font-sans">
-                                            {item.description || "Rigorous inspection standards met for absolute luxury and structural brilliance."}
-                                        </p>
+                                            <svg
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                viewBox="0 0 24 24"
+                                                className={`w-5 h-5 transition-all duration-300 ${
+                                                    isHeartLoading
+                                                        ? "animate-pulse fill-gray-500 text-gray-500"
+                                                        : isFavorite
+                                                        ? "fill-[#5ddda1] text-[#5ddda1] scale-110"
+                                                        : "fill-none text-[#c4c7c7] hover:text-[#5ddda1]"
+                                                }`}
+                                                stroke="currentColor"
+                                                strokeWidth="2"
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                            >
+                                                <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+                                            </svg>
+                                        </button>
                                     </div>
 
-                                    <button 
-                                        onClick={() => navigate(`/property/${propId}`)}
-                                        className="w-full py-3.5 bg-[#080808] hover:bg-[#5ddda1] text-[#e5e2e1] hover:text-[#003823] border border-[#444748] hover:border-[#5ddda1] text-xs font-bold uppercase tracking-[0.15em] rounded-none transition-all duration-300 cursor-pointer text-center shadow-lg"
-                                    >
-                                        View Details & Book →
-                                    </button>
-                                </div>
+                                    {/* Content Details */}
+                                    <div className="p-8 flex-1 flex flex-col justify-between space-y-6">
+                                        <div className="space-y-3">
+                                            <div className="flex justify-between items-center text-[9px] font-bold uppercase text-[#8e9192] tracking-[0.2em]">
+                                                <span>{item.type || "Estate"}</span>
+                                                <span className="text-[#5ddda1] flex items-center gap-1.5">
+                                                    <span className="w-1.5 h-1.5 bg-[#5ddda1] rounded-full inline-block"></span> 
+                                                    Verified Asset
+                                                </span>
+                                            </div>
+                                            <h4 className="font-serif text-xl font-semibold text-[#e5e2e1] tracking-tight line-clamp-1">
+                                                {item.title || "Architectural Masterpiece"}
+                                            </h4>
+                                            <p className="text-xs text-[#c4c7c7] line-clamp-2 leading-relaxed font-sans">
+                                                {item.description || "Rigorous inspection standards met for absolute luxury and structural brilliance."}
+                                            </p>
+                                        </div>
 
-                            </div>
-                        );
-                    })}
-                </div>
-            )}
+                                        <button 
+                                            onClick={() => navigate(`/property/${propId}`)}
+                                            className="w-full py-3.5 bg-[#080808] hover:bg-[#5ddda1] text-[#e5e2e1] hover:text-[#003823] border border-[#444748] hover:border-[#5ddda1] text-xs font-bold uppercase tracking-[0.15em] rounded-none transition-all duration-300 cursor-pointer text-center shadow-lg"
+                                        >
+                                            View Details & Book →
+                                        </button>
+                                    </div>
+
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
+            </div>
 
             {/* ⬅️ PREVIOUS & NEXT ARROW PAGINATION CONTROLS ➡️ */}
             {filteredProperties.length > itemsPerPage && (
-                <div className="flex items-center justify-between border-t border-[#353535] pt-8 mt-12">
+                <div className="max-w-7xl mx-auto px-4 md:px-8 flex items-center justify-between border-t border-[#353535] pt-8 mt-12">
                     <button
                         onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                         disabled={currentPage === 1}
@@ -474,34 +554,121 @@ export default function UserDashboard({
                 </div>
             )}
 
-            {/* 🌟 PARTNER / CTA CARD PLACED BELOW PROPERTY CARDS & ABOVE FOOTER */}
-            <section className="relative overflow-hidden border border-[#353535] bg-[#0e0e0e] p-12 lg:p-16 rounded-none shadow-2xl mt-16 text-center">
-                <div className="absolute inset-0 z-0 opacity-15 pointer-events-none">
-                    <img 
-                        src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=1600" 
-                        alt="Library Background" 
-                        className="w-full h-full object-cover filter grayscale"
-                    />
+  {/* 🌟 SIGNATURE SERVICES (Theme-Matched Clean Icons) */}
+            <section className="max-w-7xl mx-auto px-4 md:px-8 py-16 border-t border-[#353535] mt-16">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+                    <div className="lg:col-span-4 space-y-4">
+                        <span className="text-[10px] font-bold text-[#5ddda1] uppercase tracking-[0.2em]">Beyond The Estate</span>
+                        <h2 className="text-3xl font-serif font-bold uppercase tracking-tight text-[#e5e2e1] leading-tight">
+                            White-Glove Signature Services
+                        </h2>
+                        <p className="text-xs text-[#8e9192] leading-relaxed">
+                            Every reservation includes access to our global concierge network. We orchestrate the unseen details so you can experience absolute presence.
+                        </p>
+                    </div>
+                    
+                    <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        {/* Service 1: Private Aviation */}
+                        <div className="bg-[#1c1b1b] border border-[#353535] p-8 hover:border-[#5ddda1] transition-all duration-300 group">
+                            <div className="w-10 h-10 bg-[#0e0e0e] border border-[#353535] group-hover:border-[#5ddda1] flex items-center justify-center text-[#5ddda1] mb-5 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 fill-none stroke-current" viewBox="0 0 24 24" strokeWidth="2">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                                </svg>
+                            </div>
+                            <h4 className="text-[10px] font-bold uppercase tracking-widest text-[#e5e2e1] mb-2">Private Aviation</h4>
+                            <p className="text-[10px] text-[#8e9192] leading-relaxed">Seamless tarmac-to-villa helicopter and jet charters curated to your schedule.</p>
+                        </div>
+
+                        {/* Service 2: Michelin Chefs */}
+                        <div className="bg-[#1c1b1b] border border-[#353535] p-8 hover:border-[#5ddda1] transition-all duration-300 group">
+                            <div className="w-10 h-10 bg-[#0e0e0e] border border-[#353535] group-hover:border-[#5ddda1] flex items-center justify-center text-[#5ddda1] mb-5 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 fill-none stroke-current" viewBox="0 0 24 24" strokeWidth="2">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M18 10h-1.26A8 8 0 1 0 9 20h9a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1z" />
+                                </svg>
+                            </div>
+                            <h4 className="text-[10px] font-bold uppercase tracking-widest text-[#e5e2e1] mb-2">Michelin-Trained Chefs</h4>
+                            <p className="text-[10px] text-[#8e9192] leading-relaxed">Bespoke culinary experiences tailored to your dietary architecture.</p>
+                        </div>
+
+                        {/* Service 3: Discreet Security */}
+                        <div className="bg-[#1c1b1b] border border-[#353535] p-8 hover:border-[#5ddda1] transition-all duration-300 group">
+                            <div className="w-10 h-10 bg-[#0e0e0e] border border-[#353535] group-hover:border-[#5ddda1] flex items-center justify-center text-[#5ddda1] mb-5 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 fill-none stroke-current" viewBox="0 0 24 24" strokeWidth="2">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                                </svg>
+                            </div>
+                            <h4 className="text-[10px] font-bold uppercase tracking-widest text-[#e5e2e1] mb-2">Discreet Security</h4>
+                            <p className="text-[10px] text-[#8e9192] leading-relaxed">Unobtrusive, elite protection personnel and encrypted property privacy protocols.</p>
+                        </div>
+
+                        {/* Service 4: Lifestyle Curation */}
+                        <div className="bg-[#1c1b1b] border border-[#353535] p-8 hover:border-[#5ddda1] transition-all duration-300 group">
+                            <div className="w-10 h-10 bg-[#0e0e0e] border border-[#353535] group-hover:border-[#5ddda1] flex items-center justify-center text-[#5ddda1] mb-5 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 fill-none stroke-current" viewBox="0 0 24 24" strokeWidth="2">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 7h3a5 5 0 0 1 5 5 5 5 0 0 1-5 5h-3m-6 0H6a5 5 0 0 1-5-5 5 5 0 0 1 5-5h3m-2 5h8" />
+                                </svg>
+                            </div>
+                            <h4 className="text-[10px] font-bold uppercase tracking-widest text-[#e5e2e1] mb-2">Lifestyle Curation</h4>
+                            <p className="text-[10px] text-[#8e9192] leading-relaxed">From off-market art viewing to private yacht charters, orchestrated flawlessly.</p>
+                        </div>
+                    </div>
                 </div>
-                <div className="relative z-10 max-w-3xl mx-auto space-y-6">
-                    <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-[#5ddda1] block">
-                        Partner With Excellence
-                    </span>
-                    <h2 className="text-3xl md:text-5xl font-serif font-bold text-[#e5e2e1] uppercase tracking-tight leading-tight">
-                        List Your Property with the World's Best
-                    </h2>
-                    <div className="pt-4 flex justify-center">
-                        <button 
-                            type="button"
-                            disabled={isSwitchingPartner}
-                            onClick={handleBecomePartner}
-                            className="bg-[#5ddda1] hover:bg-[#08a56e] text-[#003823] px-12 py-4 text-xs font-bold uppercase tracking-widest rounded-none transition-all cursor-pointer shadow-xl flex items-center gap-2 disabled:opacity-50"
-                        >
-                            {isSwitchingPartner && (
-                                <div className="w-3.5 h-3.5 border-2 border-[#003823] border-t-transparent animate-spin"></div>
-                            )}
-                            <span>{isSwitchingPartner ? "Elevating Portal..." : "Become a Partner"}</span>
-                        </button>
+            </section>
+
+            {/* 🌟 VIP TESTIMONIAL (Static) */}
+            <section className="bg-[#0e0e0e] border-y border-[#353535] py-20 px-4">
+                <div className="max-w-4xl mx-auto text-center space-y-8">
+                    <div className="flex justify-center gap-2 text-[#5ddda1] text-sm">
+                        <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+                    </div>
+                    <blockquote className="font-serif text-xl md:text-3xl text-[#e5e2e1] leading-relaxed tracking-wide">
+                        "The level of curation is unprecedented. The villa in Monaco was an architectural triumph, and the platform's discreet concierge handled our security and aviation logistics flawlessly."
+                    </blockquote>
+                    <div className="space-y-1">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-[#e5e2e1]">Verified Client</p>
+                        <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#8e9192]">Technology Executive, Palo Alto</p>
+                    </div>
+                </div>
+            </section>
+
+            {/* 🌟 PLATFORM MANIFESTO / EDITORIAL QUOTE SECTION */}
+            <section className="max-w-4xl mx-auto px-4 py-8 text-center space-y-4 my-8">
+                <span className="text-[9px] font-bold uppercase tracking-[0.4em] text-[#5ddda1]">The Archival Ethos</span>
+                <blockquote className="font-serif text-lg md:text-2xl italic text-[#e5e2e1] leading-relaxed">
+                    "We do not merely curate residences; we archive architectural milestones for those who measure luxury not in square footage, but in absolute exclusivity."
+                </blockquote>
+            </section>
+
+            {/* 🌟 PARTNER / CTA CARD PLACED BELOW PROPERTY CARDS & ABOVE FOOTER */}
+            <section className="max-w-7xl mx-auto px-4 md:px-8">
+                <div className="relative overflow-hidden border border-[#353535] bg-[#0e0e0e] p-12 lg:p-16 rounded-none shadow-2xl mt-8 text-center">
+                    <div className="absolute inset-0 z-0 opacity-15 pointer-events-none">
+                        <img 
+                            src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=1600" 
+                            alt="Library Background" 
+                            className="w-full h-full object-cover filter grayscale"
+                        />
+                    </div>
+                    <div className="relative z-10 max-w-3xl mx-auto space-y-6">
+                        <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-[#5ddda1] block">
+                            Partner With Excellence
+                        </span>
+                        <h2 className="text-3xl md:text-5xl font-serif font-bold text-[#e5e2e1] uppercase tracking-tight leading-tight">
+                            List Your Property with the World's Best
+                        </h2>
+                        <div className="pt-4 flex justify-center">
+                            <button 
+                                type="button"
+                                disabled={isSwitchingPartner}
+                                onClick={handleBecomePartner}
+                                className="bg-[#5ddda1] hover:bg-[#08a56e] text-[#003823] px-12 py-4 text-xs font-bold uppercase tracking-widest rounded-none transition-all cursor-pointer shadow-xl flex items-center gap-2 disabled:opacity-50"
+                            >
+                                {isSwitchingPartner && (
+                                    <div className="w-3.5 h-3.5 border-2 border-[#003823] border-t-transparent animate-spin"></div>
+                                )}
+                                <span>{isSwitchingPartner ? "Elevating Portal..." : "Become a Partner"}</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </section>
