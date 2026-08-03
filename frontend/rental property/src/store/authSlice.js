@@ -70,12 +70,17 @@ export const switchPortalRole = createAsyncThunk("auth/switchPortalRole", async 
         const res = await api.put("users/switch-role", { targetRole });
         const updatedUserData = res.data?.data;
         
-        // 🛡️ Ensure avatar persists even if role-switch payload doesn't re-send the image path explicitly
+        // 🛡️ Grab the full existing user state from Redux
         const currentStateUser = thunkApi.getState().auth.user;
-        const mergedUser = updatedUserData ? {
-            ...updatedUserData,
-            avatar: updatedUserData.avatar || currentStateUser?.avatar
-        } : null;
+        
+        // ⚡ Deep merge so fullname, email, avatar, and other profile details are never wiped out
+        const mergedUser = currentStateUser ? {
+            ...currentStateUser,
+            ...(updatedUserData || {}),
+            role: updatedUserData?.role || targetRole,
+            avatar: updatedUserData?.avatar || currentStateUser?.avatar,
+            fullname: updatedUserData?.fullname || updatedUserData?.fullName || currentStateUser?.fullname || currentStateUser?.fullName
+        } : updatedUserData;
 
         if (mergedUser) {
             localStorage.setItem("user", JSON.stringify(mergedUser));

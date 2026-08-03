@@ -224,7 +224,7 @@ export default function DashBoardLayout() {
                                 className="cursor-pointer text-[#5ddda1] pt-3 border-t border-[#353535] flex items-center justify-between bg-[#083823] p-3 border border-[#5ddda1]"
                             >
                                 <span>{isOwner ? "Switch to User Portal" : "Switch to Owner Portal"}</span>
-                                <span className="text-[9px] bg-[#5ddda1] text-[#003823] px-2 py-1 font-bold">Toggle</span>
+                                <span className="text-[9px] bg-[#5ddda1] text-[#003823] px-2 py-1 font-bold">Switch</span>
                             </div>
                         )}
 
