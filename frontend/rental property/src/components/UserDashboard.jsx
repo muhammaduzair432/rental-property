@@ -6,6 +6,7 @@ import {
     fetchUserFavorites, 
     clearToastMessage 
 } from "../store/favoriteSlice.js"; 
+import { switchPortalRole } from "../store/authSlice.js"; // 👈 Added for partner role elevation
 import PropertyDetailsModal from "./PropertyDetailsModal.jsx";
 import { useNavigate } from "react-router-dom";
 import { BadgeCheck, Globe, ConciergeBell } from "lucide-react";
@@ -47,6 +48,7 @@ export default function UserDashboard({
     const [selectedPropertyId, setSelectedPropertyId] = useState(null);
     const [sliderMax, setSliderMax] = useState(50000);
     const [isPriceFilterOpen, setIsPriceFilterOpen] = useState(false);
+    const [isSwitchingPartner, setIsSwitchingPartner] = useState(false); // 👈 Local state for partner button transition
 
     // 📄 Pagination State (Exactly 3 cards per page)
     const [currentPage, setCurrentPage] = useState(1);
@@ -134,6 +136,19 @@ export default function UserDashboard({
         setMaxPrice(max);
         if (max !== Infinity && max > sliderMax) {
             setSliderMax(max);
+        }
+    };
+
+    // ⚡ Handle Become a Partner Button Click (Switches role to owner & syncs profile)
+    const handleBecomePartner = async () => {
+        setIsSwitchingPartner(true);
+        try {
+            await dispatch(switchPortalRole("owner")).unwrap();
+            setIsSwitchingPartner(false);
+            navigate("/dashboard");
+        } catch (error) {
+            setIsSwitchingPartner(false);
+            alert(error || "Failed to elevate account to owner portal.");
         }
     };
 
@@ -477,10 +492,15 @@ export default function UserDashboard({
                     </h2>
                     <div className="pt-4 flex justify-center">
                         <button 
-                            onClick={() => navigate("/dashboard")}
-                            className="bg-[#5ddda1] hover:bg-[#08a56e] text-[#003823] px-12 py-4 text-xs font-bold uppercase tracking-widest rounded-none transition-all cursor-pointer shadow-xl"
+                            type="button"
+                            disabled={isSwitchingPartner}
+                            onClick={handleBecomePartner}
+                            className="bg-[#5ddda1] hover:bg-[#08a56e] text-[#003823] px-12 py-4 text-xs font-bold uppercase tracking-widest rounded-none transition-all cursor-pointer shadow-xl flex items-center gap-2 disabled:opacity-50"
                         >
-                            Become a Partner
+                            {isSwitchingPartner && (
+                                <div className="w-3.5 h-3.5 border-2 border-[#003823] border-t-transparent animate-spin"></div>
+                            )}
+                            <span>{isSwitchingPartner ? "Elevating Portal..." : "Become a Partner"}</span>
                         </button>
                     </div>
                 </div>
