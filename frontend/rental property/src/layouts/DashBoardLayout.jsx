@@ -132,7 +132,7 @@ export default function DashBoardLayout() {
                             <button
                                 onClick={handlePortalToggle}
                                 disabled={isSwitchingRole}
-                                className="bg-[#083823] hover:bg-[#5ddda1] text-[#5ddda1] hover:text-[#003823] border border-[#5ddda1] px-3.5 py-2 text-[9px] font-bold uppercase tracking-widest rounded-none transition-all cursor-pointer shadow-sm disabled:opacity-40 flex items-center gap-2 whitespace-nowrap"
+                                className=" hover:bg-[#5ddda1] text-[#5ddda1] hover:text-[#003823] border border-[#5ddda1] px-3.5 py-2 text-[9px] font-bold uppercase tracking-widest rounded-none transition-all cursor-pointer shadow-sm disabled:opacity-40 flex items-center gap-2 whitespace-nowrap"
                                 title="Switch between User and Owner portals"
                             >
                                 {isSwitchingRole && <div className="w-2.5 h-2.5 border-2 border-current border-t-transparent animate-spin"></div>}
