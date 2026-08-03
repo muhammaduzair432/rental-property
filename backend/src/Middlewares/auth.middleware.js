@@ -1,49 +1,58 @@
 import jwt from "jsonwebtoken";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { User } from "../Models/user.model.js";
-import { ApiError } from "../Utils/apiError.js";
+import { ApiError } from "../utils/apiError.js";
 
-export const verifyJwt = asyncHandler(async (req, _, next) => {
-
+export const verifyJwt = asyncHandler(async (req, res, next) => {
     try {
         // 1. Extract the token cleanly
         const token = req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ", "");
 
         // 2. BULLETPROOF CHECK: Ensure it exists, isn't undefined, and isn't an empty string
         if (!token || typeof token !== "string" || token.trim() === "") {
-            throw new ApiError(401, "Unauthorized request. Token is missing or empty.");
+            return res.status(401).json({ success: false, message: "Unauthorized request. Token is missing or empty." });
         }
 
         // 3. Safety Check: Ensure your secret key is loaded from .env
         if (!process.env.ACCESS_TOKEN_SECRET) {
-            throw new ApiError(500, "Internal Server Error: Access token secret is missing in .env config.");
+            return res.status(500).json({ success: false, message: "Internal Server Error: Access token secret is missing." });
         }
 
         // 4. Verify token strings safely
         const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
         
+        // 5. Fetch user document from database first
         const user = await User.findById(decodedToken._id).select("-password -refreshToken");
         
         if (!user) {
-            throw new ApiError(401, "Invalid access token");
+            return res.status(401).json({ success: false, message: "Invalid access token - User record not found." });
+        }
+
+        // 🛑 STRICT SUSPENSION CHECK: Directly return a 403 JSON response
+        if (user.isSuspended === true) {
+            return res.status(403).json({
+                success: false,
+                message: "ACCOUNT_SUSPENDED: Your account has been locked by an administrator. You cannot perform actions or use the platform."
+            });
         }
 
         req.user = user;
         next();
     } catch (error) {
-        // Keeps the error processing inside your custom ApiError boundary wrapper
-        throw new ApiError(401, error.message || "Invalid access token");
+        // Handle JWT expiration or tampering safely without crashing server
+        return res.status(401).json({ 
+            success: false, 
+            message: error.message || "Invalid or expired access token." 
+        });
     }
 });
 
 export const authorizeRoles = (...allowedRoles) => {
     return (req, res, next) => {
-        // verifyJwt runs right before this, guaranteeing req.user exists
         if (!req.user) {
             return res.status(401).json({ success: false, message: "Authentication required." });
         }
 
-        // Intercept request if user's role is not whitelisted for this route
         if (!allowedRoles.includes(req.user.role)) {
             return res.status(403).json({
                 success: false,
@@ -51,6 +60,6 @@ export const authorizeRoles = (...allowedRoles) => {
             });
         }
 
-        next(); // Authorization cleared! Pass to the controller
+        next();
     };
 };

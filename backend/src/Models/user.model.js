@@ -60,6 +60,12 @@ const userSchema = new Schema(
     otpExpiry: {
       type: Date,
     },
+    // user.model.js
+isSuspended: {
+    type: Boolean,
+    default: false,
+    required: true
+}
   },
   { timestamps: true }
 );

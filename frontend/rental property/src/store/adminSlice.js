@@ -48,15 +48,15 @@ export const updateUserRole = createAsyncThunk("admin/updateUserRole", async ({ 
     }
 });
 
-export const purgeUserAccount = createAsyncThunk("admin/purgeUserAccount", async (userId, thunkApi) => {
+export const suspendUserAccount = createAsyncThunk("admin/suspendUserAccount", async ({ userId, suspend }, thunkApi) => {
     try {
-        await api.delete(`admin/users/purge/${userId}`);
-        return userId;
+        const res = await api.put(`admin/users/suspend/${userId}`, { suspend });
+        return res.data?.data || res.data?.user || { _id: userId, isSuspended: suspend };
     } catch (error) {
         return thunkApi.rejectWithValue(error.response?.data?.message || error.message);
     }
 });
-// Add this new async thunk under section 2 or 3
+
 export const fetchTargetUserDetails = createAsyncThunk("admin/fetchTargetUserDetails", async (userId, thunkApi) => {
     try {
         const res = await api.get(`admin/users/${userId}`);
@@ -113,6 +113,7 @@ const adminSlice = createSlice({
         globalBookings: [],
         systemReports: {},
         systemLogs: [],
+        selectedUserDossier: null,
         loading: false,
         error: null,
         successMessage: null,
@@ -142,9 +143,10 @@ const adminSlice = createSlice({
                 state.usersList = state.usersList.map(u => u._id === updated.userId ? { ...u, role: updated.role } : u);
                 state.successMessage = `User role updated to ${updated.role}!`;
             })
-            .addCase(purgeUserAccount.fulfilled, (state, action) => {
-                state.usersList = state.usersList.filter(u => u._id !== action.payload);
-                state.successMessage = "User profile account purged successfully.";
+            .addCase(suspendUserAccount.fulfilled, (state, action) => {
+                const updated = action.payload;
+                state.usersList = state.usersList.map(u => u._id === updated._id ? { ...u, isSuspended: updated.isSuspended } : u);
+                state.successMessage = `User account suspension status updated successfully.`;
             })
             // Bookings & Reports
             .addCase(fetchGlobalBookings.fulfilled, (state, action) => { state.globalBookings = action.payload; })
@@ -156,8 +158,8 @@ const adminSlice = createSlice({
             // System Logs
             .addCase(fetchSystemLogs.fulfilled, (state, action) => { state.systemLogs = action.payload; })
             .addCase(fetchTargetUserDetails.fulfilled, (state, action) => {
-    state.selectedUserDossier = action.payload;
-})
+                state.selectedUserDossier = action.payload;
+            });
     }
 });
 

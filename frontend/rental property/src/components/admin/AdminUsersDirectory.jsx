@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchUsersDirectory, updateUserRole, purgeUserAccount, fetchTargetUserDetails } from "../../store/adminSlice.js";
+import { fetchUsersDirectory, updateUserRole, suspendUserAccount, fetchTargetUserDetails } from "../../store/adminSlice.js";
 
 export default function AdminUsersDirectory() {
     const dispatch = useDispatch();
@@ -37,6 +37,14 @@ export default function AdminUsersDirectory() {
         const targetRole = selectedRoleChanges[userId];
         if (!targetRole) return;
         dispatch(updateUserRole({ userId, targetRole }));
+    };
+
+    const handleSuspendToggle = (u) => {
+        const nextState = !u.isSuspended;
+        const actionLabel = nextState ? "suspend and lock" : "unsuspend and unlock";
+        if (window.confirm(`Are you sure you want to ${actionLabel} account [${u.username}]?`)) {
+            dispatch(suspendUserAccount({ userId: u._id, suspend: nextState }));
+        }
     };
 
     // 🕒 Time-Range Filtering Logic for Users Directory
@@ -221,7 +229,7 @@ export default function AdminUsersDirectory() {
                                 </tr>
                             ) : (
                                 filteredUsersList.map((u) => (
-                                    <tr key={u._id} className="hover:bg-[#0e0e0e] transition-colors">
+                                    <tr key={u._id} className={`hover:bg-[#0e0e0e] transition-colors ${u.isSuspended ? "bg-[#2a1215]/30" : ""}`}>
                                         <td className="py-4 px-5 flex items-center gap-3.5">
                                             {u.avatar ? (
                                                 <img 
@@ -239,12 +247,19 @@ export default function AdminUsersDirectory() {
                                                 </div>
                                             )}
                                             <div>
-                                                <span 
-                                                    onClick={() => handleOpenDossier(u)}
-                                                    className="font-serif font-bold uppercase tracking-wide text-[#e5e2e1] cursor-pointer hover:text-[#5ddda1] transition-colors block"
-                                                >
-                                                    {u.fullname || u.username}
-                                                </span>
+                                                <div className="flex items-center gap-2">
+                                                    <span 
+                                                        onClick={() => handleOpenDossier(u)}
+                                                        className="font-serif font-bold uppercase tracking-wide text-[#e5e2e1] cursor-pointer hover:text-[#5ddda1] transition-colors block"
+                                                    >
+                                                        {u.fullname || u.username}
+                                                    </span>
+                                                    {u.isSuspended && (
+                                                        <span className="px-1.5 py-0.2 bg-[#2a1215] text-[#ffb4ab] border border-[#ffb4ab]/50 text-[8px] font-bold uppercase tracking-widest">
+                                                            Suspended
+                                                        </span>
+                                                    )}
+                                                </div>
                                                 <span className="text-[9px] text-[#8e9192] font-mono">@{u.username || "handle"}</span>
                                             </div>
                                         </td>
@@ -279,10 +294,14 @@ export default function AdminUsersDirectory() {
                                                 Inspect
                                             </button>
                                             <button 
-                                                onClick={() => { if(window.confirm("Are you sure you want to permanently purge this account?")) dispatch(purgeUserAccount(u._id)); }} 
-                                                className="px-4 py-2.5 bg-[#1c1b1b] hover:bg-[#ffb4ab] text-[#ffb4ab] hover:text-[#380007] border border-[#444748] hover:border-[#ffb4ab] text-[10px] font-bold uppercase tracking-widest rounded-none cursor-pointer shadow-md transition-all"
+                                                onClick={() => handleSuspendToggle(u)} 
+                                                className={`px-4 py-2.5 text-[10px] font-bold uppercase tracking-widest rounded-none cursor-pointer shadow-md transition-all border ${
+                                                    u.isSuspended 
+                                                        ? "bg-[#083823] text-[#5ddda1] border-[#5ddda1] hover:bg-[#5ddda1] hover:text-[#003823]" 
+                                                        : "bg-[#1c1b1b] text-[#ffb4ab] border-[#444748] hover:bg-[#ffb4ab] hover:text-[#380007]"
+                                                }`}
                                             >
-                                                Delete
+                                                {u.isSuspended ? "Unsuspend" : "Suspend"}
                                             </button>
                                         </td>
                                     </tr>

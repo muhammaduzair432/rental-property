@@ -5,13 +5,13 @@ import {
     rejectPropertyListing,
     getAllUsersDirectory,       // 🔥 Injected for User Management
     updateAccountRoleOverride,  // 🔥 Injected for User Management
-    administrativeUserPurge,
+    administrativeUserSuspendToggle, // 🔥 Updated from purge to strict suspension toggle
     getGlobalBookingsMatrix,    // 🔥 Injected for Bookings & Ops
     getSystemSummaryReports,    // 🔥 Injected for Bookings & Ops
     administrativeReviewPurge,  // 🔥 Injected for Bookings & Ops
-    getSystemAuditLogs ,
+    getSystemAuditLogs, 
     getAllSystemReviews,   
-    getTargetUserDetails    // 🔥 Injected for User Management
+    getTargetUserDetails        // 🔥 Injected for User Management
 } from "../Controllers/admin.controller.js";
 import { verifyJwt, authorizeRoles } from "../Middlewares/auth.middleware.js";
 
@@ -27,12 +27,15 @@ router.route("/properties/approve/:propertyId").put(approvePropertyListing);
 router.route("/properties/reject/:propertyId").delete(rejectPropertyListing);
 router.route("/users").get(getAllUsersDirectory);
 router.route("/users/role/:userId").put(updateAccountRoleOverride);
-router.route("/users/purge/:userId").delete(administrativeUserPurge);
+
+// 🛑 Strict Account Suspension & Lockout Route (Replaced permanent delete)
+router.route("/users/suspend/:userId").put(administrativeUserSuspendToggle);
+
 router.route("/bookings/all").get(getGlobalBookingsMatrix);
 router.route("/operations/reports").get(getSystemSummaryReports);
 router.route("/reviews/delete/:reviewId").delete(administrativeReviewPurge);
 router.route("/operations/system-logs").get(getSystemAuditLogs);
 router.route("/reviews/all").get(getAllSystemReviews);
-router.route("/users/:userId").get(verifyJwt, authorizeRoles("admin"), getTargetUserDetails);
+router.route("/users/:userId").get(getTargetUserDetails);
 
 export default router;
