@@ -52,13 +52,38 @@ export const resendOtp = createAsyncThunk("auth/resendOtp", async (emailData, th
 export const loginUser = createAsyncThunk("auth/loginUser", async (credentials, thunkApi) => {
     try {
         const res = await api.post("users/loginUser", credentials);
-        localStorage.setItem("user", JSON.stringify(res.data.data.user));
+        const loggedInUser = res.data.data.user;
+        if (loggedInUser) {
+            localStorage.setItem("user", JSON.stringify(loggedInUser));
+        }
         return res.data.data;
     } catch (error) {
-        // ⚡ ROBUST ERROR EXTRACTION: Safely grab backend message whether it's in response.data.message, response.data, or error.message
         const backendMsg = error.response?.data?.message || error.response?.data || error.message;
         const finalMessage = typeof backendMsg === "string" ? backendMsg : JSON.stringify(backendMsg);
         return thunkApi.rejectWithValue(finalMessage);
+    }
+});
+
+// 5. Asynchronous Thunk: Dual-Role Portal Switcher (User <-> Owner)
+export const switchPortalRole = createAsyncThunk("auth/switchPortalRole", async (targetRole, thunkApi) => {
+    try {
+        const res = await api.put("users/switch-role", { targetRole });
+        const updatedUserData = res.data?.data;
+        
+        // 🛡️ Ensure avatar persists even if role-switch payload doesn't re-send the image path explicitly
+        const currentStateUser = thunkApi.getState().auth.user;
+        const mergedUser = updatedUserData ? {
+            ...updatedUserData,
+            avatar: updatedUserData.avatar || currentStateUser?.avatar
+        } : null;
+
+        if (mergedUser) {
+            localStorage.setItem("user", JSON.stringify(mergedUser));
+        }
+        return mergedUser;
+    } catch (error) {
+        const errorMessage = error.response?.data?.message || error.message;
+        return thunkApi.rejectWithValue(errorMessage);
     }
 });
 
@@ -67,10 +92,6 @@ export const browseProperties = createAsyncThunk("auth/browseProperties", async 
     try {
         const res = await api.get("properties/browse");
 
-        // 🔍 DEBUG LOG: Look in your browser console to see exactly what this prints!
-        console.log("=== BACKEND RAW RESPONSE DATA ===", res.data);
-
-        // Fully flexible return that checks every common response wrapper
         if (res.data && typeof res.data === 'object') {
             return res.data.properties || res.data.data || res.data.listings || (Array.isArray(res.data) ? res.data : []);
         }
@@ -92,9 +113,13 @@ const authSlice = createSlice({
         authSuccess: (state, action) => {
             state.loading = false;
             state.isVerified = true;
-            state.user = action.payload;
-            if (action.payload) {
-                localStorage.setItem("user", JSON.stringify(action.payload));
+            const incoming = action.payload;
+            state.user = incoming ? {
+                ...incoming,
+                avatar: incoming.avatar || state.user?.avatar
+            } : null;
+            if (state.user) {
+                localStorage.setItem("user", JSON.stringify(state.user));
             }
         },
         authFailure: (state, action) => {
@@ -108,7 +133,6 @@ const authSlice = createSlice({
             state.isVerified = false;
             state.loading = false;
             state.error = null;
-            // Clear local listings memory upon signout lifecycle trigger
             state.properties = [];
             state.propertiesError = null;
             localStorage.removeItem("user");
@@ -116,11 +140,15 @@ const authSlice = createSlice({
         clearAuthError: (state) => {
             state.error = null;
         },
-        // 🔑 NEW REDUCER: Updates active user state and persists changes to localStorage
         updateAuthUser: (state, action) => {
-            const updatedUser = action.payload 
-                ? { ...state.user, ...action.payload } 
-                : state.user;
+            const incomingPayload = action.payload || {};
+            const updatedUser = state.user 
+                ? { 
+                    ...state.user, 
+                    ...incomingPayload, 
+                    avatar: incomingPayload.avatar || state.user.avatar // 🛡️ Protects avatar from accidental overwrites
+                  } 
+                : incomingPayload;
             state.user = updatedUser;
             if (updatedUser) {
                 localStorage.setItem("user", JSON.stringify(updatedUser));
@@ -137,8 +165,12 @@ const authSlice = createSlice({
             .addCase(registerUser.fulfilled, (state, action) => {
                 state.loading = false;
                 state.error = null;
-                state.user = action.payload?.data ?? null;
-                state.isVerified = Boolean(action.payload?.data?.isVerified);
+                const regData = action.payload?.data ?? null;
+                state.user = regData ? {
+                    ...regData,
+                    avatar: regData.avatar || state.user?.avatar
+                } : null;
+                state.isVerified = Boolean(regData?.isVerified);
             })
             .addCase(registerUser.rejected, (state, action) => {
                 state.loading = false;
@@ -154,9 +186,13 @@ const authSlice = createSlice({
                 state.loading = false;
                 state.error = null;
                 state.isVerified = true;
-                if (action.payload?.user) {
-                    state.user = action.payload.user;
-                    localStorage.setItem("user", JSON.stringify(action.payload.user));
+                const verifiedUser = action.payload?.user;
+                if (verifiedUser) {
+                    state.user = {
+                        ...verifiedUser,
+                        avatar: verifiedUser.avatar || state.user?.avatar
+                    };
+                    localStorage.setItem("user", JSON.stringify(state.user));
                 }
             })
             .addCase(verifyOtp.rejected, (state, action) => {
@@ -186,12 +222,37 @@ const authSlice = createSlice({
             .addCase(loginUser.fulfilled, (state, action) => {
                 state.loading = false;
                 state.error = null;
-                state.user = action.payload?.user ?? action.payload?.data ?? null;
+                const incomingUser = action.payload?.user ?? action.payload?.data ?? null;
+                
+                // 🛡️ Safeguard avatar retention during login sync
+                state.user = incomingUser ? {
+                    ...incomingUser,
+                    avatar: incomingUser.avatar || state.user?.avatar
+                } : null;
+                
                 state.isVerified = true;
+                if (state.user) {
+                    localStorage.setItem("user", JSON.stringify(state.user));
+                }
             })
             .addCase(loginUser.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload || "Login failed";
+            })
+
+            // 🔥 Portal Role Switching Lifecycle Hooks
+            .addCase(switchPortalRole.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(switchPortalRole.fulfilled, (state, action) => {
+                state.loading = false;
+                state.error = null;
+                state.user = action.payload; // Updates active user role state instantly while keeping avatar intact
+            })
+            .addCase(switchPortalRole.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload || "Failed to switch portal mode";
             })
 
             // Properties Marketplace Pipeline Lifecycle Hooks

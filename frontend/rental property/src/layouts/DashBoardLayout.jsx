@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Navigate, useNavigate, useLocation } from "react-router-dom";
-import { logoutSuccess } from "../store/authSlice.js";
+import { logoutSuccess, switchPortalRole } from "../store/authSlice.js";
 import UserDashboard from "../components/UserDashboard.jsx";
 import UserProfileModal from "../components/UserProfileModal.jsx";
 import AddPropertyForm from "../components/AddPropertyForm.jsx";
@@ -41,6 +41,7 @@ export default function DashBoardLayout() {
     // User Profile Pop-up Modal State & Mobile Menu Toggle State
     const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [isSwitchingRole, setIsSwitchingRole] = useState(false);
 
     if (!user) {
         return <Navigate to="/auth" replace />;
@@ -54,6 +55,23 @@ export default function DashBoardLayout() {
     const isOwner = user?.role === "owner";
     const isAdmin = user?.role === "admin";
 
+    // ⚡ Resolve avatar across any common schema property name
+    const userAvatar = user?.avatar || user?.avatarUrl || user?.profilePicture || user?.image;
+
+    // ⚡ Role Toggle Switch Handler
+    const handlePortalToggle = async () => {
+        const targetRole = isOwner ? "user" : "owner";
+        setIsSwitchingRole(true);
+        try {
+            await dispatch(switchPortalRole(targetRole)).unwrap();
+            setIsSwitchingRole(false);
+            navigate("/dashboard");
+        } catch (error) {
+            setIsSwitchingRole(false);
+            alert(error || "Failed to switch portal mode.");
+        }
+    };
+
     return (
         <div className="min-h-screen w-full bg-[#131313] text-[#e5e2e1] flex flex-col antialiased font-sans selection:bg-[#5ddda1]/30 selection:text-black">
             
@@ -64,7 +82,7 @@ export default function DashBoardLayout() {
             />
 
             {/* 🌐 RESPONSIVE NAVBAR SECTION */}
-            <header className="bg-[#080808]/90 backdrop-blur-md  w-full z-50 border-b border-[#353535]">
+            <header className="bg-[#080808]/95 backdrop-blur-md w-full z-50 border-b border-[#353535] sticky top-0 shadow-lg">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 h-20 flex items-center justify-between gap-4">
                     
                     {/* Brand Name with Stylish Font */}
@@ -72,7 +90,7 @@ export default function DashBoardLayout() {
                         onClick={() => navigate("/dashboard")} 
                         className="flex flex-col cursor-pointer min-w-max"
                     >
-                        <span className="font-serif text-base sm:text-2xl font-bold tracking-tight text-[#e5e2e1] uppercase">
+                        <span className="font-serif text-base sm:text-xl font-bold tracking-tight text-[#e5e2e1] uppercase">
                             RENTAL PROPERTY
                         </span>
                         <span className="text-[9px] font-bold tracking-[0.25em] text-[#5ddda1] uppercase">
@@ -82,34 +100,47 @@ export default function DashBoardLayout() {
 
                     {/* Desktop Navigation Links */}
                     {isAdmin ? (
-                        <div className="hidden lg:flex gap-8 xl:gap-10 items-center text-xs font-bold tracking-[0.15em] uppercase text-[#c4c7c7]">
-                            <span onClick={() => setAdminActiveTab("home")} className={`cursor-pointer transition-colors pb-1 hover:underline ${adminActiveTab === "home" ? "text-[#5ddda1] border-b-2 border-[#5ddda1]" : "hover:text-[#5ddda1]"}`}>Home</span>
-                            <span onClick={() => setAdminActiveTab("users")} className={`cursor-pointer transition-colors pb-1 hover:underline ${adminActiveTab === "users" ? "text-[#5ddda1] border-b-2 border-[#5ddda1]" : "hover:text-[#5ddda1]"}`}>Users</span>
-                            <span onClick={() => setAdminActiveTab("reports")} className={`cursor-pointer transition-colors pb-1 hover:underline ${adminActiveTab === "reports" ? "text-[#5ddda1] border-b-2 border-[#5ddda1]" : "hover:text-[#5ddda1]"}`}>Reports</span>
-                            <span onClick={() => setAdminActiveTab("reviews")} className={`cursor-pointer transition-colors pb-1 hover:underline ${adminActiveTab === "reviews" ? "text-[#5ddda1] border-b-2 border-[#5ddda1]" : "hover:text-[#5ddda1]"}`}>Reviews</span>
-                            <span onClick={() => setAdminActiveTab("logs")} className={`cursor-pointer transition-colors pb-1 hover:underline ${adminActiveTab === "logs" ? "text-[#5ddda1] border-b-2 border-[#5ddda1]" : "hover:text-[#5ddda1]"}`}>Logs</span>
-                        </div>
+                        <nav className="hidden lg:flex items-center space-x-8 text-xs font-bold tracking-[0.15em] uppercase text-[#c4c7c7]">
+                            <span onClick={() => setAdminActiveTab("home")} className={`cursor-pointer transition-colors pb-1 ${adminActiveTab === "home" ? "text-[#5ddda1] border-b-2 border-[#5ddda1]" : "hover:text-[#5ddda1]"}`}>Home</span>
+                            <span onClick={() => setAdminActiveTab("users")} className={`cursor-pointer transition-colors pb-1 ${adminActiveTab === "users" ? "text-[#5ddda1] border-b-2 border-[#5ddda1]" : "hover:text-[#5ddda1]"}`}>Users</span>
+                            <span onClick={() => setAdminActiveTab("reports")} className={`cursor-pointer transition-colors pb-1 ${adminActiveTab === "reports" ? "text-[#5ddda1] border-b-2 border-[#5ddda1]" : "hover:text-[#5ddda1]"}`}>Reports</span>
+                            <span onClick={() => setAdminActiveTab("reviews")} className={`cursor-pointer transition-colors pb-1 ${adminActiveTab === "reviews" ? "text-[#5ddda1] border-b-2 border-[#5ddda1]" : "hover:text-[#5ddda1]"}`}>Reviews</span>
+                            <span onClick={() => setAdminActiveTab("logs")} className={`cursor-pointer transition-colors pb-1 ${adminActiveTab === "logs" ? "text-[#5ddda1] border-b-2 border-[#5ddda1]" : "hover:text-[#5ddda1]"}`}>Logs</span>
+                        </nav>
                     ) : isOwner ? (
-                        <div className="hidden lg:flex gap-4 xl:gap-6 items-center text-[11px] font-bold tracking-[0.12em] uppercase text-[#c4c7c7] whitespace-nowrap">
-                            <span onClick={() => setOwnerActiveTab("home")} className={`cursor-pointer transition-colors pb-1 hover:underline ${ownerActiveTab === "home" ? "text-[#5ddda1] border-b-2 border-[#5ddda1]" : "hover:text-[#5ddda1]"}`}>Home</span>
-                            <span onClick={() => setOwnerActiveTab("add-property")} className={`cursor-pointer transition-colors pb-1 hover:underline ${ownerActiveTab === "add-property" ? "text-[#5ddda1] border-b-2 border-[#5ddda1]" : "hover:text-[#5ddda1]"}`}>Add Property</span>
-                            <span onClick={() => setOwnerActiveTab("my-properties")} className={`cursor-pointer transition-colors pb-1 hover:underline ${ownerActiveTab === "my-properties" ? "text-[#5ddda1] border-b-2 border-[#5ddda1]" : "hover:text-[#5ddda1]"}`}>Properties</span>
-                            <span onClick={() => setOwnerActiveTab("earnings")} className={`cursor-pointer transition-colors pb-1 hover:underline ${ownerActiveTab === "earnings" ? "text-[#5ddda1] border-b-2 border-[#5ddda1]" : "hover:text-[#5ddda1]"}`}>Earnings</span>
-                            <span onClick={() => setOwnerActiveTab("manage-reviews")} className={`cursor-pointer transition-colors pb-1 hover:underline ${ownerActiveTab === "manage-reviews" ? "text-[#5ddda1] border-b-2 border-[#5ddda1]" : "hover:text-[#5ddda1]"}`}>Reviews</span>
-                        </div>
+                        <nav className="hidden lg:flex items-center space-x-6 text-[11px] font-bold tracking-[0.12em] uppercase text-[#c4c7c7] whitespace-nowrap">
+                            <span onClick={() => setOwnerActiveTab("home")} className={`cursor-pointer transition-colors pb-1 ${ownerActiveTab === "home" ? "text-[#5ddda1] border-b-2 border-[#5ddda1]" : "hover:text-[#5ddda1]"}`}>Home</span>
+                            <span onClick={() => setOwnerActiveTab("add-property")} className={`cursor-pointer transition-colors pb-1 ${ownerActiveTab === "add-property" ? "text-[#5ddda1] border-b-2 border-[#5ddda1]" : "hover:text-[#5ddda1]"}`}>Add Property</span>
+                            <span onClick={() => setOwnerActiveTab("my-properties")} className={`cursor-pointer transition-colors pb-1 ${ownerActiveTab === "my-properties" ? "text-[#5ddda1] border-b-2 border-[#5ddda1]" : "hover:text-[#5ddda1]"}`}>Properties</span>
+                            <span onClick={() => setOwnerActiveTab("earnings")} className={`cursor-pointer transition-colors pb-1 ${ownerActiveTab === "earnings" ? "text-[#5ddda1] border-b-2 border-[#5ddda1]" : "hover:text-[#5ddda1]"}`}>Earnings</span>
+                            <span onClick={() => setOwnerActiveTab("manage-reviews")} className={`cursor-pointer transition-colors pb-1 ${ownerActiveTab === "manage-reviews" ? "text-[#5ddda1] border-b-2 border-[#5ddda1]" : "hover:text-[#5ddda1]"}`}>Reviews</span>
+                        </nav>
                     ) : (
-                        <div className="hidden lg:flex gap-10 items-center text-xs font-bold tracking-[0.15em] uppercase text-[#c4c7c7]">
-                            <span onClick={() => navigate("/dashboard")} className="cursor-pointer hover:text-[#5ddda1] transition-colors pb-1 hover:underline">Home</span>
-                            <span onClick={() => navigate("/my-bookings")} className="cursor-pointer hover:text-[#5ddda1] transition-colors pb-1 hover:underline">My Bookings</span>
-                            <span onClick={() => navigate("/favourites")} className="cursor-pointer hover:text-[#5ddda1] transition-colors pb-1 hover:underline">Favourites</span>
-                        </div>
+                        <nav className="hidden lg:flex items-center space-x-10 text-xs font-bold tracking-[0.15em] uppercase text-[#c4c7c7]">
+                            <span onClick={() => navigate("/dashboard")} className="cursor-pointer hover:text-[#5ddda1] transition-colors pb-1">Home</span>
+                            <span onClick={() => navigate("/my-bookings")} className="cursor-pointer hover:text-[#5ddda1] transition-colors pb-1">My Bookings</span>
+                            <span onClick={() => navigate("/favourites")} className="cursor-pointer hover:text-[#5ddda1] transition-colors pb-1">Favourites</span>
+                        </nav>
                     )}
 
-                    {/* Right Action Center with Fixed Spacing & Profile Trigger */}
-                    <div className="hidden lg:flex items-center space-x-5">
+                    {/* Right Action Center */}
+                    <div className="hidden lg:flex items-center space-x-4">
                         <NotificationBell />
 
-                        {/* Interactive Profile Tab */}
+                        {/* 🔄 Theme-Matched Portal Switch Button */}
+                        {!isAdmin && (
+                            <button
+                                onClick={handlePortalToggle}
+                                disabled={isSwitchingRole}
+                                className="bg-[#083823] hover:bg-[#5ddda1] text-[#5ddda1] hover:text-[#003823] border border-[#5ddda1] px-3.5 py-2 text-[9px] font-bold uppercase tracking-widest rounded-none transition-all cursor-pointer shadow-sm disabled:opacity-40 flex items-center gap-2 whitespace-nowrap"
+                                title="Switch between User and Owner portals"
+                            >
+                                {isSwitchingRole && <div className="w-2.5 h-2.5 border-2 border-current border-t-transparent animate-spin"></div>}
+                                <span>{isOwner ? "Switch to User Portal" : "Switch to Owner Portal"}</span>
+                            </button>
+                        )}
+
+                        {/* Interactive Profile Tab with Bulletproof Avatar Check */}
                         <div 
                             onClick={() => setIsProfileModalOpen(true)}
                             className="flex items-center gap-2.5 cursor-pointer group px-2 py-1 rounded-none hover:bg-[#1c1b1b] border border-transparent hover:border-[#444748] transition-all"
@@ -122,33 +153,30 @@ export default function DashBoardLayout() {
                                 <span className="text-[9px] text-[#c4c7c7]">{user?.email}</span>
                             </div>
 
-                            {user?.avatar ? (
-                                <img src={user.avatar} alt="avatar" className="w-10 h-10 rounded-full border-2 border-[#444748] object-cover" />
+                            {userAvatar ? (
+                                <img src={userAvatar} alt="avatar" className="w-9 h-9 rounded-full border-2 border-[#444748] object-cover shrink-0" />
                             ) : (
-                                <div className="w-10 h-10 rounded-full border border-[#444748] bg-[#1c1b1b] flex items-center justify-center text-[#5ddda1]">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-4 h-4 fill-current">
-                                        <circle cx="12" cy="8" r="4" />
-                                        <path d="M5 20c0-3.3 3-6 7-6s7 2.7 7 6" />
-                                    </svg>
+                                <div className="w-9 h-9 rounded-full border border-[#444748] bg-[#1c1b1b] flex items-center justify-center text-[#5ddda1] uppercase font-bold text-xs shrink-0">
+                                    {(user?.fullname || user?.username || "U").charAt(0)}
                                 </div>
                             )}
                         </div>
 
-                        {/* Logout Button with Proper Margin Separation */}
+                        {/* Logout Button */}
                         <button 
                             onClick={handleSystemLogout}
-                            className="bg-[#5ddda1] text-[#003823] px-5 py-2.5 text-xs font-bold uppercase tracking-widest rounded-none transition-all hover:bg-[#08a56e] cursor-pointer shadow-md ml-1"
+                            className="bg-[#5ddda1] text-[#003823] px-4 py-2 text-xs font-bold uppercase tracking-widest rounded-none transition-all hover:bg-[#08a56e] cursor-pointer shadow-md shrink-0"
                         >
                             Logout
                         </button>
                     </div>
 
-                    {/* Mobile Hamburger Toggle Button */}
+                    {/* Mobile Hamburger & Controls */}
                     <div className="flex lg:hidden items-center gap-3">
                         <NotificationBell />
                         <button 
                             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                            className="text-[#e5e2e1] p-2 focus:outline-none cursor-pointer"
+                            className="text-[#e5e2e1] p-1.5 focus:outline-none cursor-pointer"
                         >
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 {isMobileMenuOpen ? (
@@ -164,7 +192,7 @@ export default function DashBoardLayout() {
 
                 {/* Mobile Dropdown Menu Drawer */}
                 {isMobileMenuOpen && (
-                    <div className="lg:hidden bg-[#0e0e0e] border-b border-[#353535] px-6 py-6 space-y-4 text-xs font-bold tracking-widest uppercase">
+                    <div className="lg:hidden bg-[#0e0e0e] border-b border-[#353535] px-6 py-6 space-y-4 text-xs font-bold tracking-widest uppercase shadow-2xl">
                         {isAdmin ? (
                             <>
                                 <div onClick={() => { setAdminActiveTab("home"); setIsMobileMenuOpen(false); }} className="cursor-pointer text-[#c4c7c7] hover:text-[#5ddda1]">Home Feed</div>
@@ -188,6 +216,18 @@ export default function DashBoardLayout() {
                                 <div onClick={() => { navigate("/favourites"); setIsMobileMenuOpen(false); }} className="cursor-pointer text-[#c4c7c7] hover:text-[#5ddda1]">Favourites</div>
                             </>
                         )}
+
+                        {/* Mobile Portal Switcher Button */}
+                        {!isAdmin && (
+                            <div 
+                                onClick={() => { handlePortalToggle(); setIsMobileMenuOpen(false); }} 
+                                className="cursor-pointer text-[#5ddda1] pt-3 border-t border-[#353535] flex items-center justify-between bg-[#083823] p-3 border border-[#5ddda1]"
+                            >
+                                <span>{isOwner ? "Switch to User Portal" : "Switch to Owner Portal"}</span>
+                                <span className="text-[9px] bg-[#5ddda1] text-[#003823] px-2 py-1 font-bold">Toggle</span>
+                            </div>
+                        )}
+
                         <div onClick={() => { setIsProfileModalOpen(true); setIsMobileMenuOpen(false); }} className="cursor-pointer text-[#5ddda1] pt-2 border-t border-[#353535]">View Profile</div>
                         <div className="pt-2">
                             <button 
@@ -202,42 +242,40 @@ export default function DashBoardLayout() {
             </header>
 
             {/* MAIN CONTENT SECTION */}
-           
-{/* MAIN CONTENT SECTION */}
-<main className="flex-1 max-w-7xl w-full mx-auto p-0 sm:p-0 lg:p-0 pt-6 sm:pt-8">
-    {isAdmin ? (
-        <div className="space-y-6">
-            {adminActiveTab === "home" && <AdminHomeFeed />}
-            {adminActiveTab === "users" && <AdminUsersDirectory />}
-            {adminActiveTab === "reports" && <AdminReportsPage />}
-            {adminActiveTab === "reviews" && <AdminReviewsModeration />}
-            {adminActiveTab === "logs" && <AdminSystemLogs />}
-        </div>
-    ) : user?.role === "user" ? (
-        <UserDashboard 
-            searchQuery={searchQuery} 
-            setSearchQuery={setSearchQuery}
-            selectedFilter={selectedFilter}
-            setSelectedFilter={setSelectedFilter}
-            minPrice={minPrice}
-            setMinPrice={setMinPrice}
-            maxPrice={maxPrice}
-            setMaxPrice={setMaxPrice}
-        />
-    ) : user?.role === "owner" ? (
-        <div className="space-y-6">
-            {ownerActiveTab === "home" && <OwnerDashboardHome />}
-            {ownerActiveTab === "add-property" && <AddPropertyForm />}
-            {ownerActiveTab === "my-properties" && <OwnerPropertiesList />}
-            {ownerActiveTab === "earnings" && <OwnerEarningsPage />}
-            {ownerActiveTab === "manage-reviews" && <OwnerReviewsPage />}
-        </div>
-    ) : (
-        <div className="bg-[#1c1b1b] p-8 rounded-none border border-[#444748] text-center text-xs font-bold uppercase tracking-wider text-[#c4c7c7]">
-            Please sign in with a verified account to access this workspace.
-        </div>
-    )}
-</main>
+            <main className="flex-1 max-w-7xl w-full mx-auto p-0 sm:p-0 lg:p-0 pt-6 sm:pt-8">
+                {isAdmin ? (
+                    <div className="space-y-6">
+                        {adminActiveTab === "home" && <AdminHomeFeed />}
+                        {adminActiveTab === "users" && <AdminUsersDirectory />}
+                        {adminActiveTab === "reports" && <AdminReportsPage />}
+                        {adminActiveTab === "reviews" && <AdminReviewsModeration />}
+                        {adminActiveTab === "logs" && <AdminSystemLogs />}
+                    </div>
+                ) : user?.role === "user" ? (
+                    <UserDashboard 
+                        searchQuery={searchQuery} 
+                        setSearchQuery={setSearchQuery}
+                        selectedFilter={selectedFilter}
+                        setSelectedFilter={setSelectedFilter}
+                        minPrice={minPrice}
+                        setMinPrice={setMinPrice}
+                        maxPrice={maxPrice}
+                        setMaxPrice={setMaxPrice}
+                    />
+                ) : user?.role === "owner" ? (
+                    <div className="space-y-6">
+                        {ownerActiveTab === "home" && <OwnerDashboardHome />}
+                        {ownerActiveTab === "add-property" && <AddPropertyForm />}
+                        {ownerActiveTab === "my-properties" && <OwnerPropertiesList />}
+                        {ownerActiveTab === "earnings" && <OwnerEarningsPage />}
+                        {ownerActiveTab === "manage-reviews" && <OwnerReviewsPage />}
+                    </div>
+                ) : (
+                    <div className="bg-[#1c1b1b] p-8 rounded-none border border-[#444748] text-center text-xs font-bold uppercase tracking-wider text-[#c4c7c7]">
+                        Please sign in with a verified account to access this workspace.
+                    </div>
+                )}
+            </main>
 
             {/* 🌐 ROLE-DYNAMIC FOOTER SECTION */}
             <footer className="w-full bg-[#0e0e0e] border-t border-[#353535] text-[#e5e2e1] pt-16 pb-8 mt-auto">

@@ -22,15 +22,15 @@ export default function UserProfileModal({ isOpen, onClose }) {
     const [avatarFile, setAvatarFile] = useState(null);
     const [avatarPreview, setAvatarPreview] = useState("");
 
-    // Synchronize inputs with user Redux state whenever modal opens
+    // Synchronize inputs with user Redux state whenever modal opens or user updates
     useEffect(() => {
         if (user && isOpen) {
-            setFullname(user.fullname || user.name || "");
+            setFullname(user.fullname || user.fullName || user.name || "");
             setUsername(user.username || "");
             setEmail(user.email || "");
             setPhone(user.phone || user.phoneNumber || "");
             setPassword(""); 
-            setAvatarPreview(user.avatar || "");
+            setAvatarPreview(user.avatar || user.avatarUrl || "");
         }
     }, [user, isOpen]);
 
@@ -57,9 +57,16 @@ export default function UserProfileModal({ isOpen, onClose }) {
         }
     };
 
-    // Toggle into Edit Mode cleanly
+    // Toggle into Edit Mode cleanly & pre-fill fields with latest user data
     const handleStartEditing = () => {
         dispatch(clearProfileState()); 
+        if (user) {
+            setFullname(user.fullname || user.fullName || user.name || "");
+            setUsername(user.username || "");
+            setEmail(user.email || "");
+            setPhone(user.phone || user.phoneNumber || "");
+            setAvatarPreview(user.avatar || user.avatarUrl || "");
+        }
         setIsEditing(true);
     };
 
@@ -68,7 +75,7 @@ export default function UserProfileModal({ isOpen, onClose }) {
         dispatch(clearProfileState());
         setIsEditing(false);
         setPassword("");
-        setAvatarPreview(user.avatar || "");
+        setAvatarPreview(user.avatar || user.avatarUrl || "");
         setAvatarFile(null);
     };
 
@@ -90,6 +97,7 @@ export default function UserProfileModal({ isOpen, onClose }) {
         if (updateUserProfile.fulfilled.match(result)) {
             setIsEditing(false);
             setPassword("");
+            setAvatarFile(null);
         }
     };
 
@@ -301,7 +309,7 @@ export default function UserProfileModal({ isOpen, onClose }) {
                             <div className="space-y-3 bg-[#0e0e0e] p-5 rounded-none border border-[#353535]">
                                 <div className="flex justify-between items-center border-b border-[#353535] pb-3">
                                     <span className="text-[9px] font-bold uppercase tracking-widest text-[#8e9192]">Full Name</span>
-                                    <span className="text-xs font-bold text-[#e5e2e1]">{user.fullname || user.name || "N/A"}</span>
+                                    <span className="text-xs font-bold text-[#e5e2e1]">{user.fullname || user.fullName || user.name || "N/A"}</span>
                                 </div>
                                 <div className="flex justify-between items-center border-b border-[#353535] pb-3">
                                     <span className="text-[9px] font-bold uppercase tracking-widest text-[#8e9192]">Username</span>
