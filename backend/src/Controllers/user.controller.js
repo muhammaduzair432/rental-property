@@ -388,4 +388,50 @@ export const getMyNotifications = asyncHandler(async (req, res) => {
     });
 });
 
+// =========================================================================
+// TOGGLE USER / OWNER PORTAL MODE (PUT /api/v2/users/switch-role)
+// =========================================================================
+export const switchPortalRole = asyncHandler(async (req, res) => {
+    const { targetRole } = req.body; // Expects "user" or "owner"
+
+    if (!targetRole || !["user", "owner"].includes(targetRole)) {
+        throw new ApiError(400, "Invalid portal mode. You can only switch between 'user' and 'owner'.");
+    }
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+        throw new ApiError(404, "User account record not found.");
+    }
+
+    // Safety lock: Prevent admins from accidentally locking themselves out of the admin portal via this toggle
+    if (user.role === "admin") {
+        return res.status(403).json({
+            success: false,
+            message: "Action Denied. Administrators must use the admin control panel."
+        });
+    }
+
+    // Update active operational role
+    user.role = targetRole;
+    await user.save({ validateBeforeSave: false });
+
+    // Log the portal switch event
+    await Log.create({
+        actionType: "PORTAL_ROLE_SWITCH",
+        description: `User [${user.username}] switched their active portal mode to [${targetRole}].`,
+        performedBy: user._id
+    });
+
+    return res.status(200).json({
+        success: true,
+        message: `Successfully switched portal mode to ${targetRole}. All your previous data remains securely linked.`,
+        data: {
+            _id: user._id,
+            username: user.username,
+            email: user.email,
+            role: user.role
+        }
+    });
+});
+
 export { registerUser, loginUser, becomeOwner, promoteToAdmin, logoutUser, updateProfile,resendOTP };

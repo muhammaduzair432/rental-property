@@ -66,6 +66,16 @@ export const fetchTargetUserDetails = createAsyncThunk("admin/fetchTargetUserDet
     }
 });
 
+// 🔥 Injected Portal Switch Thunk for Dual-Role Transition Support
+export const switchPortalRole = createAsyncThunk("admin/switchPortalRole", async (targetRole, thunkApi) => {
+    try {
+        const res = await api.put("users/switch-role", { targetRole });
+        return res.data?.data;
+    } catch (error) {
+        return thunkApi.rejectWithValue(error.response?.data?.message || error.message);
+    }
+});
+
 // 3. Reports & Global Bookings
 export const fetchGlobalBookings = createAsyncThunk("admin/fetchGlobalBookings", async (_, thunkApi) => {
     try {
