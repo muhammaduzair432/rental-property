@@ -104,7 +104,7 @@ export default function UserDashboard({
 
     const safeProperties = Array.isArray(properties) ? properties : [];
 
-    // Filter Logic with Fail-Safe Price Matching
+    // ⚡ Clean & Precise Filtering Logic using database `type` field
     const filteredProperties = safeProperties.filter(item => {
         if (!item) return false;
 
@@ -112,14 +112,8 @@ export default function UserDashboard({
             (item.description || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
             (item.location || "").toLowerCase().includes(searchQuery.toLowerCase());
 
-        const isHouse = (item.description || "").toLowerCase().includes("house") || (item.type || "").toLowerCase() === "house";
-        const isVilla = (item.description || "").toLowerCase().includes("villa") || (item.type || "").toLowerCase() === "villa";
-        const isApartment = (item.description || "").toLowerCase().includes("apartment") || (item.type || "").toLowerCase() === "apartment";
-
-        const matchesType = selectedFilter === "all" || 
-            (selectedFilter === "house" && isHouse) ||
-            (selectedFilter === "villa" && isVilla) ||
-            (selectedFilter === "apartment" && isApartment);
+        const itemType = (item.type || "").toLowerCase();
+        const matchesType = selectedFilter === "all" || itemType === selectedFilter.toLowerCase();
 
         const itemPrice = Number(item.pricePerNight || item.price || 0);
         const matchesPrice = itemPrice >= minPrice && (maxPrice === Infinity || itemPrice <= maxPrice);
@@ -138,11 +132,6 @@ export default function UserDashboard({
         if (propertyId) {
             dispatch(toggleFavoriteProperty(propertyId));
         }
-    };
-
-    const handleSliderChange = (e) => {
-        const val = Number(e.target.value);
-        setMaxPrice(val);
     };
 
     const resetPriceFilter = () => {
@@ -320,7 +309,7 @@ export default function UserDashboard({
                 </div>
             </section>
 
-            {/* 🌟 PRESS & RECOGNITION BANNER (Static) */}
+            {/* 🌟 PRESS & RECOGNITION BANNER */}
             <section className="border-b border-[#353535] bg-[#0e0e0e] py-8">
                 <div className="max-w-7xl mx-auto px-4 md:px-8">
                     <p className="text-center text-[9px] font-bold uppercase tracking-[0.3em] text-[#8e9192] mb-6">
@@ -367,7 +356,7 @@ export default function UserDashboard({
                 </div>
             </section>
 
-            {/* 🌟 GLOBAL FOOTPRINT STATISTICS BAR (Pure Static Display) */}
+            {/* 🌟 GLOBAL FOOTPRINT STATISTICS BAR */}
             <section className="max-w-7xl mx-auto px-4 md:px-8">
                 <div className="bg-[#1c1b1b] border border-[#353535] grid grid-cols-2 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-[#353535] py-8 text-center shadow-2xl">
                     <div className="p-4 space-y-1">
@@ -389,7 +378,7 @@ export default function UserDashboard({
                 </div>
             </section>
 
-            {/* 🌟 EDITORIAL MOOD CATEGORIES (Pure Static Grid) */}
+            {/* 🌟 EDITORIAL MOOD CATEGORIES */}
             <section className="max-w-7xl mx-auto px-4 md:px-8 py-8 space-y-8">
                 <div className="border-b border-[#353535] pb-4">
                     <span className="text-[10px] font-bold text-[#c4c7c7] uppercase tracking-[0.2em]">CURATED INSPIRATION</span>
@@ -554,7 +543,7 @@ export default function UserDashboard({
                 </div>
             )}
 
-  {/* 🌟 SIGNATURE SERVICES (Theme-Matched Clean Icons) */}
+            {/* 🌟 SIGNATURE SERVICES */}
             <section className="max-w-7xl mx-auto px-4 md:px-8 py-16 border-t border-[#353535] mt-16">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
                     <div className="lg:col-span-4 space-y-4">
@@ -568,7 +557,6 @@ export default function UserDashboard({
                     </div>
                     
                     <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-6">
-                        {/* Service 1: Private Aviation */}
                         <div className="bg-[#1c1b1b] border border-[#353535] p-8 hover:border-[#5ddda1] transition-all duration-300 group">
                             <div className="w-10 h-10 bg-[#0e0e0e] border border-[#353535] group-hover:border-[#5ddda1] flex items-center justify-center text-[#5ddda1] mb-5 transition-colors">
                                 <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 fill-none stroke-current" viewBox="0 0 24 24" strokeWidth="2">
@@ -579,7 +567,6 @@ export default function UserDashboard({
                             <p className="text-[10px] text-[#8e9192] leading-relaxed">Seamless tarmac-to-villa helicopter and jet charters curated to your schedule.</p>
                         </div>
 
-                        {/* Service 2: Michelin Chefs */}
                         <div className="bg-[#1c1b1b] border border-[#353535] p-8 hover:border-[#5ddda1] transition-all duration-300 group">
                             <div className="w-10 h-10 bg-[#0e0e0e] border border-[#353535] group-hover:border-[#5ddda1] flex items-center justify-center text-[#5ddda1] mb-5 transition-colors">
                                 <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 fill-none stroke-current" viewBox="0 0 24 24" strokeWidth="2">
@@ -590,7 +577,6 @@ export default function UserDashboard({
                             <p className="text-[10px] text-[#8e9192] leading-relaxed">Bespoke culinary experiences tailored to your dietary architecture.</p>
                         </div>
 
-                        {/* Service 3: Discreet Security */}
                         <div className="bg-[#1c1b1b] border border-[#353535] p-8 hover:border-[#5ddda1] transition-all duration-300 group">
                             <div className="w-10 h-10 bg-[#0e0e0e] border border-[#353535] group-hover:border-[#5ddda1] flex items-center justify-center text-[#5ddda1] mb-5 transition-colors">
                                 <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 fill-none stroke-current" viewBox="0 0 24 24" strokeWidth="2">
@@ -601,7 +587,6 @@ export default function UserDashboard({
                             <p className="text-[10px] text-[#8e9192] leading-relaxed">Unobtrusive, elite protection personnel and encrypted property privacy protocols.</p>
                         </div>
 
-                        {/* Service 4: Lifestyle Curation */}
                         <div className="bg-[#1c1b1b] border border-[#353535] p-8 hover:border-[#5ddda1] transition-all duration-300 group">
                             <div className="w-10 h-10 bg-[#0e0e0e] border border-[#353535] group-hover:border-[#5ddda1] flex items-center justify-center text-[#5ddda1] mb-5 transition-colors">
                                 <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 fill-none stroke-current" viewBox="0 0 24 24" strokeWidth="2">
@@ -615,7 +600,7 @@ export default function UserDashboard({
                 </div>
             </section>
 
-            {/* 🌟 VIP TESTIMONIAL (Static) */}
+            {/* 🌟 VIP TESTIMONIAL */}
             <section className="bg-[#0e0e0e] border-y border-[#353535] py-20 px-4">
                 <div className="max-w-4xl mx-auto text-center space-y-8">
                     <div className="flex justify-center gap-2 text-[#5ddda1] text-sm">
@@ -639,7 +624,7 @@ export default function UserDashboard({
                 </blockquote>
             </section>
 
-            {/* 🌟 PARTNER / CTA CARD PLACED BELOW PROPERTY CARDS & ABOVE FOOTER */}
+            {/* 🌟 PARTNER / CTA CARD */}
             <section className="max-w-7xl mx-auto px-4 md:px-8">
                 <div className="relative overflow-hidden border border-[#353535] bg-[#0e0e0e] p-12 lg:p-16 rounded-none shadow-2xl mt-8 text-center">
                     <div className="absolute inset-0 z-0 opacity-15 pointer-events-none">

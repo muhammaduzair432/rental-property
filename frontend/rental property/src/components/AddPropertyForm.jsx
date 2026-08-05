@@ -7,13 +7,13 @@ export default function AddPropertyForm() {
     const dispatch = useDispatch();
     usePasteCleaner();
     
-    // ⚡ FIXED: Read `loadingCreation` from Redux slice instead of non-existent `loading`
+    // ⚡ FIXED: Read `loadingCreation` from Redux slice
     const { loadingCreation: loading, error, successMessage } = useSelector((state) => state.properties || {});
 
     // Form Fields
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
-    const [type, setType] = useState("house");
+    const [type, setType] = useState("house"); // 👈 Active property type state
     const [pricePerNight, setPricePerNight] = useState("");
     const [location, setLocation] = useState("");
     
@@ -80,7 +80,7 @@ export default function AddPropertyForm() {
         const formData = new FormData();
         formData.append("title", title);
         formData.append("description", description);
-        formData.append("type", type);
+        formData.append("type", type); // 👈 Officially appends property type for backend routing/filtering
         formData.append("price", pricePerNight); 
         formData.append("location", location);
         formData.append("amenities", combinedAmenities.join(", "));
@@ -95,6 +95,7 @@ export default function AddPropertyForm() {
             // Reset form upon success
             setTitle("");
             setDescription("");
+            setType("house");
             setPricePerNight("");
             setLocation("");
             setCustomAmenityInput("");
@@ -107,7 +108,7 @@ export default function AddPropertyForm() {
     return (
         <div className="w-full max-w-5xl mx-auto bg-[#1c1b1b] p-6 sm:p-10 rounded-none border border-[#353535] shadow-2xl space-y-8 text-[#e5e2e1] font-sans antialiased relative overflow-hidden">
             
-            {/* ⚡ THEMED LOADING PROGRESS BAR ANIMATION (Triggers when loadingCreation is true) */}
+            {/* ⚡ THEMED LOADING PROGRESS BAR ANIMATION */}
             {loading && (
                 <div className="absolute top-0 left-0 w-full h-1.5 bg-[#0e0e0e] overflow-hidden z-50">
                     <div className="w-full h-full bg-[#5ddda1] animate-[pulse_1s_infinite] shadow-[0_0_12px_#5ddda1]"></div>
@@ -151,16 +152,17 @@ export default function AddPropertyForm() {
                 {/* Type & Price Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     <div className="space-y-1.5">
-                        <label className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#5ddda1] block">Property Type</label>
+                        <label className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#5ddda1] block">Property Type *</label>
                         <select
                             value={type}
                             onChange={(e) => setType(e.target.value)}
                             disabled={loading}
-                            className="w-full text-xs p-3.5 border border-[#444748] rounded-none font-sans bg-[#0e0e0e] text-[#e5e2e1] focus:outline-none focus:border-[#5ddda1] cursor-pointer disabled:opacity-50"
+                            required
+                            className="w-full text-xs p-3.5 border border-[#444748] rounded-none font-sans bg-[#0e0e0e] text-[#e5e2e1] focus:outline-none focus:border-[#5ddda1] cursor-pointer disabled:opacity-50 uppercase tracking-wider font-bold"
                         >
-                            <option value="house">House</option>
-                            <option value="apartment">Apartment</option>
-                            <option value="villa">Luxury Villa</option>
+                            <option value="house" className="bg-[#1c1b1b]">House</option>
+                            <option value="apartment" className="bg-[#1c1b1b]">Apartment</option>
+                            <option value="villa" className="bg-[#1c1b1b]">Luxury Villa</option>
                         </select>
                     </div>
                     <div className="space-y-1.5">
@@ -251,7 +253,7 @@ export default function AddPropertyForm() {
                     </div>
                 </div>
 
-                {/* 📸 MULTIPLE IMAGES UPLOAD FIELD (Up to 10 images) */}
+                {/* 📸 MULTIPLE IMAGES UPLOAD FIELD */}
                 <div className="space-y-3">
                     <label className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#5ddda1] block">
                         Property Gallery Images <span className="text-[#8e9192] font-normal lowercase">(At least 1 required, Max 10)</span>

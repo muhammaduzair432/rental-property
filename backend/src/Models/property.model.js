@@ -14,6 +14,15 @@ const propertySchema = new Schema(
       trim: true,
     },
 
+    type: {
+      type: String,
+      required: true,
+      default: "house",
+      enum: ["house", "apartment", "villa"], // 👈 Officially restricts and validates types
+      lowercase: true,
+      trim: true,
+    },
+
     price: {
       type: Number,
       required: true,
@@ -22,11 +31,16 @@ const propertySchema = new Schema(
     location: {
       type: String,
       required: true,
+      trim: true,
+    },
+
+    image: {
+      type: String, // Primary cover image fallback
     },
 
     images: [
       {
-        type: String, // cloudinary URLs
+        type: String, // Cloudinary URLs
       },
     ],
 
@@ -35,6 +49,10 @@ const propertySchema = new Schema(
         type: String,
       },
     ],
+
+    image: {
+      type: String, // Primary cover image fallback
+    },
 
     owner: {
       type: Schema.Types.ObjectId,
@@ -49,5 +67,8 @@ const propertySchema = new Schema(
   },
   { timestamps: true }
 );
+
+// ⚡ Add an index to make type-based searches lightning fast on MongoDB
+propertySchema.index({ type: 1, location: 1, price: 1 });
 
 export const Property = mongoose.model("Property", propertySchema);

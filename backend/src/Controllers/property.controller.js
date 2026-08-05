@@ -26,7 +26,7 @@ export const createProperty = asyncHandler(async (req, res) => {
     const imageFiles = req.files; 
     let cloudinaryImageUrls = [];
 
-    // ⚡ FIX: Upload images sequentially using a for...of loop to prevent ECONNRESET and 502 Bad Gateway errors
+    // ⚡ Upload images sequentially using a for...of loop to prevent connection resets
     if (imageFiles && imageFiles.length > 0) {
         for (const file of imageFiles) {
             try {
@@ -39,7 +39,6 @@ export const createProperty = asyncHandler(async (req, res) => {
                 }
             } catch (uploadErr) {
                 console.error(`Failed to upload file ${file.originalname}:`, uploadErr.message);
-                // Continue loop so one bad image doesn't crash the whole property creation
             }
         }
     }
@@ -48,23 +47,23 @@ export const createProperty = asyncHandler(async (req, res) => {
     if (amenities) {
         processedAmenities = Array.isArray(amenities) 
             ? amenities 
-            : amenities.split(",").map(item => item.trim());
+            : amenities.split(",").map(item => item.trim()).filter(Boolean);
     }
 
     const newProperty = await Property.create({
         title,
         description,
-        type: type || "house",
+        type: type ? type.toLowerCase().trim() : "house", // 👈 Safely map property type with a fallback
         price: Number(price),
         location,
         amenities: processedAmenities,
         images: cloudinaryImageUrls,
-        image: cloudinaryImageUrls[0] || "", // Primary cover fallback
+        image: cloudinaryImageUrls[0] || "", // Primary cover fallback image
         owner: req.user._id,
         isApproved: false
     });
 
-    // 🔥 FLOWCHART AUDIT LOG: Track property creation events
+    // 🔥 Track property creation events in audit logs
     await Log.create({
         actionType: "PROPERTY_CREATED",
         description: `Host [${req.user.username}] staged a new property listing: "${newProperty.title}" awaiting verification review.`,
@@ -207,9 +206,8 @@ export const updateProperty = asyncHandler(async (req, res) => {
     
     // 🛡️ Safe guard: fallback to {} if req.body is undefined
     const body = req.body || {};
-    const { title, description, price, location, amenities, existingImages } = body;
+    const { title, description, price, location, type, amenities, existingImages } = body;
     
-
     const property = await Property.findOne({ _id: propertyId, owner: req.user._id });
     if (!property) {
         throw new ApiError(404, "Property not found or unauthorized access.");
@@ -219,6 +217,11 @@ export const updateProperty = asyncHandler(async (req, res) => {
     if (description) property.description = description;
     if (price) property.price = Number(price);
     if (location) property.location = location;
+    
+    // ⚡ NEW: Safely update property type if provided in the update payload
+    if (type) {
+        property.type = type.toLowerCase().trim();
+    }
 
     if (amenities) {
         property.amenities = Array.isArray(amenities) 
@@ -251,11 +254,12 @@ export const updateProperty = asyncHandler(async (req, res) => {
     }
 
     property.images = finalImages;
+    property.image = finalImages[0] || ""; // Sync primary cover fallback image
     await property.save();
 
     return res.status(200).json({
         success: true,
-        message: "Property listing details, images, and amenities updated successfully.",
+        message: "Property listing details, type, images, and amenities updated successfully.",
         property
     });
 });

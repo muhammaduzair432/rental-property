@@ -19,6 +19,7 @@ export default function OwnerPropertiesList() {
     const [price, setPrice] = useState("");
     const [location, setLocation] = useState("");
     const [description, setDescription] = useState("");
+    const [propertyType, setPropertyType] = useState("house"); // 👈 NEW: Property type edit state
     
     // Images management states
     const [currentImages, setCurrentImages] = useState([]); // Existing URLs kept
@@ -55,6 +56,7 @@ export default function OwnerPropertiesList() {
         setPrice(property.pricePerNight || property.price || "");
         setLocation(property.location || "");
         setDescription(property.description || "");
+        setPropertyType(property.type || "house"); // 👈 NEW: Sync existing property type
         
         // Normalize existing images from property object safely
         const rawImages = property.images || [];
@@ -116,6 +118,7 @@ export default function OwnerPropertiesList() {
         formData.append("price", price);
         formData.append("location", location);
         formData.append("description", description);
+        formData.append("type", propertyType); // 👈 NEW: Append updated property type to form payload
         formData.append("existingImages", JSON.stringify(currentImages));
         formData.append("amenities", combinedAmenities.join(", "));
 
@@ -278,6 +281,22 @@ export default function OwnerPropertiesList() {
                                 <div className="space-y-1.5">
                                     <label className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#5ddda1] block">Title</label>
                                     <input type="text" value={title} disabled={loadingAction} onChange={(e) => setTitle(e.target.value)} required className="w-full text-xs p-3.5 border border-[#444748] rounded-none font-sans bg-[#0e0e0e] text-[#e5e2e1] focus:outline-none focus:border-[#5ddda1] focus:ring-1 focus:ring-[#5ddda1] disabled:opacity-50" />
+                                </div>
+
+                                {/* ⚡ NEW: Property Type Selector */}
+                                <div className="space-y-1.5">
+                                    <label className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#5ddda1] block">Property Type</label>
+                                    <select 
+                                        value={propertyType} 
+                                        disabled={loadingAction} 
+                                        onChange={(e) => setPropertyType(e.target.value)} 
+                                        required 
+                                        className="w-full text-xs p-3.5 border border-[#444748] rounded-none font-sans bg-[#0e0e0e] text-[#e5e2e1] focus:outline-none focus:border-[#5ddda1] focus:ring-1 focus:ring-[#5ddda1] cursor-pointer disabled:opacity-50"
+                                    >
+                                        <option value="house" className="bg-[#1c1b1b]">House</option>
+                                        <option value="apartment" className="bg-[#1c1b1b]">Apartment</option>
+                                        <option value="villa" className="bg-[#1c1b1b]">Luxury Villa</option>
+                                    </select>
                                 </div>
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
