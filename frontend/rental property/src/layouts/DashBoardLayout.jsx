@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Navigate, useNavigate, useLocation } from "react-router-dom";
 import { logoutSuccess, switchPortalRole } from "../store/authSlice.js";
+import { fetchAdminNotifications } from "../store/adminSlice.js"; // 👈 Import admin notifications thunk
 import UserDashboard from "../components/UserDashboard.jsx";
 import UserProfileModal from "../components/UserProfileModal.jsx";
 import AddPropertyForm from "../components/AddPropertyForm.jsx";
@@ -43,6 +44,16 @@ export default function DashBoardLayout() {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isSwitchingRole, setIsSwitchingRole] = useState(false);
 
+    const isOwner = user?.role === "owner";
+    const isAdmin = user?.role === "admin";
+
+    // ⚡ Trigger fetch for admin notifications on mount if user is an admin
+    useEffect(() => {
+        if (isAdmin) {
+            dispatch(fetchAdminNotifications());
+        }
+    }, [dispatch, isAdmin]);
+
     if (!user) {
         return <Navigate to="/auth" replace />;
     }
@@ -51,9 +62,6 @@ export default function DashBoardLayout() {
         dispatch(logoutSuccess());
         navigate("/auth");
     };
-
-    const isOwner = user?.role === "owner";
-    const isAdmin = user?.role === "admin";
 
     // ⚡ Resolve avatar across any common schema property name
     const userAvatar = user?.avatar || user?.avatarUrl || user?.profilePicture || user?.image;
@@ -132,7 +140,7 @@ export default function DashBoardLayout() {
                             <button
                                 onClick={handlePortalToggle}
                                 disabled={isSwitchingRole}
-                                className=" hover:bg-[#5ddda1] text-[#5ddda1] hover:text-[#003823] border border-[#5ddda1] px-3.5 py-2 text-[9px] font-bold uppercase tracking-widest rounded-none transition-all cursor-pointer shadow-sm disabled:opacity-40 flex items-center gap-2 whitespace-nowrap"
+                                className="hover:bg-[#5ddda1] text-[#5ddda1] hover:text-[#003823] border border-[#5ddda1] px-3.5 py-2 text-[9px] font-bold uppercase tracking-widest rounded-none transition-all cursor-pointer shadow-sm disabled:opacity-40 flex items-center gap-2 whitespace-nowrap"
                                 title="Switch between User and Owner portals"
                             >
                                 {isSwitchingRole && <div className="w-2.5 h-2.5 border-2 border-current border-t-transparent animate-spin"></div>}

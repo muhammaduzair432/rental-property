@@ -11,7 +11,9 @@ import {
     administrativeReviewPurge,  // 🔥 Injected for Bookings & Ops
     getSystemAuditLogs, 
     getAllSystemReviews,   
-    getTargetUserDetails        // 🔥 Injected for User Management
+    getTargetUserDetails,
+    getAdminNotifications
+         // 🔥 Injected for User Management
 } from "../Controllers/admin.controller.js";
 import { verifyJwt, authorizeRoles } from "../Middlewares/auth.middleware.js";
 
@@ -37,5 +39,8 @@ router.route("/reviews/delete/:reviewId").delete(administrativeReviewPurge);
 router.route("/operations/system-logs").get(getSystemAuditLogs);
 router.route("/reviews/all").get(getAllSystemReviews);
 router.route("/users/:userId").get(getTargetUserDetails);
+// In your main router file (e.g., api.routes.js or index.routes.js)
+// In admin.routes.js (assuming app.js mounts this router under /api/v2/admin)
+router.route("/notifications").get(verifyJwt, authorizeRoles("admin"), getAdminNotifications);
 
 export default router;

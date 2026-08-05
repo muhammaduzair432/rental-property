@@ -115,6 +115,17 @@ export const fetchSystemLogs = createAsyncThunk("admin/fetchSystemLogs", async (
     }
 });
 
+// 6. 🔔 Admin Notifications Feed Thunk
+export const fetchAdminNotifications = createAsyncThunk("admin/fetchAdminNotifications", async (_, thunkApi) => {
+    try {
+        const res = await api.get("admin/notifications"); 
+        // ⚡ FIX: Added `res.data?.notifications` check to match backend JSON response key
+        return res.data?.notifications || res.data?.data || res.data || [];
+    } catch (error) {
+        return thunkApi.rejectWithValue(error.response?.data?.message || error.message);
+    }
+});
+
 const adminSlice = createSlice({
     name: "admin",
     initialState: {
@@ -123,6 +134,7 @@ const adminSlice = createSlice({
         globalBookings: [],
         systemReports: {},
         systemLogs: [],
+        adminNotifications: [], // 👈 Tracking array for admin system alerts
         selectedUserDossier: null,
         loading: false,
         error: null,
@@ -167,6 +179,8 @@ const adminSlice = createSlice({
             })
             // System Logs
             .addCase(fetchSystemLogs.fulfilled, (state, action) => { state.systemLogs = action.payload; })
+            // Admin Notifications
+            .addCase(fetchAdminNotifications.fulfilled, (state, action) => { state.adminNotifications = action.payload; })
             .addCase(fetchTargetUserDetails.fulfilled, (state, action) => {
                 state.selectedUserDossier = action.payload;
             });

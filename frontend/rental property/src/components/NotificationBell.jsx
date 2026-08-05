@@ -1,26 +1,46 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchUserNotifications } from "../store/notificationsSlice.js";
+import { fetchAdminNotifications } from "../store/adminSlice.js";
 import NotificationModal from "./NotificationModal.jsx";
 
-export default function NotificationBell() {
+export default function NotificationBell({ notifications: propNotifications }) {
     const dispatch = useDispatch();
-    const { items = [] } = useSelector((state) => state.notifications || {});
+    const user = useSelector((state) => state.auth?.user);
+    const isAdmin = user?.role === "admin";
+    
+    // 🛡️ Pull from admin slice if admin role, otherwise use standard user slice (or passed prop)
+    const { adminNotifications = [] } = useSelector((state) => state.admin || {});
+    const { items: userItems = [] } = useSelector((state) => state.notifications || {});
+
+    const items = propNotifications || (isAdmin ? adminNotifications : userItems);
+
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     // ⚡ Store the ISO timestamp of when the user last opened the notifications modal
     const [lastSeenTimestamp, setLastSeenTimestamp] = useState(() => {
-        return localStorage.getItem("lastSeenNotificationTimestamp") || "1970-01-01T00:00:00.000Z";
+        return localStorage.getItem(isAdmin ? "adminLastSeenNotificationTimestamp" : "lastSeenNotificationTimestamp") || "1970-01-01T00:00:00.000Z";
     });
 
     useEffect(() => {
-        dispatch(fetchUserNotifications());
+        // Initial fetch based on role
+        if (isAdmin) {
+            dispatch(fetchAdminNotifications());
+        } else {
+            dispatch(fetchUserNotifications());
+        }
+
         // Live poll sync every 15 seconds to catch new incoming alerts dynamically
         const interval = setInterval(() => {
-            dispatch(fetchUserNotifications());
+            if (isAdmin) {
+                dispatch(fetchAdminNotifications());
+            } else {
+                dispatch(fetchUserNotifications());
+            }
         }, 15000);
+
         return () => clearInterval(interval);
-    }, [dispatch]);
+    }, [dispatch, isAdmin]);
 
     // ⚡ Dynamically calculate EXACT number of notifications created AFTER the last seen timestamp
     const unreadNewCount = items.filter((notif) => {
@@ -32,10 +52,10 @@ export default function NotificationBell() {
     const handleOpenModal = () => {
         setIsModalOpen(true);
         
-        // When modal opens, mark everything currently in the list as "seen" by saving the current time
+        // When modal opens, mark everything currently in the list as "seen"
         const currentTimestamp = new Date().toISOString();
         setLastSeenTimestamp(currentTimestamp);
-        localStorage.setItem("lastSeenNotificationTimestamp", currentTimestamp);
+        localStorage.setItem(isAdmin ? "adminLastSeenNotificationTimestamp" : "lastSeenNotificationTimestamp", currentTimestamp);
     };
 
     return (

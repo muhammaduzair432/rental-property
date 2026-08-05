@@ -7,6 +7,11 @@ const notificationSchema = new Schema(
       ref: "User",
       required: true,
     },
+    roleTarget: {
+      type: String,
+      enum: ["admin", "owner", "user"],
+      default: "user",
+    },
     message: {
       type: String,
       required: true,

@@ -315,3 +315,19 @@ export const getTargetUserDetails = asyncHandler(async (req, res) => {
         }
     });
 });
+
+export const getAdminNotifications = asyncHandler(async (req, res) => {
+    if (req.user?.role !== "admin") {
+        throw new ApiError(403, "Access denied. Admins only.");
+    }
+
+    const notifications = await Notification.find({ roleTarget: "admin" })
+        .sort({ createdAt: -1 })
+        .limit(50);
+
+    return res.status(200).json({
+        success: true,
+        count: notifications.length,
+        notifications
+    });
+});
