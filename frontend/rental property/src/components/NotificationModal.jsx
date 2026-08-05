@@ -11,7 +11,7 @@ export default function NotificationModal({ isOpen, onClose, notifications = [] 
                 <div className="flex justify-between items-center border-b border-[#353535] pb-4">
                     <div>
                         <span className="text-[9px] font-bold text-[#c4c7c7] uppercase tracking-[0.2em] block">System Activity Center</span>
-                        <h3 className="text-xs font-bold uppercase text-[#e5e2e1] tracking-wider mt-1">Role-Based Notifications ({notifications.length})</h3>
+                        <h3 className="text-xs font-bold uppercase text-[#e5e2e1] tracking-wider mt-1"> Notifications ({notifications.length})</h3>
                     </div>
                     <button 
                         type="button"
