@@ -91,7 +91,7 @@ export const createProperty = asyncHandler(async (req, res) => {
 //    👉 FLOWCHART COMPLIANCE: Locks down and blocks unapproved listings!
 // =========================================================================
 export const browseProperties = asyncHandler(async (req, res) => {
-    const { location, minPrice, maxPrice, amenities, search, page, limit } = req.query;
+    const { location, minPrice, maxPrice, amenities, search, type, page, limit } = req.query;
     
     const activePage = parseInt(page) || 1;
     const activeLimit = parseInt(limit) || 10;
@@ -105,7 +105,12 @@ export const browseProperties = asyncHandler(async (req, res) => {
         queryConditions.location = { $regex: location.trim(), $options: "i" };
     }
 
-    // B. 🔥 FIXED Global Search Bar: Forces MongoDB to match both conditions simultaneously
+    // B. Property Type Filter (e.g., house, apartment, villa)
+    if (type && type.trim() !== "" && type.toLowerCase() !== "all") {
+        queryConditions.type = type.toLowerCase().trim();
+    }
+
+    // C. 🔥 FIXED Global Search Bar: Forces MongoDB to match both conditions simultaneously
     if (search && search.trim() !== "") {
         queryConditions.$and = [
             { isApproved: true }, // Re-enforce verification constraint inside compound search array
@@ -118,14 +123,14 @@ export const browseProperties = asyncHandler(async (req, res) => {
         ];
     }
 
-    // C. Pricing Slider Filter
+    // D. Pricing Slider Filter
     if (minPrice || maxPrice) {
         queryConditions.price = {};
         if (minPrice) queryConditions.price.$gte = Number(minPrice);
         if (maxPrice) queryConditions.price.$lte = Number(maxPrice);
     }
 
-    // D. Amenities Checkboxes using $all array matcher
+    // E. Amenities Checkboxes using $all array matcher
     if (amenities && amenities.trim() !== "") {
         const amenitiesArray = amenities.split(",").map(item => item.trim());
         queryConditions.amenities = { $all: amenitiesArray };
@@ -134,7 +139,7 @@ export const browseProperties = asyncHandler(async (req, res) => {
     // Query Execution Layer with Pagination and Total Count Tracking
     const [properties, totalMatchingResults] = await Promise.all([
         Property.find(queryConditions)
-            .select("title description price location images amenities owner isApproved")
+            .select("title description price location type images amenities owner isApproved") // 👈 Added "type" here so frontend receives it
             .skip(skipValue)
             .limit(activeLimit)
             .sort({ createdAt: -1 }), 
@@ -157,7 +162,6 @@ export const browseProperties = asyncHandler(async (req, res) => {
         data: properties
     });
 });
-
 // =========================================================================
 // 3. FETCH SINGLE PROPERTY DETAILS (GET /api/v2/properties/details/:propertyId)
 // =========================================================================

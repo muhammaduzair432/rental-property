@@ -104,7 +104,7 @@ export default function UserDashboard({
 
     const safeProperties = Array.isArray(properties) ? properties : [];
 
-    // ⚡ Clean & Precise Filtering Logic using database `type` field
+    // ⚡ Bulletproof Filtering Logic with Multi-Layer Type Matching & Search
     const filteredProperties = safeProperties.filter(item => {
         if (!item) return false;
 
@@ -112,8 +112,19 @@ export default function UserDashboard({
             (item.description || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
             (item.location || "").toLowerCase().includes(searchQuery.toLowerCase());
 
-        const itemType = (item.type || "").toLowerCase();
-        const matchesType = selectedFilter === "all" || itemType === selectedFilter.toLowerCase();
+        // Multi-layer type match: checks database `type` field first, falls back to text scanning
+        const itemType = (item.type || "").toLowerCase().trim();
+        const filterVal = (selectedFilter || "all").toLowerCase().trim();
+
+        const isHouseMatch = itemType === "house" || (item.description || "").toLowerCase().includes("house");
+        const isApartmentMatch = itemType === "apartment" || (item.description || "").toLowerCase().includes("apartment");
+        const isVillaMatch = itemType === "villa" || (item.description || "").toLowerCase().includes("villa");
+
+        const matchesType = filterVal === "all" || 
+            itemType === filterVal ||
+            (filterVal === "house" && isHouseMatch) ||
+            (filterVal === "apartment" && isApartmentMatch) ||
+            (filterVal === "villa" && isVillaMatch);
 
         const itemPrice = Number(item.pricePerNight || item.price || 0);
         const matchesPrice = itemPrice >= minPrice && (maxPrice === Infinity || itemPrice <= maxPrice);
@@ -147,7 +158,7 @@ export default function UserDashboard({
         }
     };
 
-    // ⚡ Handle Become a Partner Button Click (Switches role to owner & syncs profile)
+    // ⚡ Handle Become a Partner Button Click
     const handleBecomePartner = async () => {
         setIsSwitchingPartner(true);
         try {

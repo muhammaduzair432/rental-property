@@ -9,7 +9,6 @@ export default function OwnerPropertiesList() {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     
-    // ⚡ FIXED: Read `loadingAction` to track update/delete loading states precisely
     const { ownerProperties = [], loadingOwnerList, loadingAction, successMessage } = useSelector((state) => state.properties || {});
 
     const [editingProperty, setEditingProperty] = useState(null);
@@ -19,11 +18,11 @@ export default function OwnerPropertiesList() {
     const [price, setPrice] = useState("");
     const [location, setLocation] = useState("");
     const [description, setDescription] = useState("");
-    const [propertyType, setPropertyType] = useState("house"); // 👈 NEW: Property type edit state
+    const [propertyType, setPropertyType] = useState("house"); // 👈 Property type edit state
     
     // Images management states
-    const [currentImages, setCurrentImages] = useState([]); // Existing URLs kept
-    const [newImageFiles, setNewImageFiles] = useState([]); // New File objects to upload
+    const [currentImages, setCurrentImages] = useState([]); 
+    const [newImageFiles, setNewImageFiles] = useState([]); 
     const [newImagePreviews, setNewImagePreviews] = useState([]);
 
     // Amenities management states
@@ -56,9 +55,8 @@ export default function OwnerPropertiesList() {
         setPrice(property.pricePerNight || property.price || "");
         setLocation(property.location || "");
         setDescription(property.description || "");
-        setPropertyType(property.type || "house"); // 👈 NEW: Sync existing property type
+        setPropertyType((property.type || "house").toLowerCase().trim()); // 👈 Sync existing property type safely
         
-        // Normalize existing images from property object safely
         const rawImages = property.images || [];
         const singleImage = property.image ? [property.image] : [];
         const combinedExisting = Array.from(new Set([...singleImage, ...rawImages])).filter(Boolean);
@@ -75,7 +73,6 @@ export default function OwnerPropertiesList() {
         setCurrentImages(currentImages.filter((_, idx) => idx !== indexToRemove));
     };
 
-    // 📸 Robust accumulative new image selection handler for editing
     const handleNewImagesChange = (e) => {
         const files = Array.from(e.target.files);
         if (files.length > 0) {
@@ -118,11 +115,10 @@ export default function OwnerPropertiesList() {
         formData.append("price", price);
         formData.append("location", location);
         formData.append("description", description);
-        formData.append("type", propertyType); // 👈 NEW: Append updated property type to form payload
+        formData.append("type", propertyType); // 👈 Appends updated property type to backend payload
         formData.append("existingImages", JSON.stringify(currentImages));
         formData.append("amenities", combinedAmenities.join(", "));
 
-        // 📸 Append each staged file under the exact key "images" expected by backend upload middleware
         if (newImageFiles && newImageFiles.length > 0) {
             newImageFiles.forEach((file) => {
                 formData.append("images", file);
@@ -132,7 +128,6 @@ export default function OwnerPropertiesList() {
         const result = await dispatch(updatePropertyDetails({ propertyId: pId, formData }));
         if (updatePropertyDetails.fulfilled.match(result)) {
             setEditingProperty(null);
-            // ⚡ Instantly re-fetch inventory to synchronize newly uploaded image paths from DB
             dispatch(fetchOwnerProperties());
         }
     };
@@ -180,7 +175,6 @@ export default function OwnerPropertiesList() {
                                 onClick={() => navigate(`/property/${pId}`)}
                                 className="bg-[#1c1b1b] border border-[#353535] hover:border-[#5ddda1] rounded-none overflow-hidden shadow-2xl flex flex-col cursor-pointer group transition-all duration-300 transform hover:-translate-y-1"
                             >
-                                {/* Image Container */}
                                 <div className="h-52 bg-[#0e0e0e] relative border-b border-[#353535] overflow-hidden">
                                     {mainImg ? (
                                         <img 
@@ -193,20 +187,16 @@ export default function OwnerPropertiesList() {
                                             No Asset Image
                                         </div>
                                     )}
-                                    {/* Price Tag */}
                                     <span className="absolute bottom-3 left-3 px-3 py-1.5 bg-[#080808]/90 text-[#5ddda1] text-[10px] font-black rounded-none uppercase tracking-wider border border-[#5ddda1]">
                                         ${item.pricePerNight || item.price || "0"} / night
                                     </span>
-                                    {/* Ref ID */}
                                     <span className="absolute top-2 right-2 bg-[#080808]/90 text-[#8e9192] text-[8px] font-mono px-2 py-0.5 uppercase tracking-wider border border-[#444748]">
                                         REF: {pId.slice(-6)}
                                     </span>
                                 </div>
 
-                                {/* Content Body */}
                                 <div className="p-5 flex-1 flex flex-col justify-between space-y-5">
                                     <div className="space-y-2">
-                                        {/* Type & Status Header */}
                                         <div className="flex justify-between items-center text-[9px] font-bold uppercase tracking-wider">
                                             <span className="text-[#5ddda1] bg-[#083823] px-2 py-0.5 border border-[#5ddda1]">
                                                 {item.type || "Rental Unit"}
@@ -215,7 +205,6 @@ export default function OwnerPropertiesList() {
                                                 ● {item.isApproved ? "Verified" : "Pending Review"}
                                             </span>
                                         </div>
-                                        {/* Title & Description */}
                                         <h4 className="text-sm font-serif font-bold uppercase text-[#e5e2e1] group-hover:text-[#5ddda1] transition-colors line-clamp-1">
                                             {item.title}
                                         </h4>
@@ -224,7 +213,6 @@ export default function OwnerPropertiesList() {
                                         </p>
                                     </div>
 
-                                    {/* Action Buttons */}
                                     <div className="flex items-center gap-3 pt-4 border-t border-[#353535]">
                                         <button 
                                             onClick={(e) => startEditing(e, item)}
@@ -251,14 +239,12 @@ export default function OwnerPropertiesList() {
                 <div className="fixed inset-0 w-screen h-screen z-[99999] flex items-center justify-center bg-[#080808]/90 backdrop-blur-md p-4 overflow-y-auto">
                     <form onSubmit={handleUpdateSubmit} className="bg-[#1c1b1b] border border-[#353535] w-full max-w-3xl rounded-none shadow-2xl overflow-hidden flex flex-col my-auto max-h-[95vh] relative">
                         
-                        {/* ⚡ THEMED LOADING PROGRESS BAR ANIMATION */}
                         {loadingAction && (
                             <div className="absolute top-0 left-0 w-full h-1.5 bg-[#0e0e0e] overflow-hidden z-50">
                                 <div className="w-full h-full bg-[#5ddda1] animate-[pulse_1s_infinite] shadow-[0_0_12px_#5ddda1]"></div>
                             </div>
                         )}
 
-                        {/* Modal Header */}
                         <div className="bg-[#0e0e0e] border-b border-[#353535] px-6 py-5 flex items-center justify-between sticky top-0 z-10">
                             <h3 className="text-xs font-bold uppercase text-[#e5e2e1] tracking-widest">
                                 Edit Listing: <span className="text-[#5ddda1] font-mono">{editingProperty.title}</span>
@@ -273,17 +259,15 @@ export default function OwnerPropertiesList() {
                             </button>
                         </div>
 
-                        {/* Scrollable Modal Body */}
                         <div className="p-6 sm:p-8 space-y-6 flex-1 overflow-y-auto">
                             
-                            {/* Basic Info Fields */}
                             <div className="space-y-4">
                                 <div className="space-y-1.5">
                                     <label className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#5ddda1] block">Title</label>
                                     <input type="text" value={title} disabled={loadingAction} onChange={(e) => setTitle(e.target.value)} required className="w-full text-xs p-3.5 border border-[#444748] rounded-none font-sans bg-[#0e0e0e] text-[#e5e2e1] focus:outline-none focus:border-[#5ddda1] focus:ring-1 focus:ring-[#5ddda1] disabled:opacity-50" />
                                 </div>
 
-                                {/* ⚡ NEW: Property Type Selector */}
+                                {/* Property Type Selector */}
                                 <div className="space-y-1.5">
                                     <label className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#5ddda1] block">Property Type</label>
                                     <select 
@@ -291,7 +275,7 @@ export default function OwnerPropertiesList() {
                                         disabled={loadingAction} 
                                         onChange={(e) => setPropertyType(e.target.value)} 
                                         required 
-                                        className="w-full text-xs p-3.5 border border-[#444748] rounded-none font-sans bg-[#0e0e0e] text-[#e5e2e1] focus:outline-none focus:border-[#5ddda1] focus:ring-1 focus:ring-[#5ddda1] cursor-pointer disabled:opacity-50"
+                                        className="w-full text-xs p-3.5 border border-[#444748] rounded-none font-sans bg-[#0e0e0e] text-[#e5e2e1] focus:outline-none focus:border-[#5ddda1] focus:ring-1 focus:ring-[#5ddda1] cursor-pointer disabled:opacity-50 uppercase tracking-wider font-bold"
                                     >
                                         <option value="house" className="bg-[#1c1b1b]">House</option>
                                         <option value="apartment" className="bg-[#1c1b1b]">Apartment</option>
@@ -316,13 +300,12 @@ export default function OwnerPropertiesList() {
                                 </div>
                             </div>
 
-                            {/* 🖼️ Manage Images Section */}
+                            {/* Images Section */}
                             <div className="space-y-3.5 border-t border-[#353535] pt-5">
                                 <label className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#5ddda1] block">
                                     Manage Existing Images <span className="text-[#8e9192] font-normal lowercase">(Click '✕' to stage for removal)</span>
                                 </label>
                                 
-                                {/* Existing Images Grid */}
                                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                                     {currentImages.map((imgUrl, idx) => (
                                         <div key={idx} className="relative h-24 rounded-none border border-[#444748] overflow-hidden group bg-[#0e0e0e]">
@@ -351,7 +334,6 @@ export default function OwnerPropertiesList() {
                                     className="w-full text-xs text-[#c4c7c7] file:mr-4 file:py-2.5 file:px-4 file:rounded-none file:border-0 file:text-[9px] file:font-bold file:uppercase file:bg-[#5ddda1] file:text-[#003823] file:cursor-pointer hover:file:bg-[#08a56e] bg-[#0e0e0e] border border-[#444748] disabled:opacity-50" 
                                 />
                                 
-                                {/* Newly Selected Image Previews Grid */}
                                 {newImagePreviews.length > 0 && (
                                     <div className="space-y-2 pt-2">
                                         <span className="text-[9px] font-bold uppercase tracking-[0.15em] text-[#8e9192] block">Staged New Uploads:</span>
@@ -377,7 +359,7 @@ export default function OwnerPropertiesList() {
                                 )}
                             </div>
 
-                            {/* 🛋️ Amenities Section */}
+                            {/* Amenities Section */}
                             <div className="space-y-3.5 border-t border-[#353535] pt-5">
                                 <label className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#5ddda1] block">Property Amenities</label>
                                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
