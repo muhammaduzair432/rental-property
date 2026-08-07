@@ -30,7 +30,7 @@ export default function MyBookingsPage() {
 
             const list = Array.isArray(bookingsData) ? bookingsData : [];
 
-            // Filter out any cancelled bookings returned by backend
+            // Filter out any cancelled bookings returned by backend database ledger
             const activeBookings = list.filter((b) => {
                 const status = (b.status || "").toLowerCase();
                 return status !== "cancelled" && status !== "canceled";
@@ -45,9 +45,9 @@ export default function MyBookingsPage() {
         }
     };
 
-    // Immediate cancellation & removal from list
+    // Cancellation handler aligned with ledger strategy & concession tracking
     const handleCancel = async (bookingId) => {
-        if (!window.confirm("Are you sure you want to cancel this reservation?")) return;
+        if (!window.confirm("Are you sure you want to cancel or terminate this reservation?")) return;
 
         try {
             setCancelLoadingId(bookingId);
@@ -56,10 +56,18 @@ export default function MyBookingsPage() {
             // Call backend cancellation API
             const res = await api.put(`bookings/cancel/${bookingId}`);
 
-            // Show success message
-            setSuccessMessage(res.data?.message || "Reservation canceled successfully.");
+            // Extract structured cancellation feedback from ledger response if available
+            const cancellationDetails = res.data?.data;
+            let displayMessage = res.data?.message || "Reservation successfully updated.";
+            
+            if (cancellationDetails?.cancellationType === "CANCELLED_MID_STAY") {
+                displayMessage = `Mid-stay cancellation logged. Owner concession applied: $${cancellationDetails.ownerConcessionApplied.toFixed(2)}`;
+            }
 
-            // ⚡ IMMEDIATELY filter out and remove booking from state & update count
+            // Show success summary message
+            setSuccessMessage(displayMessage);
+
+            // ⚡ IMMEDIATELY filter out and remove booking from active state view
             setUserBookings((prevBookings) =>
                 prevBookings.filter((booking) => {
                     const bId = booking._id || booking.id;
@@ -67,14 +75,14 @@ export default function MyBookingsPage() {
                 })
             );
 
-            // Clear success message after 3 seconds
+            // Clear success message after 5 seconds
             setTimeout(() => {
                 setSuccessMessage(null);
-            }, 3000);
+            }, 5000);
 
         } catch (err) {
             console.error("Cancel booking error:", err);
-            setError(err.response?.data?.message || err.message || "Failed to cancel reservation.");
+            setError(err.response?.data?.message || err.message || "Failed to process cancellation.");
         } finally {
             setCancelLoadingId(null);
         }
@@ -165,7 +173,7 @@ export default function MyBookingsPage() {
                     <div className="p-16 sm:p-20 flex flex-col items-center justify-center space-y-4 bg-[#1c1b1b] border border-[#353535]">
                         <div className="w-8 h-8 border-2 border-[#5ddda1] border-t-transparent rounded-none animate-spin"></div>
                         <div className="text-[10px] font-bold tracking-[0.25em] text-[#c4c7c7] uppercase font-mono text-center">
-                            Syncing reservation logs...
+                            Syncing reservation ledger logs...
                         </div>
                     </div>
                 ) : userBookings.length === 0 ? (
@@ -292,7 +300,7 @@ export default function MyBookingsPage() {
                                             disabled={cancelLoadingId === bookingId}
                                             className="w-full lg:w-auto px-6 py-3 bg-[#080808] hover:bg-[#93000a] text-[#ffb4ab] hover:text-[#ffdad6] border border-[#444748] hover:border-[#93000a] text-[10px] font-bold uppercase tracking-[0.15em] rounded-none transition-all duration-300 cursor-pointer disabled:opacity-40 shadow-lg text-center"
                                         >
-                                            {cancelLoadingId === bookingId ? "Revoking..." : "Cancel Reservation"}
+                                            {cancelLoadingId === bookingId ? "Processing..." : "Cancel Reservation"}
                                         </button>
                                     </div>
 

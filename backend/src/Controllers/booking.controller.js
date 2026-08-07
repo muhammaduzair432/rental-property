@@ -132,30 +132,95 @@ export const getMyBookings = asyncHandler(async (req, res) => {
 // ==========================================
 // 3. CANCEL BOOKING (PUT /api/v2/bookings/cancel/:bookingId)
 // ==========================================
+
+
 export const cancelBooking = asyncHandler(async (req, res) => {
-    const { bookingId } = req.params; 
+    const { bookingId } = req.params;
     const tenantId = req.user._id;
 
-    // 🗑️ PERMANENT DELETE: Deletes the booking document directly from MongoDB
-    const deletedBooking = await Booking.findOneAndDelete({ 
+    // 1. Find the existing booking record securely
+    const booking = await Booking.findOne({ 
         _id: bookingId, 
         user: tenantId 
-    });
+    }).populate("property");
 
-    if (!deletedBooking) {
-        throw new ApiError(404, "Booking record not found or already deleted.");
+    if (!booking) {
+        throw new ApiError(404, "Booking record not found or unauthorized.");
     }
 
-    // 🔥 AUDIT LOG: Track booking cancellation/deletion
+    // Prevent re-canceling an already cancelled or completed stay
+    if (booking.status === "cancelled" || booking.status === "completed") {
+        throw new ApiError(400, "This booking has already been processed.");
+    }
+
+    const now = new Date();
+    const checkInDate = new Date(booking.checkInDate);
+    const checkOutDate = new Date(booking.checkOutDate);
+
+    // Calculate total days and daily price safely
+    const totalDays = Math.ceil(Math.abs(checkOutDate - checkInDate) / (1000 * 60 * 60 * 24)) || 1;
+    const dailyPrice = booking.totalPrice / totalDays;
+
+    let cancellationType = "CANCELLED_BEFORE_CHECKIN";
+    let ownerConcessionAmount = 0;
+    let finalOwnerEarnings = 0;
+
+    // 2. Determine if it's a Mid-Stay Cancellation (User is checking out early)
+    if (now >= checkInDate && now < checkOutDate) {
+        cancellationType = "CANCELLED_MID_STAY";
+
+        // Days actually stayed until today
+        const daysStayed = Math.ceil(Math.abs(now - checkInDate) / (1000 * 60 * 60 * 24));
+        const actualDaysUsed = Math.min(Math.max(daysStayed, 1), totalDays);
+        
+        // Unused remaining days
+        const unusedDays = totalDays - actualDaysUsed;
+
+        // Financial Math based on our final strategy:
+        const earnedForDaysUsed = actualDaysUsed * dailyPrice;
+        const unusedValue = unusedDays * dailyPrice;
+        
+        // 10% owner concession on the unused portion
+        ownerConcessionAmount = unusedValue * 0.10;
+        
+        // Final total credited to the owner's ledger for this broken stay
+        finalOwnerEarnings = earnedForDaysUsed + ownerConcessionAmount;
+
+        // Adjust check-out date in database to reflect early departure (frees up calendar dates)
+        booking.checkOutDate = now; 
+    } else {
+        // Cancelled before check-in (Standard policy)
+        // If within final 48 hours, count as forfeited; otherwise clean cancellation
+        const hoursUntilCheckIn = (checkInDate - now) / (1000 * 60 * 60);
+        if (hoursUntilCheckIn <= 48 && hoursUntilCheckIn > 0) {
+            finalOwnerEarnings = booking.totalPrice; // Last-minute penalty protection for owner
+        } else {
+            finalOwnerEarnings = 0; // Full release
+        }
+    }
+
+    // 3. Update booking status instead of deleting permanently
+    booking.status = "cancelled";
+    booking.ownerEarnings = finalOwnerEarnings;
+    await booking.save();
+
+    // 🔥 AUDIT LOG: Track cancellation event with ledger impact
     await Log.create({
         actionType: "BOOKING_CANCELLATION",
-        description: `User [${req.user.username}] cancelled/deleted booking record ID [${bookingId}].`,
+        description: `User [${req.user.username}] cancelled booking ID [${bookingId}]. Type: ${cancellationType}. Owner concession logged: $${ownerConcessionAmount.toFixed(2)}.`,
         performedBy: req.user._id
     });
 
     return res.status(200).json({
         success: true,
-        message: "Booking deleted successfully from database."
+        message: "Booking successfully cancelled and updated in the ledger.",
+        data: {
+            bookingId: booking._id,
+            status: booking.status,
+            cancellationType,
+            ownerConcessionApplied: ownerConcessionAmount,
+            finalOwnerCreditedEarnings: finalOwnerEarnings
+        }
     });
 });
 

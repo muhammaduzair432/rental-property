@@ -12,8 +12,9 @@ export default function OwnerEarningsPage() {
 
     // ⚡ Extract metrics directly from your backend's 'analytics' payload object
     const analyticsData = overview.analytics || overview;
-    const totalEarnings = analyticsData.grandTotalEarnings || analyticsData.totalEarnings || 0;
-    const confirmedCount = analyticsData.totalConfirmedBookingsCount || analyticsData.confirmedBookingsCount || 0;
+    const unlockedEarnings = analyticsData.grandTotalEarnings || analyticsData.totalEarnings || 0;
+    const pendingEscrow = analyticsData.pendingEscrowBalance || 0; // Optional field if your backend calculates pending balance
+    const unlockedCount = analyticsData.totalConfirmedBookingsCount || analyticsData.confirmedBookingsCount || 0;
     const performanceList = analyticsData.propertyPerformanceBreakdown || analyticsData.earningsHistory || [];
 
     return (
@@ -29,13 +30,13 @@ export default function OwnerEarningsPage() {
 
                 <div className="relative z-10 space-y-2 max-w-2xl">
                     <span className="text-[9px] sm:text-[10px] font-bold text-[#5ddda1] uppercase tracking-[0.3em]">
-                        FINANCIAL LEDGER
+                        ESCROW LEDGER & CHECKOUT COMPLETION
                     </span>
                     <h2 className="text-xl sm:text-3xl font-serif font-bold uppercase text-[#e5e2e1] tracking-tight">
                         Earnings & Payouts Report
                     </h2>
                     <p className="text-xs sm:text-sm text-[#c4c7c7] font-sans leading-relaxed">
-                        Track revenue streams generated from confirmed tenant stays across your portfolio properties.
+                        Funds from active stays are held securely in platform escrow and unlock automatically once the checkout date passes.
                     </p>
                 </div>
             </div>
@@ -46,15 +47,24 @@ export default function OwnerEarningsPage() {
                 </div>
             )}
 
-            {/* Metrics Grid */}
+            {/* Metrics Grid: Unlocked vs Escrow Pending */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="bg-[#1c1b1b] p-6 rounded-none border border-[#353535] shadow-2xl space-y-2">
-                    <span className="text-[9px] font-bold text-[#8e9192] uppercase tracking-[0.2em] block">Total Confirmed Revenue</span>
-                    <h3 className="text-2xl sm:text-3xl font-serif font-bold text-[#5ddda1]">${Number(totalEarnings).toLocaleString()}</h3>
+                    <div className="flex justify-between items-center">
+                        <span className="text-[9px] font-bold text-[#5ddda1] uppercase tracking-[0.2em] block">Unlocked Available Revenue</span>
+                        <span className="text-[8px] bg-[#083823] text-[#5ddda1] px-2 py-0.5 font-bold uppercase">Ready</span>
+                    </div>
+                    <h3 className="text-2xl sm:text-3xl font-serif font-bold text-[#5ddda1]">${Number(unlockedEarnings).toLocaleString()}</h3>
+                    <p className="text-[10px] text-[#8e9192]">Stays successfully completed past checkout date.</p>
                 </div>
+
                 <div className="bg-[#1c1b1b] p-6 rounded-none border border-[#353535] shadow-2xl space-y-2">
-                    <span className="text-[9px] font-bold text-[#8e9192] uppercase tracking-[0.2em] block">Confirmed Stays</span>
-                    <h3 className="text-2xl sm:text-3xl font-serif font-bold text-[#e5e2e1]">{confirmedCount} <span className="text-xs font-sans uppercase text-[#8e9192]">Bookings</span></h3>
+                    <div className="flex justify-between items-center">
+                        <span className="text-[9px] font-bold text-[#8e9192] uppercase tracking-[0.2em] block">Completed Stays Count</span>
+                        <span className="text-[8px] bg-[#2a2a2a] text-[#c4c7c7] px-2 py-0.5 font-bold uppercase">Archive</span>
+                    </div>
+                    <h3 className="text-2xl sm:text-3xl font-serif font-bold text-[#e5e2e1]">{unlockedCount} <span className="text-xs font-sans uppercase text-[#8e9192]">Stays</span></h3>
+                    <p className="text-[10px] text-[#8e9192]">Total processed and unlocked reservation units.</p>
                 </div>
             </div>
 
@@ -62,19 +72,19 @@ export default function OwnerEarningsPage() {
             <div className="bg-[#1c1b1b] p-6 sm:p-8 rounded-none border border-[#353535] shadow-2xl space-y-6">
                 <div>
                     <span className="text-[9px] font-bold text-[#8e9192] uppercase tracking-[0.2em] block">PORTFOLIO ANALYTICS</span>
-                    <h3 className="text-base font-serif font-bold uppercase tracking-wider text-[#e5e2e1] mt-1">Property Performance Breakdown</h3>
+                    <h3 className="text-base font-serif font-bold uppercase tracking-wider text-[#e5e2e1] mt-1">Property Performance Breakdown (Unlocked Revenue)</h3>
                 </div>
 
                 {loading ? (
                     <div className="p-16 flex flex-col items-center justify-center space-y-3 bg-[#0e0e0e] border border-[#353535]">
                         <div className="w-8 h-8 border-2 border-[#5ddda1] border-t-transparent rounded-none animate-spin"></div>
                         <div className="text-[10px] font-bold tracking-[0.25em] text-[#8e9192] uppercase font-mono">
-                            Analyzing Revenue Streams...
+                            Syncing Escrow Ledger Matrix...
                         </div>
                     </div>
                 ) : performanceList.length === 0 ? (
                     <div className="bg-[#0e0e0e] p-12 border border-dashed border-[#444748] text-center text-xs font-bold text-[#8e9192] uppercase rounded-none tracking-widest shadow-xl">
-                        No property earnings records found yet.
+                        No unlocked property earnings found yet.
                     </div>
                 ) : (
                     <div className="overflow-x-auto border border-[#353535]">
@@ -84,8 +94,8 @@ export default function OwnerEarningsPage() {
                                     <th className="py-4 px-5">Property Unit</th>
                                     <th className="py-4 px-5">Location</th>
                                     <th className="py-4 px-5">Base Rate</th>
-                                    <th className="py-4 px-5 text-center">Bookings Count</th>
-                                    <th className="py-4 px-5 text-right">Revenue Generated</th>
+                                    <th className="py-4 px-5 text-center">Completed Stays</th>
+                                    <th className="py-4 px-5 text-right">Unlocked Revenue</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-[#353535] font-medium text-[#e5e2e1]">
@@ -101,7 +111,9 @@ export default function OwnerEarningsPage() {
                                             <td className="py-4 px-5 text-[#c4c7c7] font-sans">{item.location}</td>
                                             <td className="py-4 px-5 font-mono text-[#c4c7c7]">${item.basePricePerNight} / night</td>
                                             <td className="py-4 px-5 text-center font-mono font-bold text-[#e5e2e1]">{item.totalBookingsCount}</td>
-                                            <td className="py-4 px-5 text-right font-mono font-bold text-[#5ddda1]">${item.revenueGenerated}</td>
+                                            <td className="py-4 px-5 text-right font-mono font-bold text-[#5ddda1]">
+                                                ${Number(item.revenueGenerated || 0).toLocaleString()}
+                                            </td>
                                         </tr>
                                     );
                                 })}
