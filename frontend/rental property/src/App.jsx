@@ -7,6 +7,7 @@ import MyBookingsPage from "./components/MyBookingsPage.jsx";
 import MyFavoritesPage from "./components/MyFavoritesPage.jsx"; 
 import OwnerPropertiesList from "./components/OwnerPropertiesList.jsx";
 import OwnerEarningsPage from "./components/OwnerEarningsPage.jsx";
+import PrivacyPolicyPage from "./components/PrivacyPolicyPage.jsx";
 
 export default function App() {
   return (
@@ -24,7 +25,7 @@ export default function App() {
       {/* ❤️ Favorites routes */}
       <Route path="/favorites" element={<MyFavoritesPage />} />
       <Route path="/favourites" element={<MyFavoritesPage />} />
-
+      <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
       {/* Catch-all fallback */}
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>

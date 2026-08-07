@@ -10,9 +10,9 @@ export default function PropertyDetailsPage() {
     const navigate = useNavigate();
     const dispatch = useDispatch();
 
-    // Get current logged-in user to check their role
+    // Get current logged-in user to check ID and role
     const { user } = useSelector((state) => state.auth || {});
-    const isOwner = user?.role === "owner";
+    const isOwnerRole = user?.role === "owner";
 
     const { selectedProperty, loadingDetails, errorDetails } = useSelector(
         (state) => state.properties || {}
@@ -54,10 +54,23 @@ export default function PropertyDetailsPage() {
     const totalNights = calculateNights();
     const totalPrice = totalNights * pricePerNight;
 
+    // 🛡️ Bulletproof check: Is the current logged-in user the absolute creator/owner of this property?
+    const propertyOwnerId = typeof selectedProperty?.owner === "object" 
+        ? selectedProperty?.owner?._id || selectedProperty?.owner?.id 
+        : selectedProperty?.owner || selectedProperty?.ownerId;
+
+    const currentUserId = user?._id || user?.id;
+    const isMyOwnProperty = Boolean(propertyOwnerId && currentUserId && String(propertyOwnerId) === String(currentUserId));
+
     // Handle Redux Booking Submission
     const handleBooking = async (e) => {
         e.preventDefault();
         setLocalError(null);
+
+        if (isMyOwnProperty) {
+            setLocalError("You cannot book your own property asset.");
+            return;
+        }
 
         if (!checkIn || !checkOut) {
             setLocalError("Please select both check-in and check-out dates.");
@@ -92,7 +105,7 @@ export default function PropertyDetailsPage() {
 
     // ⚡ Dynamic Back Navigation Handler based on User Role
     const handleBackNavigation = () => {
-        if (isOwner) {
+        if (isOwnerRole) {
             navigate(-1);
         } else {
             navigate("/dashboard");
@@ -120,7 +133,7 @@ export default function PropertyDetailsPage() {
                     onClick={handleBackNavigation} 
                     className="px-6 py-3 bg-[#5ddda1] hover:bg-[#08a56e] text-[#003823] text-xs font-bold uppercase tracking-widest rounded-none transition-all cursor-pointer shadow-lg"
                 >
-                    {isOwner ? "Back To My Properties" : "Back To Catalog"}
+                    {isOwnerRole ? "Back To My Properties" : "Back To Catalog"}
                 </button>
             </div>
         );
@@ -152,7 +165,7 @@ export default function PropertyDetailsPage() {
                         onClick={handleBackNavigation} 
                         className="text-xs font-bold uppercase tracking-widest text-[#5ddda1] hover:underline flex items-center gap-2 cursor-pointer transition-all"
                     >
-                        ← {isOwner ? "Back To My Properties" : "Back To Catalog"}
+                        ← {isOwnerRole ? "Back To My Properties" : "Back To Catalog"}
                     </button>
                     <span className="text-[9px] font-mono font-bold text-[#8e9192] uppercase tracking-[0.2em]">
                         Asset ID: {selectedProperty._id || selectedProperty.id}
@@ -265,10 +278,10 @@ export default function PropertyDetailsPage() {
                             <span className="text-xs font-bold text-[#8e9192] uppercase tracking-widest">/ night</span>
                         </div>
                         
-                        {isOwner ? (
+                        {isMyOwnProperty ? (
                             <div className="bg-[#0e0e0e] border border-[#353535] p-5 rounded-none space-y-2 text-xs text-[#c4c7c7]">
-                                <span className="font-bold uppercase tracking-[0.2em] text-[#5ddda1] block">🛡️ Owner Inspection Mode</span>
-                                <p className="text-xs leading-relaxed">You are viewing your own property asset listing details. Tenant reservation booking actions are disabled for property owners.</p>
+                                <span className="font-bold uppercase tracking-[0.2em] text-[#ffb4ab] block">🚫 Booking Restricted</span>
+                                <p className="text-xs leading-relaxed">You cannot book your own property asset. Reservation actions are disabled for property creators.</p>
                             </div>
                         ) : (
                             <form onSubmit={handleBooking} className="space-y-5">

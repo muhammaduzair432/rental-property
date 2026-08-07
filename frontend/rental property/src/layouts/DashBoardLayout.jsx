@@ -355,7 +355,7 @@ export default function DashBoardLayout() {
                         &copy; {new Date().getFullYear()} RENTAL PROPERTY. CURATED EXCELLENCE.
                     </div>
                     <div className="flex space-x-6 mt-4 sm:mt-0">
-                        <span className="hover:text-[#5ddda1] cursor-pointer transition-colors">Privacy Policy</span>
+                        <span className="hover:text-[#5ddda1] cursor-pointer transition-colors" onClick={() => navigate("/privacy-policy")}>Privacy Policy</span>
                         <span className="hover:text-[#5ddda1] cursor-pointer transition-colors">Terms of Service</span>
                         <span className="hover:text-[#5ddda1] cursor-pointer transition-colors">Support</span>
                     </div>
