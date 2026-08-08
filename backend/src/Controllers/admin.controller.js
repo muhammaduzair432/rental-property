@@ -1,7 +1,7 @@
 import { Property } from "../Models/property.model.js";
 import { Notification } from "../Models/notification.model.js";
-import { asyncHandler } from "../utils/asyncHandler.js";
-import { ApiError } from "../utils/apiError.js";
+import { asyncHandler } from "../Utils/asyncHandler.js";
+import { ApiError } from "../Utils/apiError.js";
 import { User } from "../Models/user.model.js"; 
 import { Booking } from "../Models/booking.model.js"
 import { Review } from "../Models/review.model.js";

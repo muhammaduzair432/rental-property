@@ -3,7 +3,7 @@ import { Property } from "../Models/property.model.js";
 import { Notification } from "../Models/notification.model.js";
 import { ApiError } from "../Utils/apiError.js";
 import { asyncHandler } from "../Utils/asyncHandler.js";
-import { sendLiveNotification } from "../utils/socket.js";
+import { sendLiveNotification } from "../Utils/socket.js";
 import { Log } from "../Models/log.model.js";
 
 // ==========================================

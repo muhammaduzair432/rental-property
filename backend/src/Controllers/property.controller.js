@@ -1,7 +1,7 @@
 import { Property } from "../Models/property.model.js";
-import { uploadOnCloudinary } from "../utils/cloudinary.js";
-import { ApiError } from "../utils/apiError.js";
-import { asyncHandler } from "../utils/asyncHandler.js";
+import { uploadOnCloudinary } from "../Utils/cloudinary.js";
+import { ApiError } from "../Utils/apiError.js";
+import { asyncHandler } from "../Utils/asyncHandler.js";
 import { Favorite } from "../Models/favorite.model.js";
 import { Review } from "../Models/review.model.js";
 import { Notification } from "../Models/notification.model.js";
