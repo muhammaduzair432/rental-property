@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchUserNotifications } from "../store/notificationsSlice.js";
 import { fetchAdminNotifications } from "../store/adminSlice.js";
 import NotificationModal from "./NotificationModal.jsx";
-import Pusher from "pusher-js";
+import pusherClient from "../lib/pusherClient.js";
 
 export default function NotificationBell({ notifications: propNotifications }) {
     const dispatch = useDispatch();
@@ -31,21 +31,10 @@ export default function NotificationBell({ notifications: propNotifications }) {
             dispatch(fetchUserNotifications());
         }
 
-        const appKey = import.meta.env.VITE_PUSHER_APP_KEY;
-        if (!appKey) {
-            console.warn("Pusher app key is missing. Please restart your Vite dev server.");
-        }
-
-        let pusher;
         let channel;
 
-        if (user?._id && appKey) {
-            // Prevent multiple rapid connections in React Strict Mode
-            pusher = new Pusher(appKey, {
-                cluster: import.meta.env.VITE_PUSHER_CLUSTER,
-            });
-
-            channel = pusher.subscribe(`user-${user._id}`);
+        if (user?._id && pusherClient) {
+            channel = pusherClient.subscribe(`user-${user._id}`);
             
             const handleUpdate = () => {
                 if (isAdmin) dispatch(fetchAdminNotifications());
@@ -70,9 +59,6 @@ export default function NotificationBell({ notifications: propNotifications }) {
             if (channel) {
                 channel.unbind_all();
                 channel.unsubscribe();
-            }
-            if (pusher) {
-                pusher.disconnect();
             }
         };
     }, [dispatch, isAdmin, user?._id]);
