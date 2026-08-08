@@ -34,10 +34,10 @@ app.use(express.static("public"));
 app.use(cookieParser());
 
 // Routers
-import userRouter from "./Routes/user.Routes.js";
+import userRouter from "./Routes/user.routes.js";
 import propertyRouter from "./Routes/property.routes.js";
 import bookingRouter from "./Routes/booking.routes.js";
-import adminRouter from "./Routes/admin.Routes.js";
+import adminRouter from "./Routes/admin.routes.js";
 
 app.use("/api/v2/users", userRouter);
 app.use("/api/v2/properties", propertyRouter);
