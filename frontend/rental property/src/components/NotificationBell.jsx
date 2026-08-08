@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchUserNotifications } from "../store/notificationsSlice.js";
 import { fetchAdminNotifications } from "../store/adminSlice.js";
 import NotificationModal from "./NotificationModal.jsx";
+import Pusher from "pusher-js";
 
 export default function NotificationBell({ notifications: propNotifications }) {
     const dispatch = useDispatch();
@@ -30,17 +31,45 @@ export default function NotificationBell({ notifications: propNotifications }) {
             dispatch(fetchUserNotifications());
         }
 
-        // Live poll sync every 15 seconds to catch new incoming alerts dynamically
+        let pusher;
+        let channel;
+
+        if (user?._id) {
+            pusher = new Pusher(import.meta.env.VITE_PUSHER_APP_KEY, {
+                cluster: import.meta.env.VITE_PUSHER_CLUSTER,
+            });
+
+            channel = pusher.subscribe(`user-${user._id}`);
+            
+            const handleUpdate = () => {
+                if (isAdmin) dispatch(fetchAdminNotifications());
+                else dispatch(fetchUserNotifications());
+            };
+
+            channel.bind('NEW_BOOKING_ALERT', handleUpdate);
+            channel.bind('BOOKING_STATUS_UPDATE', handleUpdate);
+        }
+
+        // Keep a slower polling interval as fallback
         const interval = setInterval(() => {
             if (isAdmin) {
                 dispatch(fetchAdminNotifications());
             } else {
                 dispatch(fetchUserNotifications());
             }
-        }, 15000);
+        }, 60000); // 60 seconds
 
-        return () => clearInterval(interval);
-    }, [dispatch, isAdmin]);
+        return () => {
+            clearInterval(interval);
+            if (channel) {
+                channel.unbind_all();
+                channel.unsubscribe();
+            }
+            if (pusher) {
+                pusher.disconnect();
+            }
+        };
+    }, [dispatch, isAdmin, user?._id]);
 
     // ⚡ Dynamically calculate EXACT number of notifications created AFTER the last seen timestamp
     const unreadNewCount = items.filter((notif) => {
