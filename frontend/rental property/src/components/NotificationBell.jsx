@@ -72,10 +72,7 @@ export default function NotificationBell({ notifications: propNotifications }) {
                 channel.unsubscribe();
             }
             if (pusher) {
-                // Delay disconnect to prevent "WebSocket is closed before the connection is established" in React Strict Mode
-                setTimeout(() => {
-                    pusher.disconnect();
-                }, 500);
+                pusher.disconnect();
             }
         };
     }, [dispatch, isAdmin, user?._id]);
@@ -112,7 +109,7 @@ export default function NotificationBell({ notifications: propNotifications }) {
                     {/* 🔴 Theme-matched circular counter badge */}
                     {unreadNewCount > 0 && (
                         <span className="absolute -top-2 -right-2 bg-[#5ddda1] text-[#003823] font-bold text-[10px] min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center shadow-lg ring-2 ring-[#1c1b1b]">
-                            {unreadNewCount > 9 ? "9+" : unreadNewCount}
+                            {unreadNewCount > 9 ? "+9" : `+${unreadNewCount}`}
                         </span>
                     )}
                 </div>
