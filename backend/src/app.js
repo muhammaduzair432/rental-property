@@ -35,8 +35,8 @@ app.use(cookieParser());
 
 // Routers
 import userRouter from "./Routes/user.Routes.js";
-import propertyRouter from "./Routes/property.Routes.js";
-import bookingRouter from "./Routes/booking.Routes.js";
+import propertyRouter from "./Routes/property.routes.js";
+import bookingRouter from "./Routes/booking.routes.js";
 import adminRouter from "./Routes/admin.Routes.js";
 
 app.use("/api/v2/users", userRouter);
