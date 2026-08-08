@@ -33,8 +33,6 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static("public"));
 app.use(cookieParser());
 
-export { app };
-
 // Routers
 import userRouter from "./Routes/user.Routes.js";
 import propertyRouter from "./Routes/property.Routes.js";
@@ -45,3 +43,5 @@ app.use("/api/v2/users", userRouter);
 app.use("/api/v2/properties", propertyRouter);
 app.use("/api/v2/bookings", bookingRouter);
 app.use("/api/v2/admin", adminRouter);
+
+export { app };
