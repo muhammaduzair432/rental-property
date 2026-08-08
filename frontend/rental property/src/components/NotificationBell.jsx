@@ -10,17 +10,28 @@ export default function NotificationBell({ notifications: propNotifications }) {
     const user = useSelector((state) => state.auth?.user);
     const isAdmin = user?.role === "admin";
     
-    // 🛡️ Pull from admin slice if admin role, otherwise use standard user slice (or passed prop)
-    const { adminNotifications = [] } = useSelector((state) => state.admin || {});
-    const { items: userItems = [] } = useSelector((state) => state.notifications || {});
+    // 🛡️ Safe fallback extraction across various Redux store schemas
+    const adminState = useSelector((state) => state.admin || {});
+    const notificationState = useSelector((state) => state.notifications || {});
+
+    const adminNotifications = adminState.adminNotifications || adminState.notifications || [];
+    const userItems = notificationState.items || notificationState.notifications || notificationState.data || [];
 
     const items = propNotifications || (isAdmin ? adminNotifications : userItems);
 
     const [isModalOpen, setIsModalOpen] = useState(false);
 
-    // ⚡ Store the ISO timestamp of when the user last opened the notifications modal
-    const [lastSeenTimestamp, setLastSeenTimestamp] = useState(() => {
-        return localStorage.getItem(isAdmin ? "adminLastSeenNotificationTimestamp" : "lastSeenNotificationTimestamp") || "1970-01-01T00:00:00.000Z";
+    // ⚡ Persistent storage key for dismissed/seen notification IDs
+    const dismissedStorageKey = isAdmin ? "adminDismissedNotificationIds" : `dismissedNotificationIds_${user?._id || "guest"}`;
+
+    // Load dismissed notification IDs from localStorage
+    const [dismissedIds, setDismissedIds] = useState(() => {
+        try {
+            const saved = localStorage.getItem(dismissedStorageKey);
+            return saved ? JSON.parse(saved) : [];
+        } catch (e) {
+            return [];
+        }
     });
 
     useEffect(() => {
@@ -43,16 +54,16 @@ export default function NotificationBell({ notifications: propNotifications }) {
 
             channel.bind('NEW_BOOKING_ALERT', handleUpdate);
             channel.bind('BOOKING_STATUS_UPDATE', handleUpdate);
+            channel.bind('new-notification', handleUpdate);
         }
 
-        // Keep a slower polling interval as fallback
         const interval = setInterval(() => {
             if (isAdmin) {
                 dispatch(fetchAdminNotifications());
             } else {
                 dispatch(fetchUserNotifications());
             }
-        }, 60000); // 60 seconds
+        }, 60000); // 60 seconds fallback poll
 
         return () => {
             clearInterval(interval);
@@ -63,20 +74,28 @@ export default function NotificationBell({ notifications: propNotifications }) {
         };
     }, [dispatch, isAdmin, user?._id]);
 
-    // ⚡ Dynamically calculate EXACT number of notifications created AFTER the last seen timestamp
-    const unreadNewCount = items.filter((notif) => {
-        const notifTime = new Date(notif.createdAt || Date.now()).getTime();
-        const lastSeenTime = new Date(lastSeenTimestamp).getTime();
-        return notifTime > lastSeenTime;
+    // ⚡ Count ONLY notifications whose ID has NOT been dismissed/seen yet
+    const unreadNewCount = items.filter((notif, index) => {
+        const notifId = notif._id || notif.id || `notif_${index}`;
+        
+        // If backend explicitly marks it as read, skip it
+        if (notif.isRead === true || notif.read === true) return false;
+
+        // If this ID is recorded in our dismissed list, it has been seen
+        if (dismissedIds.includes(notifId)) return false;
+
+        return true;
     }).length;
 
     const handleOpenModal = () => {
         setIsModalOpen(true);
         
-        // When modal opens, mark everything currently in the list as "seen"
-        const currentTimestamp = new Date().toISOString();
-        setLastSeenTimestamp(currentTimestamp);
-        localStorage.setItem(isAdmin ? "adminLastSeenNotificationTimestamp" : "lastSeenNotificationTimestamp", currentTimestamp);
+        // When modal opens, capture all current notification IDs and mark them as dismissed/seen
+        const currentIds = items.map((notif, index) => notif._id || notif.id || `notif_${index}`);
+        const updatedDismissed = Array.from(new Set([...dismissedIds, ...currentIds]));
+        
+        setDismissedIds(updatedDismissed);
+        localStorage.setItem(dismissedStorageKey, JSON.stringify(updatedDismissed));
     };
 
     return (
@@ -92,10 +111,10 @@ export default function NotificationBell({ notifications: propNotifications }) {
                         <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                     </svg>
                     
-                    {/* 🔴 Theme-matched circular counter badge */}
+                    {/* 🟥 Small, Sharp Square Counter Badge */}
                     {unreadNewCount > 0 && (
-                        <span className="absolute -top-2 -right-2 bg-[#5ddda1] text-[#003823] font-bold text-[10px] min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center shadow-lg ring-2 ring-[#1c1b1b]">
-                            {unreadNewCount > 9 ? "+9" : `+${unreadNewCount}`}
+                        <span className="absolute -top-1 -right-1 bg-[#5ddda1] text-[#003823] font-bold text-[8px] min-w-[14px] h-[14px] px-0.5 rounded-none flex items-center justify-center shadow-md ring-1 ring-[#1c1b1b]">
+                            {unreadNewCount > 9 ? "+9" : unreadNewCount}
                         </span>
                     )}
                 </div>

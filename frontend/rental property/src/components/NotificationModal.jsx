@@ -1,6 +1,6 @@
 import React from "react";
 
-export default function NotificationModal({ isOpen, onClose, notifications = [] }) {
+export default function NotificationModal({ isOpen, onClose, notifications = [], onMarkAllAsRead }) {
     if (!isOpen) return null;
 
     return (
@@ -46,11 +46,20 @@ export default function NotificationModal({ isOpen, onClose, notifications = [] 
                 </div>
 
                 {/* Modal Footer */}
-                <div className="pt-4 border-t border-[#353535] text-right">
+                <div className="pt-4 border-t border-[#353535] flex justify-between items-center">
+                    {onMarkAllAsRead && notifications.length > 0 && (
+                        <button 
+                            type="button"
+                            onClick={onMarkAllAsRead}
+                            className="text-[10px] font-bold uppercase tracking-widest text-[#5ddda1] hover:underline cursor-pointer"
+                        >
+                            Mark All as Read
+                        </button>
+                    )}
                     <button 
                         type="button"
                         onClick={onClose} 
-                        className="px-6 py-3 bg-[#5ddda1] text-[#003823] text-[10px] font-bold uppercase tracking-widest rounded-none hover:bg-[#08a56e] cursor-pointer transition-all shadow-lg"
+                        className="px-6 py-3 bg-[#5ddda1] text-[#003823] text-[10px] font-bold uppercase tracking-widest rounded-none hover:bg-[#08a56e] cursor-pointer transition-all shadow-lg ml-auto"
                     >
                         Close Feed
                     </button>
