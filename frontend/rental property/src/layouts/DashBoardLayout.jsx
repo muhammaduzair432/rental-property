@@ -356,7 +356,7 @@ export default function DashBoardLayout() {
                     </div>
                     <div className="flex space-x-6 mt-4 sm:mt-0">
                         <span className="hover:text-[#5ddda1] cursor-pointer transition-colors" onClick={() => navigate("/privacy-policy")}>Privacy Policy</span>
-                        <span className="hover:text-[#5ddda1] cursor-pointer transition-colors">Terms of Service</span>
+                        <span className="hover:text-[#5ddda1] cursor-pointer transition-colors" onClick={() => navigate("/terms-of-service")}>Terms of Service</span>
                         <span className="hover:text-[#5ddda1] cursor-pointer transition-colors">Support</span>
                     </div>
                 </div>
