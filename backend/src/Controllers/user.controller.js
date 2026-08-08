@@ -114,7 +114,7 @@ const registerUser = asyncHandler(async (req, res) => {
         throw new ApiError(409, "user with username, email already exists");
     }
     
-    const avatarLocalPath = req.file?.path;
+    const avatarLocalPath = req.file?.buffer || req.file?.path;
     let avatar = null;
     if (avatarLocalPath) {
         avatar = await uploadOnCloudinary(avatarLocalPath);
@@ -313,7 +313,7 @@ const updateProfile = asyncHandler(async (req, res) => {
     }
 
     // B. Upload the incoming fresh avatar file [cite: 2077]
-    const avatarLocalPath = req.file.path;
+    const avatarLocalPath = req.file.buffer || req.file.path;
     const uploadedAvatar = await uploadOnCloudinary(avatarLocalPath);
 
     if (uploadedAvatar) {

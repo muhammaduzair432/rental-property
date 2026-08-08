@@ -30,7 +30,7 @@ export const createProperty = asyncHandler(async (req, res) => {
     if (imageFiles && imageFiles.length > 0) {
         for (const file of imageFiles) {
             try {
-                const result = await uploadOnCloudinary(file.path);
+                const result = await uploadOnCloudinary(file.buffer || file.path);
                 if (result) {
                     const url = typeof result === "string" ? result : (result?.secure_url || result?.url || "");
                     if (url) {
@@ -246,7 +246,7 @@ export const updateProperty = asyncHandler(async (req, res) => {
 
     const newImageFiles = req.files;
     if (newImageFiles && newImageFiles.length > 0) {
-        const uploadPromises = newImageFiles.map((file) => uploadOnCloudinary(file.path));
+        const uploadPromises = newImageFiles.map((file) => uploadOnCloudinary(file.buffer || file.path));
         const uploadedResults = await Promise.all(uploadPromises);
 
         const newCloudinaryUrls = uploadedResults
