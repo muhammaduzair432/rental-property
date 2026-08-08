@@ -15,14 +15,23 @@ const initialState = {
     propertiesError: null,
 };
 
+// Helper utility to safely parse backend error objects/strings
+const parseBackendError = (error) => {
+    const backendMsg = error.response?.data?.message || error.response?.data || error.message;
+    if (typeof backendMsg === "string") return backendMsg;
+    if (typeof backendMsg === "object" && backendMsg !== null) {
+        return backendMsg.message || JSON.stringify(backendMsg);
+    }
+    return String(backendMsg || "An unexpected error occurred");
+};
+
 // 1. Asynchronous Thunk: User Registration
 export const registerUser = createAsyncThunk("auth/registerUser", async (userData, thunkApi) => {
     try {
         const res = await api.post("users/registerUser", userData);
         return res.data;
     } catch (error) {
-        const errorMessage = error.response?.data?.message || error.message;
-        return thunkApi.rejectWithValue(errorMessage);
+        return thunkApi.rejectWithValue(parseBackendError(error));
     }
 });
 
@@ -32,8 +41,7 @@ export const verifyOtp = createAsyncThunk("auth/verifyOtp", async (otpData, thun
         const res = await api.post("users/verifyOTP", otpData);
         return res.data;
     } catch (error) {
-        const errorMessage = error.response?.data?.message || error.message;
-        return thunkApi.rejectWithValue(errorMessage);
+        return thunkApi.rejectWithValue(parseBackendError(error));
     }
 });
 
@@ -43,8 +51,7 @@ export const resendOtp = createAsyncThunk("auth/resendOtp", async (emailData, th
         const res = await api.post("users/resend-otp", emailData);
         return res.data;
     } catch (error) {
-        const errorMessage = error.response?.data?.message || error.message;
-        return thunkApi.rejectWithValue(errorMessage);
+        return thunkApi.rejectWithValue(parseBackendError(error));
     }
 });
 
@@ -58,9 +65,7 @@ export const loginUser = createAsyncThunk("auth/loginUser", async (credentials, 
         }
         return res.data.data;
     } catch (error) {
-        const backendMsg = error.response?.data?.message || error.response?.data || error.message;
-        const finalMessage = typeof backendMsg === "string" ? backendMsg : JSON.stringify(backendMsg);
-        return thunkApi.rejectWithValue(finalMessage);
+        return thunkApi.rejectWithValue(parseBackendError(error));
     }
 });
 
@@ -87,8 +92,7 @@ export const switchPortalRole = createAsyncThunk("auth/switchPortalRole", async 
         }
         return mergedUser;
     } catch (error) {
-        const errorMessage = error.response?.data?.message || error.message;
-        return thunkApi.rejectWithValue(errorMessage);
+        return thunkApi.rejectWithValue(parseBackendError(error));
     }
 });
 
@@ -102,8 +106,7 @@ export const browseProperties = createAsyncThunk("auth/browseProperties", async 
         }
         return [];
     } catch (error) {
-        const errorMessage = error.response?.data?.message || error.message;
-        return thunkApi.rejectWithValue(errorMessage);
+        return thunkApi.rejectWithValue(parseBackendError(error));
     }
 });
 
@@ -170,7 +173,7 @@ const authSlice = createSlice({
             .addCase(registerUser.fulfilled, (state, action) => {
                 state.loading = false;
                 state.error = null;
-                const regData = action.payload?.data ?? null;
+                const regData = action.payload?.data ?? action.payload ?? null;
                 state.user = regData ? {
                     ...regData,
                     avatar: regData.avatar || state.user?.avatar
@@ -191,7 +194,7 @@ const authSlice = createSlice({
                 state.loading = false;
                 state.error = null;
                 state.isVerified = true;
-                const verifiedUser = action.payload?.user;
+                const verifiedUser = action.payload?.user || action.payload?.data;
                 if (verifiedUser) {
                     state.user = {
                         ...verifiedUser,
@@ -227,7 +230,7 @@ const authSlice = createSlice({
             .addCase(loginUser.fulfilled, (state, action) => {
                 state.loading = false;
                 state.error = null;
-                const incomingUser = action.payload?.user ?? action.payload?.data ?? null;
+                const incomingUser = action.payload?.user ?? action.payload?.data ?? action.payload ?? null;
                 
                 // 🛡️ Safeguard avatar retention during login sync
                 state.user = incomingUser ? {

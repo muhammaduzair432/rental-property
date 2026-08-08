@@ -59,90 +59,117 @@ const generateaccessTokenAndRefreshToken = async (userid) => {
     }
   };
 
+
 const registerUser = asyncHandler(async (req, res) => {
-  // console.log("==== WHAT POSTMAN SENT ====");
-  // console.log("Text Data (req.body):", req.body);
-  // console.log("File Data (req.file):", req.file);
-  // console.log("===========================");
+    const { fullname, email, password, username } = req.body;
+    const normalizedUsername = username?.toLowerCase().trim();
+    const normalizedEmail = email?.toLowerCase().trim();
+    const normalizedFullname = fullname?.trim();
 
-  const { fullname, email, password, username } = req.body;
-  const normalizedUsername = username?.toLowerCase().trim();
-  const normalizedEmail = email?.toLowerCase().trim();
-  const normalizedFullname = fullname?.trim();
-  console.log(req.body);
-
-  if (
-    [normalizedFullname, normalizedEmail, password, normalizedUsername].some((field) => field?.trim() === "")
-  ) {
-    throw new ApiError(400, "all fields are required");
-  }
-  const existedUser = await User.findOne({
-    $or: [{ email: normalizedEmail }, { username: normalizedUsername }],
-  });
-  if (existedUser) {
-    throw new ApiError(409, "user with username, email already exists");
-  }
-  const avatarLocalPath = req.file?.path;
-
-  let avatar = null;
-
-  if (avatarLocalPath) {
-    avatar = await uploadOnCloudinary(avatarLocalPath);
-  }
-
-  const otp = generateOTP();
-  let user;
-  try {
-    user = await User.create({
-      fullname: normalizedFullname,
-      email: normalizedEmail,
-      password,
-      username: normalizedUsername,
-      // role: role || "user",
-      avatar: avatar?.secure_url || "",
-      otp,
-      otpExpiry: Date.now() + 2 * 60 * 1000, // 2 min
-      isVerified: false,
-    });
-  } catch (error) {
-    if (error?.code === 11000) {
-      const duplicateField = Object.keys(error.keyValue || {})[0];
-      throw new ApiError(409, `${duplicateField} already exists`);
+    if (
+        [normalizedFullname, normalizedEmail, password, normalizedUsername].some((field) => !field || field.trim() === "")
+    ) {
+        throw new ApiError(400, "all fields are required");
     }
-    throw error;
-  }
-  // 🔥 FLOWCHART AUDIT LOG: Track new registrations automatically
-  await Log.create({
-    actionType: "USER_REGISTRATION",
-    description: `New user registration completed for account: [${user.username}] with role: [${user.role}].`,
-    performedBy: user._id
-  });
-  // send email
-  await sendEmail(user.email, `Your OTP is ${otp}`);
 
+    // ================= USERNAME VALIDATION =================
 
+    // 1. Username must be 3-20 characters
+    if (normalizedUsername.length < 3 || normalizedUsername.length > 20) {
+        throw new ApiError(400, "username must be between 3 and 20 characters");
+    }
 
-  const createdUser = await User.findById(user._id).select(
-    "-password -refreshToken",
-  );
+    // 2. Username can only contain letters, numbers, _ and -
+    if (!/^[a-zA-Z0-9_-]+$/.test(normalizedUsername)) {
+        throw new ApiError(
+            400,
+            "username can only contain letters, numbers, underscore (_) and hyphen (-)"
+        );
+    }
 
+    // 3. Username must contain at least one letter and at least one number
+    const hasLetter = /[a-zA-Z]/.test(normalizedUsername);
+    const hasNumber = /[0-9]/.test(normalizedUsername);
 
-  if (!createdUser) {
-    throw new ApiError(500, "something went wrong while registering the user ");
-  }
+    if (!hasLetter || !hasNumber) {
+        throw new ApiError(
+            400,
+            "username must contain at least one letter and one number"
+        );
+    }
 
-  
-  // step: 9 return response
-  return res
-    .status(201)
-    .json(
-      new ApiResponse(
-        201,
-        createdUser,
-        "user registerd successfully, Please verify your otp",
-      ),
+    // ================= PASSWORD VALIDATION =================
+
+    // Password must be at least 8 characters
+    if (password.length < 8) {
+        throw new ApiError(400, "password must be at least 8 characters");
+    }
+
+    // ================= EXISTING CODE =================
+
+    const existedUser = await User.findOne({
+        $or: [{ email: normalizedEmail }, { username: normalizedUsername }],
+    });
+    if (existedUser) {
+        throw new ApiError(409, "user with username, email already exists");
+    }
+    
+    const avatarLocalPath = req.file?.path;
+    let avatar = null;
+    if (avatarLocalPath) {
+        avatar = await uploadOnCloudinary(avatarLocalPath);
+    }
+    
+    const otp = generateOTP();
+    let user;
+    try {
+        user = await User.create({
+            fullname: normalizedFullname,
+            email: normalizedEmail,
+            password,
+            username: normalizedUsername,
+            avatar: avatar?.secure_url || "",
+            otp,
+            otpExpiry: Date.now() + 2 * 60 * 1000, // 2 min
+            isVerified: false,
+        });
+    } catch (error) {
+        if (error?.code === 11000) {
+            const duplicateField = Object.keys(error.keyValue || {})[0];
+            throw new ApiError(409, `${duplicateField} already exists`);
+        }
+        throw error;
+    }
+
+    // 🔥 FLOWCHART AUDIT LOG: Track new registrations automatically
+    await Log.create({
+        actionType: "USER_REGISTRATION",
+        description: `New user registration completed for account: [${user.username}] with role: [${user.role}].`,
+        performedBy: user._id
+    });
+
+    // send email
+    await sendEmail(user.email, `Your OTP is ${otp}`);
+
+    const createdUser = await User.findById(user._id).select(
+        "-password -refreshToken",
     );
-});
+    if (!createdUser) {
+        throw new ApiError(500, "something went wrong while registering the user ");
+    }
+
+    return res
+        .status(201)
+        .json(
+            new ApiResponse(
+                201,
+                createdUser,
+                "user registerd successfully, Please verify your otp",
+            ),
+        );
+});;
+
+
 
 // login section
 const loginUser = asyncHandler(async (req, res) => {

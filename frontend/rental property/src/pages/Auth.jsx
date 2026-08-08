@@ -6,32 +6,52 @@ import {
   resendOtp,
   loginUser,
 } from "../store/authSlice.js";
+import usePasteCleaner from "../hooks/usePasteCleaner.js";
 import { useNavigate } from "react-router-dom";
 
 export default function Auth() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  usePasteCleaner(); // Custom hook to clean pasted input in forms
 
-  // Dynamic Form States: "login" | "register" | "otp" | "verified"
-  const [authState, setAuthState] = useState("login");
+  // ⚡ Persistent Auth State Initialization via SessionStorage to prevent reset on page refresh
+  const [authState, setAuthState] = useState(() => {
+    return sessionStorage.getItem("auth_portal_state") || "login";
+  });
+
+  const [email, setEmail] = useState(() => {
+    return sessionStorage.getItem("auth_portal_email") || "";
+  });
+
+  const [timeLeft, setTimeLeft] = useState(() => {
+    const savedTime = sessionStorage.getItem("auth_portal_timer");
+    return savedTime ? parseInt(savedTime, 10) : 120;
+  });
 
   // Select the loading status directly from our slice
   const { loading: isSliceLoading } = useSelector((state) => state.auth);
 
   // Form inputs matching our backend requirements
-  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
   const [fullname, setFullname] = useState("");
   const [avatar, setAvatar] = useState(null);
   const [otpArray, setOtpArray] = useState(new Array(6).fill(""));
 
-  // ⏱️ Timer States: 2 minutes = 120 seconds matrix limit
-  const [timeLeft, setTimeLeft] = useState(120);
-
   const [uiError, setUiError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const otpRefs = useRef([]);
+
+  // Sync auth state changes to sessionStorage so refreshes hold their position
+  useEffect(() => {
+    sessionStorage.setItem("auth_portal_state", authState);
+  }, [authState]);
+
+  useEffect(() => {
+    if (email) {
+      sessionStorage.setItem("auth_portal_email", email);
+    }
+  }, [email]);
 
   // Clear UI error on state switch
   useEffect(() => {
@@ -44,7 +64,11 @@ export default function Auth() {
     if (timeLeft <= 0) return;
 
     const timerInterval = setInterval(() => {
-      setTimeLeft((prevTime) => prevTime - 1);
+      setTimeLeft((prevTime) => {
+        const nextTime = prevTime - 1;
+        sessionStorage.setItem("auth_portal_timer", nextTime);
+        return nextTime;
+      });
     }, 1000);
 
     return () => clearInterval(timerInterval);
@@ -57,8 +81,8 @@ export default function Auth() {
     return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
-  // ⚡ Precise Error Parser Mapped to Your Exact Backend Responses
-  const getLoginErrorMessage = (errorObj) => {
+  // ⚡ Precise Error Parser Mapped to Your Exact Backend Responses (Login & Registration)
+  const getAuthErrorMessage = (errorObj) => {
     const errorText =
       typeof errorObj === "string"
         ? errorObj
@@ -68,33 +92,36 @@ export default function Auth() {
           String(errorObj || "");
     const errStr = errorText.toLowerCase();
 
-    // 1. Backend error: "user not found with this email" (Status 404)
-    if (
-      errStr.includes("user not found with this email") ||
-      errStr.includes("not found")
-    ) {
+    // 1. Backend validation messages
+    if (errStr.includes("all fields are required")) {
+      return "All fields are required.";
+    }
+    if (errStr.includes("between 3 and 20 characters")) {
+      return "Username must be between 3 and 20 characters.";
+    }
+    if (errStr.includes("can only contain letters, numbers")) {
+      return "Username can only contain letters, numbers, underscore (_) and hyphen (-).";
+    }
+    if (errStr.includes("at least one letter and one number")) {
+      return "Username must contain at least one letter and one number.";
+    }
+    if (errStr.includes("at least 8 characters")) {
+      return "Password must be at least 8 characters long.";
+    }
+    if (errStr.includes("already exists")) {
+      return errorText; // Returns exact duplicate field error from MongoDB catch block
+    }
+    if (errStr.includes("user not found with this email") || errStr.includes("not found")) {
       return "User not found with this email.";
     }
-
-    // 2. Backend error: "Invalid user credentials" (Status 401 - triggered when password fails)
-    if (
-      errStr.includes("invalid user credentials") ||
-      errStr.includes("credentials")
-    ) {
+    if (errStr.includes("invalid user credentials") || errStr.includes("credentials")) {
       return "Invalid password. Please check your password and try again.";
     }
-
-    // 3. Backend error: Account not verified (Status 403)
     if (errStr.includes("not verified")) {
       return "Account not verified. Please verify your account before logging in.";
     }
 
-    // 4. Backend error: All fields required (Status 400)
-    if (errStr.includes("all fields are required")) {
-      return "All fields are required.";
-    }
-
-    return errorText || "Invalid email or password.";
+    return errorText || "An unexpected error occurred.";
   };
 
   // 1. Submit Login Handler
@@ -106,24 +133,46 @@ export default function Auth() {
     try {
       await dispatch(loginUser({ email, password })).unwrap();
       setIsSubmitting(false);
+      sessionStorage.clear(); // Clear persistence upon successful login session
       navigate("/dashboard");
     } catch (error) {
       setIsSubmitting(false);
-      setUiError(getLoginErrorMessage(error));
+      setUiError(getAuthErrorMessage(error));
     }
   };
 
-  // 2. Submit Registration Handler
+  // 2. Submit Registration Handler (Mirrors backend username & password rules)
   const handleRegisterSubmit = async (e) => {
     e.preventDefault();
     setUiError("");
+
+    const trimmedUsername = username.trim();
+
+    // Frontend validation guards matching your updated backend constraints
+    if (trimmedUsername.length < 3 || trimmedUsername.length > 20) {
+      setUiError("Username must be between 3 and 20 characters.");
+      return;
+    }
+    if (!/^[a-zA-Z0-9_-]+$/.test(trimmedUsername)) {
+      setUiError("Username can only contain letters, numbers, underscore (_) and hyphen (-).");
+      return;
+    }
+    if (!/[a-zA-Z]/.test(trimmedUsername) || !/[0-9]/.test(trimmedUsername)) {
+      setUiError("Username must contain at least one letter and one number.");
+      return;
+    }
+    if (password.length < 8) {
+      setUiError("Password must be at least 8 characters.");
+      return;
+    }
+
     setIsSubmitting(true);
 
     const dataPayload = new FormData();
-    dataPayload.append("username", username);
-    dataPayload.append("email", email);
+    dataPayload.append("username", trimmedUsername);
+    dataPayload.append("email", email.trim());
     dataPayload.append("password", password);
-    dataPayload.append("fullname", fullname);
+    dataPayload.append("fullname", fullname.trim());
     if (avatar) {
       dataPayload.append("avatar", avatar);
     }
@@ -134,17 +183,11 @@ export default function Auth() {
       setTimeout(() => {
         setIsSubmitting(false);
         setTimeLeft(120);
+        sessionStorage.setItem("auth_portal_timer", 120);
         setAuthState("otp");
       }, 150);
     } catch (error) {
-      const errText =
-        typeof error === "string"
-          ? error
-          : error?.payload ||
-            error?.response?.data?.message ||
-            error?.message ||
-            "Registration failed.";
-      setUiError(errText);
+      setUiError(getAuthErrorMessage(error));
       setIsSubmitting(false);
     }
   };
@@ -175,16 +218,10 @@ export default function Auth() {
 
       setTimeout(() => {
         setAuthState("login");
+        sessionStorage.clear();
       }, 3200);
     } catch (error) {
-      const errText =
-        typeof error === "string"
-          ? error
-          : error?.payload ||
-            error?.response?.data?.message ||
-            error?.message ||
-            "Invalid or expired code.";
-      setUiError(errText);
+      setUiError(getAuthErrorMessage(error));
       setIsSubmitting(false);
     }
   };
@@ -198,35 +235,59 @@ export default function Auth() {
     try {
       await dispatch(resendOtp({ email })).unwrap();
       setTimeLeft(120);
+      sessionStorage.setItem("auth_portal_timer", 120);
       setOtpArray(new Array(6).fill(""));
     } catch (error) {
-      const errText =
-        typeof error === "string"
-          ? error
-          : error?.payload ||
-            error?.response?.data?.message ||
-            error?.message ||
-            "Failed to resend token.";
-      setUiError(errText);
+      setUiError(getAuthErrorMessage(error));
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // 5. OTP Sequential Focus Management
+  // 5. Clean & Robust OTP Sequential Focus Management & Paste Feature
   const handleOtpChange = (value, index) => {
+    const cleanValue = value.replace(/\D/g, "").slice(-1);
     const updatedOtp = [...otpArray];
-    updatedOtp[index] = value.slice(-1);
+    updatedOtp[index] = cleanValue;
     setOtpArray(updatedOtp);
 
-    if (value && index < 5) {
+    if (cleanValue && index < 5 && otpRefs.current[index + 1]) {
       otpRefs.current[index + 1].focus();
     }
   };
 
+  const handleOtpPaste = (e) => {
+    e.preventDefault();
+    const pasteData = e.clipboardData.getData("text").trim();
+    if (!pasteData) return;
+
+    const digits = pasteData.replace(/\D/g, "").split("").slice(0, 6);
+    const newOtp = new Array(6).fill("");
+    
+    digits.forEach((digit, idx) => {
+      newOtp[idx] = digit;
+    });
+
+    setOtpArray(newOtp);
+    
+    const targetIndex = Math.min(digits.length - 1, 5);
+    if (targetIndex >= 0 && otpRefs.current[targetIndex]) {
+      otpRefs.current[targetIndex].focus();
+    }
+  };
+
   const handleOtpKeyDown = (e, index) => {
-    if (e.key === "Backspace" && !otpArray[index] && index > 0) {
-      otpRefs.current[index - 1].focus();
+    if (e.key === "Backspace") {
+      e.preventDefault();
+      const updatedOtp = [...otpArray];
+      if (updatedOtp[index]) {
+        updatedOtp[index] = "";
+        setOtpArray(updatedOtp);
+      } else if (index > 0) {
+        updatedOtp[index - 1] = "";
+        setOtpArray(updatedOtp);
+        otpRefs.current[index - 1].focus();
+      }
     }
   };
 
@@ -235,6 +296,29 @@ export default function Auth() {
 
   return (
     <div className="min-h-screen w-full bg-[#131313] text-[#e5e2e1] flex items-center justify-center p-4 sm:p-6 lg:p-10 font-sans antialiased selection:bg-[#5ddda1]/30 selection:text-black relative overflow-hidden">
+      
+      {/* Custom Styles for Smooth Verification Animation */}
+      <style>{`
+        @keyframes scaleIn {
+          0% { transform: scale(0); opacity: 0; }
+          60% { transform: scale(1.15); opacity: 1; }
+          100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes drawTick {
+          0% { stroke-dashoffset: 48; opacity: 0; }
+          50% { opacity: 1; }
+          100% { stroke-dashoffset: 0; opacity: 1; }
+        }
+        .animate-scale-circle {
+          animation: scaleIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        .animate-check-tick {
+          stroke-dasharray: 48;
+          stroke-dashoffset: 48;
+          animation: drawTick 0.4s ease 0.3s forwards;
+        }
+      `}</style>
+
       {/* ⚡ Themed Loading Progress Bar */}
       {combinedLoadingState && (
         <div className="absolute top-0 left-0 w-full h-1.5 bg-[#0e0e0e] overflow-hidden z-50">
@@ -243,6 +327,7 @@ export default function Auth() {
       )}
 
       <div className="w-full max-w-5xl bg-[#1c1b1b] rounded-none border border-[#353535] shadow-[0_30px_70px_-15px_rgba(0,0,0,0.95)] overflow-hidden grid grid-cols-1 md:grid-cols-2 min-h-[660px]">
+        
         {/* LEFT BLOCK PANEL: INTERACTIVE CORE FORMS CONTAINER */}
         <div className="p-8 sm:p-12 flex flex-col justify-center space-y-6 bg-[#1c1b1b] relative">
           {authState !== "verified" && (
@@ -261,7 +346,7 @@ export default function Auth() {
                 {authState === "register" &&
                   "Register your profile credentials for secure platform access."}
                 {authState === "otp" &&
-                  "Enter the 6-digit verification code dispatched to your email inbox."}
+                  "Enter or paste the 6-digit verification code dispatched to your email inbox."}
               </p>
             </div>
           )}
@@ -335,7 +420,7 @@ export default function Auth() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="block text-[9px] font-bold uppercase tracking-[0.2em] text-[#5ddda1]">
-                    Username
+                    Username (Letters + Digits)
                   </label>
                   <input
                     type="text"
@@ -343,7 +428,7 @@ export default function Auth() {
                     disabled={combinedLoadingState}
                     onChange={(e) => setUsername(e.target.value)}
                     required
-                    placeholder="username"
+                    placeholder="e.g. user123"
                     className="w-full text-xs border border-[#444748] px-3.5 py-2.5 bg-[#0e0e0e] text-[#e5e2e1] rounded-none focus:outline-none focus:border-[#5ddda1] focus:ring-1 focus:ring-[#5ddda1] placeholder:text-[#8e9192] disabled:opacity-50"
                   />
                 </div>
@@ -378,7 +463,7 @@ export default function Auth() {
               </div>
               <div className="space-y-1">
                 <label className="block text-[9px] font-bold uppercase tracking-[0.2em] text-[#5ddda1]">
-                  Password
+                  Password (Min 8 chars)
                 </label>
                 <input
                   type="password"
@@ -428,10 +513,10 @@ export default function Auth() {
             </form>
           )}
 
-          {/* C. 6-DIGIT OTP FIELDS + COUNTDOWN TIMER WIDGET */}
+          {/* C. 6-DIGIT OTP FIELDS + COUNTDOWN TIMER WIDGET WITH CLEAN PASTE SUPPORT */}
           {authState === "otp" && (
             <div className="space-y-6">
-              <div className="flex justify-between gap-2 sm:gap-3">
+              <div className="flex justify-between gap-2 sm:gap-3" onPaste={handleOtpPaste}>
                 {otpArray.map((digit, i) => (
                   <input
                     key={i}
@@ -450,7 +535,7 @@ export default function Auth() {
               <div className="flex items-center justify-between text-xs px-1 bg-[#0e0e0e] p-3 border border-[#353535]">
                 <div className="flex items-center gap-2 font-medium text-[#c4c7c7]">
                   <span className="text-[9px] uppercase tracking-[0.15em] text-[#8e9192]">
-                    Token Expiration:
+                    Time Expires In:
                   </span>
                   <span
                     className={`font-mono font-bold text-xs ${timeLeft < 30 ? "text-[#ffb4ab] animate-pulse" : "text-[#5ddda1]"}`}
@@ -470,7 +555,7 @@ export default function Auth() {
                 >
                   {combinedLoadingState && isSubmitting
                     ? "Dispatching..."
-                    : "Resend Token"}
+                    : "Resend code"}
                 </button>
               </div>
 
@@ -488,11 +573,23 @@ export default function Auth() {
             </div>
           )}
 
-          {/* D. ANIMATED ACCOUNT VERIFIED SUCCESS SCREEN */}
+          {/* D. ANIMATED ACCOUNT VERIFIED SUCCESS SCREEN WITH ROUNDED GREEN CIRCLE AND WHITE TICK */}
           {authState === "verified" && (
-            <div className="flex flex-col items-center justify-center text-center space-y-6 py-12 animate-fadeIn">
-              <div className="w-16 h-16 border-2 border-[#5ddda1] bg-[#083823]/40 flex items-center justify-center text-[#5ddda1] text-2xl shadow-2xl">
-                ✓
+            <div className="flex flex-col items-center justify-center text-center space-y-6 py-12">
+              <div className="w-20 h-20 rounded-full bg-[#08a56e] flex items-center justify-center shadow-[0_0_30px_rgba(93,221,161,0.4)] animate-scale-circle">
+                <svg
+                  className="w-10 h-10 text-white animate-check-tick"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="3.5"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
               </div>
 
               <div className="space-y-2">
