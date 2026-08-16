@@ -6,9 +6,7 @@ import path from "path";
 const app = express();
 
 // Parse allowed origins from .env
-const allowedOrigins = process.env.CORS_ORIGIN
-  ?.split(",")
-  .map((origin) => origin.trim()) || ["http://localhost:5173"];
+const allowedOrigins = process.env.CORS_ORIGIN || "http://localhost:5173";
 
 // 1. React Frontend CORS Configuration
 app.use(
