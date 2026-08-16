@@ -1,7 +1,12 @@
 import express from "express";
 import cookieParser from "cookie-parser";
 import cors from "cors";
-import path from "path";
+
+// Routers
+import userRouter from "./Routes/user.routes.js";
+import propertyRouter from "./Routes/property.routes.js";
+import bookingRouter from "./Routes/booking.routes.js";
+import adminRouter from "./Routes/admin.routes.js";
 
 const app = express();
 
@@ -31,11 +36,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static("public"));
 app.use(cookieParser());
 
-// Routers
-import userRouter from "./Routes/user.routes.js";
-import propertyRouter from "./Routes/property.routes.js";
-import bookingRouter from "./Routes/booking.routes.js";
-import adminRouter from "./Routes/admin.routes.js";
+
 
 app.use("/api/v2/users", userRouter);
 app.use("/api/v2/properties", propertyRouter);
